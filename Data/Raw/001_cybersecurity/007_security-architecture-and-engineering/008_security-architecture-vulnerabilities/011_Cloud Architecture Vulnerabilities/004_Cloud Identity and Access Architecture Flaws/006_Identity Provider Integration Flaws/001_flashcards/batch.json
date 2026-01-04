@@ -1,0 +1,1022 @@
+{
+  "topic_title": "Identity Provider Integration Flaws",
+  "category": "Security Architecture And Engineering - Security Architecture Vulnerabilities",
+  "flashcards": [
+    {
+      "question_text": "According to NIST SP 800-63B-4, what is a critical security requirement for clients when using the OAuth 2.0 Authorization Code Grant to prevent authorization code injection attacks?",
+      "correct_answer": "Clients MUST use Proof Key for Code Exchange (PKCE) or, in OpenID Connect flows, the 'nonce' parameter.",
+      "distractors": [
+        {
+          "text": "Clients SHOULD use the implicit grant flow for better security.",
+          "misconception": "Targets [flow confusion]: Advocates for the less secure implicit grant instead of the recommended authorization code grant with PKCE."
+        },
+        {
+          "text": "Clients MUST rely solely on the 'state' parameter for all security measures.",
+          "misconception": "Targets [parameter over-reliance]: Suggests 'state' alone is sufficient, ignoring PKCE/nonce for code injection prevention."
+        },
+        {
+          "text": "Authorization servers are solely responsible for preventing injection attacks.",
+          "misconception": "Targets [responsibility misattribution]: Incorrectly places all responsibility on the authorization server, ignoring client-side measures."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "PKCE or the 'nonce' parameter binds the authorization code to the specific client instance and transaction, preventing an attacker from injecting a stolen code into a different session because the verifier would detect a mismatch in the challenge or nonce. This ensures the code's integrity and prevents misuse.",
+        "distractor_analysis": "The first distractor promotes the insecure implicit grant. The second overemphasizes 'state' and ignores PKCE/nonce for code injection. The third incorrectly shifts all responsibility to the authorization server, neglecting client-side security measures.",
+        "analogy": "PKCE is like a unique, one-time-use key that the client must present to unlock the authorization code, ensuring it's the correct client and session that requested it."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "OAUTH_AUTH_CODE_GRANT",
+        "OAUTH_PKCE",
+        "OAUTH_NONCE"
+      ]
+    },
+    {
+      "question_text": "According to RFC 9700, which OAuth 2.0 grant type MUST NOT be used due to inherent security risks?",
+      "correct_answer": "Resource Owner Password Credentials Grant",
+      "distractors": [
+        {
+          "text": "Authorization Code Grant",
+          "misconception": "Targets [grant type confusion]: Incorrectly identifies a secure grant type as insecure."
+        },
+        {
+          "text": "Implicit Grant",
+          "misconception": "Targets [grant type confusion]: While discouraged, it's not universally forbidden like the password grant."
+        },
+        {
+          "text": "Client Credentials Grant",
+          "misconception": "Targets [grant type confusion]: This grant type is used for machine-to-machine authentication and is not inherently insecure in its intended use."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The Resource Owner Password Credentials Grant MUST NOT be used because it insecurely exposes resource owner credentials directly to the client, increasing the attack surface and training users to enter credentials in non-authorization server locations. It also hinders multi-factor authentication and cryptographic credential usage.",
+        "distractor_analysis": "The distractors incorrectly identify other OAuth grant types as forbidden. The Authorization Code Grant is recommended, Implicit Grant is discouraged but not forbidden, and Client Credentials Grant is for M2M and has different security considerations.",
+        "analogy": "Using the Resource Owner Password Credentials Grant is like giving your house keys directly to every guest who visits, instead of letting them use a secure entryway managed by a doorman."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "remember",
+      "prerequisites": [
+        "OAUTH_GRANT_TYPES"
+      ]
+    },
+    {
+      "question_text": "What is the primary security risk associated with the Implicit Grant in OAuth 2.0, as highlighted by RFC 9700?",
+      "correct_answer": "Access token leakage and replay due to exposure in URLs and lack of sender-constraining mechanisms.",
+      "distractors": [
+        {
+          "text": "Authorization code injection via redirect URI manipulation.",
+          "misconception": "Targets [attack vector confusion]: This is a risk for the Authorization Code Grant, not the primary risk for Implicit Grant."
+        },
+        {
+          "text": "Client impersonation due to weak client authentication methods.",
+          "misconception": "Targets [authentication method confusion]: While client authentication is important, the Implicit Grant's main flaw is token exposure, not client impersonation."
+        },
+        {
+          "text": "Cross-Site Request Forgery (CSRF) due to improper state parameter handling.",
+          "misconception": "Targets [attack vector confusion]: CSRF is a general web vulnerability; while related to state, the Implicit Grant's core issue is token leakage."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The Implicit Grant exposes access tokens directly in the URL fragment, making them vulnerable to leakage via browser history or Referer headers. Unlike the Authorization Code Grant, it lacks standardized sender-constraining mechanisms, allowing stolen tokens to be replayed by attackers against resource servers.",
+        "distractor_analysis": "The first distractor misattributes authorization code injection risks. The second focuses on client authentication, which is a separate concern. The third points to CSRF, which is mitigated by 'state' but not the core flaw of token exposure in the Implicit Grant.",
+        "analogy": "The Implicit Grant is like shouting your access token across a crowded room instead of passing it discreetly, making it easy for anyone nearby to hear and use it."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "OAUTH_IMPLICIT_GRANT",
+        "OAUTH_ACCESS_TOKENS",
+        "OAUTH_TOKEN_LEAKAGE"
+      ]
+    },
+    {
+      "question_text": "According to NIST SP 800-63B-4, what is the recommended approach for clients to prevent Cross-Site Request Forgery (CSRF) when using the Authorization Code Grant without PKCE?",
+      "correct_answer": "Use one-time-use CSRF tokens carried in the 'state' parameter, securely bound to the user agent session.",
+      "distractors": [
+        {
+          "text": "Rely solely on the authorization server to validate the 'state' parameter.",
+          "misconception": "Targets [responsibility misattribution]: Incorrectly places the burden of CSRF protection entirely on the authorization server, ignoring client-side validation."
+        },
+        {
+          "text": "Embed the access token directly into the 'state' parameter for validation.",
+          "misconception": "Targets [parameter misuse]: Incorrectly suggests embedding sensitive tokens into the 'state' parameter, which is meant for opaque CSRF tokens."
+        },
+        {
+          "text": "Use the 'nonce' parameter exclusively, as it is designed for CSRF prevention.",
+          "misconception": "Targets [parameter confusion]: 'nonce' is primarily for OpenID Connect replay protection, not general OAuth CSRF prevention without PKCE."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The 'state' parameter acts as a CSRF token by linking the authorization request to the user agent's session. By making it one-time-use and securely bound, the client can verify that the incoming authorization response originates from the same session and wasn't injected by an attacker, thus preventing CSRF.",
+        "distractor_analysis": "The first distractor misplaces responsibility. The second suggests a dangerous misuse of the 'state' parameter. The third confuses the 'nonce' parameter's primary purpose with CSRF prevention.",
+        "analogy": "The 'state' parameter is like a unique, disposable ticket stub. The client checks that the stub presented with the response matches the one it issued for that specific request, ensuring no one else used a stolen ticket."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "OAUTH_CSRF",
+        "OAUTH_STATE_PARAMETER",
+        "OAUTH_AUTH_CODE_GRANT"
+      ]
+    },
+    {
+      "question_text": "What is the primary security concern with authorization servers allowing clients to register redirection URI patterns instead of exact URIs, as per NIST SP 800-63B-4?",
+      "correct_answer": "It increases the complexity and error-proneness of validation, leading to vulnerabilities like redirection URI manipulation attacks.",
+      "distractors": [
+        {
+          "text": "It forces clients to use less secure grant types like the Implicit Grant.",
+          "misconception": "Targets [grant type impact]: Pattern matching doesn't directly force the use of different grant types."
+        },
+        {
+          "text": "It prevents the use of PKCE by requiring simpler redirect URI formats.",
+          "misconception": "Targets [PKCE compatibility]: PKCE is compatible with various redirect URI configurations; the issue is validation complexity, not PKCE itself."
+        },
+        {
+          "text": "It leads to excessive logging of sensitive data by the authorization server.",
+          "misconception": "Targets [unrelated consequence]: While logging is important, pattern matching flaws don't inherently cause excessive sensitive data logging."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Allowing redirection URI patterns instead of exact matches introduces complexity in validation logic. Naive pattern matching can be exploited by attackers to redirect authorization responses to malicious URIs, leading to code or token leakage, as the authorization server may incorrectly validate a malicious URI as legitimate.",
+        "distractor_analysis": "The first distractor incorrectly links pattern matching to forced grant type changes. The second wrongly claims it prevents PKCE. The third suggests an unrelated consequence of excessive logging.",
+        "analogy": "Using redirection URI patterns is like having a security guard check IDs with a vague description ('tall person with dark hair') instead of a specific photo, making it easier for impostors to get through."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "OAUTH_REDIRECT_URI",
+        "OAUTH_VALIDATION_FLAWS"
+      ]
+    },
+    {
+      "question_text": "According to RFC 9700, why is the 'Resource Owner Password Credentials' grant type considered insecure and MUST NOT be used?",
+      "correct_answer": "It exposes resource owner credentials directly to the client, increasing the attack surface and undermining multi-factor authentication.",
+      "distractors": [
+        {
+          "text": "It relies on outdated cryptographic standards for token issuance.",
+          "misconception": "Targets [cryptographic standard confusion]: The primary issue is credential exposure, not necessarily outdated crypto in the grant type itself."
+        },
+        {
+          "text": "It requires clients to implement complex PKCE flows, which are often flawed.",
+          "misconception": "Targets [PKCE confusion]: This grant type does not use PKCE; PKCE is associated with the Authorization Code Grant."
+        },
+        {
+          "text": "It mandates the use of the implicit grant, which is vulnerable to token leakage.",
+          "misconception": "Targets [grant type association]: It is a distinct grant type and does not mandate the use of the Implicit Grant."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "This grant type requires the client to collect the resource owner's username and password directly. This bypasses the authorization server's secure authentication flow, exposes credentials to the client (which might be malicious or compromised), and prevents the effective use of multi-factor authentication methods that are typically handled by the authorization server.",
+        "distractor_analysis": "The first distractor focuses on crypto standards, which isn't the main flaw. The second incorrectly links it to PKCE. The third wrongly associates it with the Implicit Grant.",
+        "analogy": "It's like asking your guests to hand over their house keys directly to your cleaning service, instead of letting the doorman (authorization server) handle secure access and verification."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "attack",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "OAUTH_PASSWORD_GRANT",
+        "OAUTH_CREDENTIAL_EXPOSURE"
+      ]
+    },
+    {
+      "question_text": "What is the purpose of 'sender-constrained access tokens' as described in RFC 9700 and RFC 8705?",
+      "correct_answer": "To bind an access token to a specific client instance, preventing its misuse if stolen by requiring proof of possession.",
+      "distractors": [
+        {
+          "text": "To ensure access tokens are only valid for a single resource server.",
+          "misconception": "Targets [audience vs. sender restriction]: This describes audience restriction, not sender constraint."
+        },
+        {
+          "text": "To automatically rotate refresh tokens for improved security.",
+          "misconception": "Targets [token type confusion]: Refresh token rotation is a separate security mechanism."
+        },
+        {
+          "text": "To encrypt the access token itself, making it unreadable if intercepted.",
+          "misconception": "Targets [encryption vs. binding]: Sender constraint is about binding, not encrypting the token's content."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Sender-constrained access tokens, often implemented using mutual TLS (RFC 8705) or DPoP (RFC 9449), cryptographically bind the token to the client instance that requested it. This means that even if an attacker steals the token, they cannot use it without also possessing the client's secret key or certificate, thus preventing replay attacks.",
+        "distractor_analysis": "The first distractor describes audience restriction. The second refers to refresh token rotation. The third misinterprets sender constraint as token encryption.",
+        "analogy": "Sender constraint is like a VIP pass that only works if the holder also presents a specific, unforgeable ID card issued at the same time, proving they are the legitimate owner."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "defense",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "OAUTH_SENDER_CONSTRAINT",
+        "OAUTH_ACCESS_TOKENS",
+        "RFC8705"
+      ]
+    },
+    {
+      "question_text": "According to NIST SP 800-63B-4, what is the primary risk of an authorization server allowing clients to use wildcard characters in registered redirection URIs?",
+      "correct_answer": "Attackers can exploit improperly matched patterns to redirect authorization responses to malicious sites.",
+      "distractors": [
+        {
+          "text": "It forces clients to use less secure authentication methods.",
+          "misconception": "Targets [unrelated impact]: Wildcard URIs don't directly force clients to use weaker authentication."
+        },
+        {
+          "text": "It increases the likelihood of authorization codes being leaked via Referer headers.",
+          "misconception": "Targets [attack vector confusion]: Referer header leakage is a separate issue from URI validation flaws."
+        },
+        {
+          "text": "It requires the authorization server to store more complex client configurations.",
+          "misconception": "Targets [operational burden vs. security risk]: While it increases complexity, the primary risk is security vulnerability, not just operational burden."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Improperly implemented wildcard matching in redirection URI validation can allow attackers to register malicious URIs that appear valid. This enables attacks where authorization codes or tokens are sent to attacker-controlled endpoints, bypassing security checks because the authorization server incorrectly trusts the malicious URI pattern.",
+        "distractor_analysis": "The first distractor misattributes the impact on authentication methods. The second confuses the issue with Referer header leakage. The third focuses on operational complexity rather than the direct security risk.",
+        "analogy": "It's like a bouncer accepting a vague description ('anyone wearing a hat') instead of a specific ID, allowing unauthorized individuals to enter."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "OAUTH_REDIRECT_URI",
+        "OAUTH_VALIDATION_FLAWS"
+      ]
+    },
+    {
+      "question_text": "What is the purpose of 'audience restriction' for access tokens, as described in RFC 9700?",
+      "correct_answer": "To limit the scope of an access token to a specific resource server, preventing its misuse on unintended servers.",
+      "distractors": [
+        {
+          "text": "To ensure the access token is only usable by the client that requested it.",
+          "misconception": "Targets [sender vs. audience restriction]: This describes sender constraint, not audience restriction."
+        },
+        {
+          "text": "To automatically renew access tokens without requiring re-authentication.",
+          "misconception": "Targets [token lifecycle confusion]: Audience restriction is about scope, not renewal."
+        },
+        {
+          "text": "To encrypt the access token's payload for confidentiality.",
+          "misconception": "Targets [encryption vs. scope]: Audience restriction is about limiting where the token is valid, not encrypting its contents."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Audience restriction ensures that an access token is valid only for a specific resource server (the 'audience'). This is achieved by the authorization server embedding the intended audience identifier (e.g., URL or certificate fingerprint) into the token. The resource server then verifies this identifier, preventing the token's misuse if it's leaked or phished for use with a different server.",
+        "distractor_analysis": "The first distractor describes sender constraint. The second relates to token renewal. The third confuses audience restriction with token encryption.",
+        "analogy": "An audience-restricted access token is like a ticket for a specific concert venue; it's valid for that venue but useless for any other event or location."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "OAUTH_AUDIENCE_RESTRICTION",
+        "OAUTH_ACCESS_TOKENS"
+      ]
+    },
+    {
+      "question_text": "According to RFC 9700, what is the primary reason to avoid the OAuth 2.0 Implicit Grant?",
+      "correct_answer": "Access tokens issued directly in the authorization response are vulnerable to leakage via browser history and Referer headers.",
+      "distractors": [
+        {
+          "text": "It does not support the use of the 'state' parameter for CSRF protection.",
+          "misconception": "Targets [parameter support confusion]: The Implicit Grant can and should use the 'state' parameter."
+        },
+        {
+          "text": "It requires clients to implement PKCE, which is overly complex.",
+          "misconception": "Targets [PKCE applicability]: PKCE is primarily for the Authorization Code Grant, not a requirement for Implicit Grant."
+        },
+        {
+          "text": "It exposes authorization codes to attackers through redirect URI manipulation.",
+          "misconception": "Targets [credential type confusion]: The Implicit Grant exposes access tokens, not authorization codes, directly in the response."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The Implicit Grant's design, which returns access tokens directly in the authorization response's URL fragment, makes these tokens susceptible to leakage through browser history or Referer headers. This bypasses the more secure token endpoint exchange mechanism used by the Authorization Code Grant, increasing the risk of token theft and replay.",
+        "distractor_analysis": "The first distractor incorrectly states 'state' parameter is unsupported. The second wrongly links PKCE complexity to the Implicit Grant. The third confuses the leaked credential type (access token vs. authorization code).",
+        "analogy": "It's like writing your access token on a postcard and mailing it, making it easily readable by anyone who intercepts it, rather than sending it securely in a sealed envelope via a trusted courier."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "OAUTH_IMPLICIT_GRANT",
+        "OAUTH_TOKEN_LEAKAGE"
+      ]
+    },
+    {
+      "question_text": "What is the security risk of an authorization server using HTTP status code 307 for redirects after a user authenticates, as per RFC 9700?",
+      "correct_answer": "User credentials submitted via POST can be forwarded to the client, potentially exposing them to a malicious client.",
+      "distractors": [
+        {
+          "text": "It prevents the client from receiving the authorization code securely.",
+          "misconception": "Targets [redirect behavior confusion]: The issue is credential forwarding, not blocking the authorization code."
+        },
+        {
+          "text": "It forces the use of the Implicit Grant, which is less secure.",
+          "misconception": "Targets [grant type association]: The redirect status code is independent of the grant type used."
+        },
+        {
+          "text": "It leads to CSRF attacks by allowing attackers to manipulate the redirect URI.",
+          "misconception": "Targets [attack vector confusion]: CSRF is related to state and redirect URI validation, not the HTTP status code's credential handling."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "HTTP status code 307 (Temporary Redirect) instructs the user agent to resend the original request method (e.g., POST) to the new location. If credentials were submitted via POST to the authorization server, the 307 redirect can cause the user agent to forward these credentials to the client, potentially exposing them if the client is malicious.",
+        "distractor_analysis": "The first distractor misrepresents the impact on authorization code delivery. The second incorrectly links the status code to grant type choice. The third confuses the issue with CSRF vulnerabilities.",
+        "analogy": "It's like asking a courier to deliver a package (credentials) to a new address, but the courier is instructed to hand the package directly to anyone waiting at the new address, even if that person is not the intended recipient."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "HTTP_REDIRECTS",
+        "OAUTH_CREDENTIAL_EXPOSURE"
+      ]
+    },
+    {
+      "question_text": "According to RFC 9700, what is the recommended approach for authorization servers to prevent Mix-Up attacks when clients interact with multiple authorization servers?",
+      "correct_answer": "Clients MUST use distinct redirection URIs for each issuer, or the authorization server MUST provide an issuer identifier in the response.",
+      "distractors": [
+        {
+          "text": "Clients should only interact with a single, pre-registered authorization server.",
+          "misconception": "Targets [scenario limitation]: This ignores the reality of clients interacting with multiple IdPs."
+        },
+        {
+          "text": "Authorization servers should always use the Implicit Grant to prevent mix-ups.",
+          "misconception": "Targets [grant type irrelevance]: The grant type is not the primary defense against mix-up attacks."
+        },
+        {
+          "text": "Clients should embed the access token directly in the 'state' parameter.",
+          "misconception": "Targets [parameter misuse]: 'state' is for CSRF protection, not for embedding tokens or issuer identifiers."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Mix-Up attacks occur when a client incorrectly associates an authorization response from one authorization server with a session intended for another. Using distinct redirection URIs per issuer or having the authorization server explicitly provide its issuer identifier in the response allows the client to correctly validate the origin of the response, preventing the mix-up.",
+        "distractor_analysis": "The first distractor imposes an unrealistic limitation. The second incorrectly links grant types to mix-up prevention. The third suggests a misuse of the 'state' parameter.",
+        "analogy": "It's like having separate mailboxes for different delivery services; you ensure mail from the postal service goes to the postal mailbox, and mail from a private courier goes to their designated drop-off, preventing confusion."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "OAUTH_MIXUP_ATTACK",
+        "OAUTH_REDIRECT_URI",
+        "OAUTH_ISSUER_IDENTIFICATION"
+      ]
+    },
+    {
+      "question_text": "What is the security benefit of using OAuth Authorization Server Metadata (RFC 8414) as recommended by RFC 9700?",
+      "correct_answer": "It helps clients automatically configure security features and endpoint URLs, reducing misconfigurations and improving cryptographic agility.",
+      "distractors": [
+        {
+          "text": "It encrypts all communication between the client and authorization server.",
+          "misconception": "Targets [functionality confusion]: Metadata describes security features; it doesn't encrypt communication itself (TLS does that)."
+        },
+        {
+          "text": "It eliminates the need for PKCE by providing pre-shared secrets.",
+          "misconception": "Targets [PKCE irrelevance]: Metadata supports PKCE discovery but doesn't eliminate its need."
+        },
+        {
+          "text": "It directly prevents Cross-Site Request Forgery (CSRF) attacks.",
+          "misconception": "Targets [attack prevention confusion]: While it aids security, it doesn't directly prevent CSRF; 'state' or PKCE does."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Authorization Server Metadata (RFC 8414) provides a standardized way for clients to discover an authorization server's capabilities, including supported security features (like PKCE methods), endpoint URLs, and cryptographic key locations. This automation reduces manual configuration errors and allows clients to adapt to security changes, enhancing overall security posture.",
+        "distractor_analysis": "The first distractor misattributes encryption to metadata. The second incorrectly claims it negates the need for PKCE. The third overstates its role in CSRF prevention.",
+        "analogy": "It's like a standardized instruction manual for a device, telling you exactly which ports to use, what safety features are enabled, and how to update its firmware, ensuring correct and secure setup."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "OAUTH_METADATA",
+        "OAUTH_CONFIGURATION",
+        "RFC8414"
+      ]
+    },
+    {
+      "question_text": "According to NIST SP 800-63B-4, what is the primary risk of clients not properly validating the sender origin of in-browser messages (e.g., postMessage)?",
+      "correct_answer": "Malicious origins can inject unauthorized messages, potentially leading to authorization code or token theft.",
+      "distractors": [
+        {
+          "text": "It causes the authorization server to use insecure redirect URIs.",
+          "misconception": "Targets [unrelated vulnerability]: Sender origin validation is about in-browser messages, not redirect URIs."
+        },
+        {
+          "text": "It prevents the client from using the 'state' parameter effectively.",
+          "misconception": "Targets [parameter interaction confusion]: Sender origin validation is separate from the 'state' parameter's function."
+        },
+        {
+          "text": "It leads to the exposure of access tokens via Referer headers.",
+          "misconception": "Targets [communication channel confusion]: Referer headers are related to HTTP requests, not postMessage content."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "When a client uses postMessage to receive data, failing to validate the sender's origin allows any malicious script to send a message. This can be exploited to inject fake authorization codes or tokens, mimicking a legitimate response and potentially leading to session hijacking or unauthorized access.",
+        "distractor_analysis": "The first distractor incorrectly links sender validation to redirect URIs. The second misrepresents the relationship with the 'state' parameter. The third confuses the communication channel and attack vector.",
+        "analogy": "It's like a receptionist accepting messages from anyone, allowing a scammer to slip a fake delivery slip (malicious message) under the door, which the recipient then acts upon."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "IN_BROWSER_COMMUNICATION",
+        "OAUTH_MESSAGE_INJECTION"
+      ]
+    },
+    {
+      "question_text": "What is the purpose of 'refresh token rotation' as a security measure for public clients, according to RFC 9700?",
+      "correct_answer": "To invalidate a compromised refresh token upon its first detected misuse, thereby stopping the attack.",
+      "distractors": [
+        {
+          "text": "To automatically renew access tokens without client interaction.",
+          "misconception": "Targets [renewal mechanism confusion]: Rotation is about invalidating compromised tokens, not automatic renewal."
+        },
+        {
+          "text": "To encrypt refresh tokens, preventing their leakage during transit.",
+          "misconception": "Targets [encryption vs. rotation]: Encryption protects against transit leakage; rotation addresses misuse of already leaked tokens."
+        },
+        {
+          "text": "To bind refresh tokens to specific client instances using PKCE.",
+          "misconception": "Targets [binding mechanism confusion]: PKCE is for authorization codes; refresh token binding uses other methods or rotation."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Refresh token rotation involves issuing a new refresh token each time one is used to obtain an access token. The authorization server invalidates the previous token. If an attacker uses a stolen refresh token, the legitimate client will eventually use its own valid token, triggering an invalidation event that stops the attack by revoking the compromised token.",
+        "distractor_analysis": "The first distractor misrepresents rotation as automatic renewal. The second confuses rotation with encryption. The third incorrectly links it to PKCE binding.",
+        "analogy": "It's like using a unique, single-use key for each entry into a secure area. If one key is compromised, the next time the legitimate user tries to use their key, the system detects the mismatch and invalidates the compromised key."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "defense",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "OAUTH_REFRESH_TOKENS",
+        "OAUTH_ROTATION",
+        "OAUTH_PUBLIC_CLIENTS"
+      ]
+    },
+    {
+      "question_text": "According to NIST SP 800-63B-4, what is the primary security benefit of using the Authorization Code Grant with PKCE (Proof Key for Code Exchange) compared to the Implicit Grant?",
+      "correct_answer": "It prevents authorization code injection and token replay attacks by binding the code to the client instance and transaction.",
+      "distractors": [
+        {
+          "text": "It eliminates the need for the 'state' parameter in CSRF protection.",
+          "misconception": "Targets [parameter interaction confusion]: PKCE can supplement or replace 'state' for code injection, but 'state' is still vital for CSRF in general."
+        },
+        {
+          "text": "It ensures access tokens are always sender-constrained by default.",
+          "misconception": "Targets [token property confusion]: PKCE secures the code exchange; sender constraint applies to the resulting access token and is a separate feature."
+        },
+        {
+          "text": "It allows clients to use the Resource Owner Password Credentials grant securely.",
+          "misconception": "Targets [grant type association]: PKCE is for the Authorization Code Grant, not the insecure Password Credentials Grant."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "PKCE adds a dynamic secret ('code_verifier') generated by the client for each authorization request, which is then transformed into a 'code_challenge' sent to the authorization server. The server binds this challenge to the authorization code. When the client redeems the code, it must provide the original 'code_verifier'. This binding prevents attackers from injecting stolen codes or replaying them, as they won't have the correct verifier.",
+        "distractor_analysis": "The first distractor overstates PKCE's role in CSRF, as 'state' is still relevant. The second incorrectly attributes sender constraint to PKCE. The third wrongly associates PKCE with the Password Credentials Grant.",
+        "analogy": "PKCE is like a unique, temporary keycard (code_verifier) that you must use to unlock a specific door (authorization code) after receiving it, ensuring only you can use that keycard to open that particular door."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "comparison",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "OAUTH_PKCE",
+        "OAUTH_AUTH_CODE_GRANT",
+        "OAUTH_IMPLICIT_GRANT"
+      ]
+    },
+    {
+      "question_text": "What is the security risk if an authorization server uses HTTP status code 307 for redirects after user authentication, as per RFC 9700?",
+      "correct_answer": "User credentials submitted via POST can be forwarded to the client, potentially exposing them to a malicious client.",
+      "distractors": [
+        {
+          "text": "It prevents the client from receiving the authorization code securely.",
+          "misconception": "Targets [redirect behavior confusion]: The issue is credential forwarding, not blocking the authorization code."
+        },
+        {
+          "text": "It forces the use of the Implicit Grant, which is less secure.",
+          "misconception": "Targets [grant type association]: The redirect status code is independent of the grant type used."
+        },
+        {
+          "text": "It leads to CSRF attacks by allowing attackers to manipulate the redirect URI.",
+          "misconception": "Targets [attack vector confusion]: CSRF is related to state and redirect URI validation, not the HTTP status code's credential handling."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "HTTP status code 307 (Temporary Redirect) instructs the user agent to resend the original request method (e.g., POST) to the new location. If credentials were submitted via POST to the authorization server, the 307 redirect can cause the user agent to forward these credentials to the client, potentially exposing them if the client is malicious.",
+        "distractor_analysis": "The first distractor misrepresents the impact on authorization code delivery. The second incorrectly links the status code to grant type choice. The third confuses the issue with CSRF vulnerabilities.",
+        "analogy": "It's like asking a courier to deliver a package (credentials) to a new address, but the courier is instructed to hand the package directly to anyone waiting at the new address, even if that person is not the intended recipient."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "HTTP_REDIRECTS",
+        "OAUTH_CREDENTIAL_EXPOSURE"
+      ]
+    },
+    {
+      "question_text": "According to NIST SP 800-63B-4, what is the primary security benefit of using the Authorization Code Grant with PKCE (Proof Key for Code Exchange) compared to the Implicit Grant?",
+      "correct_answer": "It prevents authorization code injection and token replay attacks by binding the code to the client instance and transaction.",
+      "distractors": [
+        {
+          "text": "It eliminates the need for the 'state' parameter in CSRF protection.",
+          "misconception": "Targets [parameter interaction confusion]: PKCE can supplement or replace 'state' for code injection, but 'state' is still vital for CSRF in general."
+        },
+        {
+          "text": "It ensures access tokens are always sender-constrained by default.",
+          "misconception": "Targets [token property confusion]: PKCE secures the code exchange; sender constraint applies to the resulting access token and is a separate feature."
+        },
+        {
+          "text": "It allows clients to use the Resource Owner Password Credentials grant securely.",
+          "misconception": "Targets [grant type association]: PKCE is for the Authorization Code Grant, not the insecure Password Credentials Grant."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "PKCE adds a dynamic secret ('code_verifier') generated by the client for each authorization request, which is then transformed into a 'code_challenge' sent to the authorization server. The server binds this challenge to the authorization code. When the client redeems the code, it must provide the original 'code_verifier'. This binding prevents attackers from injecting stolen codes or replaying them, as they won't have the correct verifier.",
+        "distractor_analysis": "The first distractor overstates PKCE's role in CSRF, as 'state' is still relevant. The second incorrectly attributes sender constraint to PKCE. The third wrongly associates PKCE with the Password Credentials Grant.",
+        "analogy": "PKCE is like a unique, temporary keycard (code_verifier) that you must use to unlock a specific door (authorization code) after receiving it, ensuring only you can use that keycard to open that particular door."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "comparison",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "OAUTH_PKCE",
+        "OAUTH_AUTH_CODE_GRANT",
+        "OAUTH_IMPLICIT_GRANT"
+      ]
+    },
+    {
+      "question_text": "What is the primary security risk of an authorization server allowing clients to register redirection URIs with wildcard characters, as per NIST SP 800-63B-4?",
+      "correct_answer": "Attackers can exploit improperly matched patterns to redirect authorization responses to malicious sites.",
+      "distractors": [
+        {
+          "text": "It forces clients to use less secure authentication methods.",
+          "misconception": "Targets [unrelated impact]: Wildcard URIs don't directly force clients to use weaker authentication."
+        },
+        {
+          "text": "It increases the likelihood of authorization codes being leaked via Referer headers.",
+          "misconception": "Targets [attack vector confusion]: Referer header leakage is a separate issue from URI validation flaws."
+        },
+        {
+          "text": "It requires the authorization server to store more complex client configurations.",
+          "misconception": "Targets [operational burden vs. security risk]: While it increases complexity, the primary risk is security vulnerability, not just operational burden."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Improperly implemented wildcard matching in redirection URI validation can allow attackers to register malicious URIs that appear valid. This enables attacks where authorization codes or tokens are sent to attacker-controlled endpoints, bypassing security checks because the authorization server incorrectly trusts the malicious URI pattern.",
+        "distractor_analysis": "The first distractor misattributes the impact on authentication methods. The second confuses the issue with Referer header leakage. The third focuses on operational complexity rather than the direct security risk.",
+        "analogy": "It's like a security guard accepting a vague description ('anyone wearing a hat') instead of a specific photo ID, allowing unauthorized individuals to enter."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "OAUTH_REDIRECT_URI",
+        "OAUTH_VALIDATION_FLAWS"
+      ]
+    },
+    {
+      "question_text": "According to RFC 9700, what is the purpose of 'audience restriction' for access tokens?",
+      "correct_answer": "To limit the scope of an access token to a specific resource server, preventing its misuse on unintended servers.",
+      "distractors": [
+        {
+          "text": "To ensure the access token is only usable by the client that requested it.",
+          "misconception": "Targets [sender vs. audience restriction]: This describes sender constraint, not audience restriction."
+        },
+        {
+          "text": "To automatically renew access tokens without requiring re-authentication.",
+          "misconception": "Targets [token lifecycle confusion]: Audience restriction is about scope, not renewal."
+        },
+        {
+          "text": "To encrypt the access token's payload for confidentiality.",
+          "misconception": "Targets [encryption vs. scope]: Audience restriction is about limiting where the token is valid, not encrypting its contents."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Audience restriction ensures that an access token is valid only for a specific resource server (the 'audience'). This is achieved by the authorization server embedding the intended audience identifier (e.g., URL or certificate fingerprint) into the token. The resource server then verifies this identifier, preventing the token's misuse if it's leaked or phished for use with a different server.",
+        "distractor_analysis": "The first distractor describes sender constraint. The second relates to token renewal. The third confuses audience restriction with token encryption.",
+        "analogy": "An audience-restricted access token is like a ticket for a specific concert venue; it's valid for that venue but useless for any other event or location."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "OAUTH_AUDIENCE_RESTRICTION",
+        "OAUTH_ACCESS_TOKENS"
+      ]
+    },
+    {
+      "question_text": "What is the primary security risk of an authorization server using HTTP status code 307 for redirects after user authentication, as per RFC 9700?",
+      "correct_answer": "User credentials submitted via POST can be forwarded to the client, potentially exposing them to a malicious client.",
+      "distractors": [
+        {
+          "text": "It prevents the client from receiving the authorization code securely.",
+          "misconception": "Targets [redirect behavior confusion]: The issue is credential forwarding, not blocking the authorization code."
+        },
+        {
+          "text": "It forces the use of the Implicit Grant, which is less secure.",
+          "misconception": "Targets [grant type association]: The redirect status code is independent of the grant type used."
+        },
+        {
+          "text": "It leads to CSRF attacks by allowing attackers to manipulate the redirect URI.",
+          "misconception": "Targets [attack vector confusion]: CSRF is related to state and redirect URI validation, not the HTTP status code's credential handling."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "HTTP status code 307 (Temporary Redirect) instructs the user agent to resend the original request method (e.g., POST) to the new location. If credentials were submitted via POST to the authorization server, the 307 redirect can cause the user agent to forward these credentials to the client, potentially exposing them if the client is malicious.",
+        "distractor_analysis": "The first distractor misrepresents the impact on authorization code delivery. The second incorrectly links the status code to grant type choice. The third confuses the issue with CSRF vulnerabilities.",
+        "analogy": "It's like asking a courier to deliver a package (credentials) to a new address, but the courier is instructed to hand the package directly to anyone waiting at the new address, even if that person is not the intended recipient."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "HTTP_REDIRECTS",
+        "OAUTH_CREDENTIAL_EXPOSURE"
+      ]
+    },
+    {
+      "question_text": "According to RFC 9700, what is the primary security risk of an authorization server allowing clients to register redirection URIs with wildcard characters?",
+      "correct_answer": "Attackers can exploit improperly matched patterns to redirect authorization responses to malicious sites.",
+      "distractors": [
+        {
+          "text": "It forces clients to use less secure authentication methods.",
+          "misconception": "Targets [unrelated impact]: Wildcard URIs don't directly force clients to use weaker authentication."
+        },
+        {
+          "text": "It increases the likelihood of authorization codes being leaked via Referer headers.",
+          "misconception": "Targets [attack vector confusion]: Referer header leakage is a separate issue from URI validation flaws."
+        },
+        {
+          "text": "It requires the authorization server to store more complex client configurations.",
+          "misconception": "Targets [operational burden vs. security risk]: While it increases complexity, the primary risk is security vulnerability, not just operational burden."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Improperly implemented wildcard matching in redirection URI validation can allow attackers to register malicious URIs that appear valid. This enables attacks where authorization codes or tokens are sent to attacker-controlled endpoints, bypassing security checks because the authorization server incorrectly trusts the malicious URI pattern.",
+        "distractor_analysis": "The first distractor misattributes the impact on authentication methods. The second confuses the issue with Referer header leakage. The third focuses on operational complexity rather than the direct security risk.",
+        "analogy": "It's like a security guard accepting a vague description ('anyone wearing a hat') instead of a specific photo ID, allowing unauthorized individuals to enter."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "OAUTH_REDIRECT_URI",
+        "OAUTH_VALIDATION_FLAWS"
+      ]
+    },
+    {
+      "question_text": "What is the purpose of 'sender-constrained access tokens' as described in RFC 9700 and RFC 8705?",
+      "correct_answer": "To bind an access token to a specific client instance, preventing its misuse if stolen by requiring proof of possession.",
+      "distractors": [
+        {
+          "text": "To ensure access tokens are only valid for a single resource server.",
+          "misconception": "Targets [audience vs. sender restriction]: This describes audience restriction, not sender constraint."
+        },
+        {
+          "text": "To automatically rotate refresh tokens for improved security.",
+          "misconception": "Targets [token type confusion]: Rotation is a separate security mechanism for refresh tokens."
+        },
+        {
+          "text": "To encrypt the access token itself, making it unreadable if intercepted.",
+          "misconception": "Targets [encryption vs. binding]: Sender constraint is about binding, not encrypting the token's content."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Sender-constrained access tokens, often implemented using mutual TLS (RFC 8705) or DPoP (RFC 9449), cryptographically bind the token to the client instance that requested it. This means that even if an attacker steals the token, they cannot use it without also possessing the client's secret key or certificate, thus preventing replay attacks.",
+        "distractor_analysis": "The first distractor describes audience restriction. The second relates to refresh token rotation. The third misinterprets sender constraint as token encryption.",
+        "analogy": "Sender constraint is like a VIP pass that only works if the holder also presents a specific, unforgeable ID card issued at the same time, proving they are the legitimate owner."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "defense",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "OAUTH_SENDER_CONSTRAINT",
+        "OAUTH_ACCESS_TOKENS",
+        "RFC8705"
+      ]
+    },
+    {
+      "question_text": "According to NIST SP 800-63B-4, what is the primary security benefit of using the Authorization Code Grant with PKCE (Proof Key for Code Exchange) compared to the Implicit Grant?",
+      "correct_answer": "It prevents authorization code injection and token replay attacks by binding the code to the client instance and transaction.",
+      "distractors": [
+        {
+          "text": "It eliminates the need for the 'state' parameter in CSRF protection.",
+          "misconception": "Targets [parameter interaction confusion]: PKCE can supplement or replace 'state' for code injection, but 'state' is still vital for CSRF in general."
+        },
+        {
+          "text": "It ensures access tokens are always sender-constrained by default.",
+          "misconception": "Targets [token property confusion]: PKCE secures the code exchange; sender constraint applies to the resulting access token and is a separate feature."
+        },
+        {
+          "text": "It allows clients to use the Resource Owner Password Credentials grant securely.",
+          "misconception": "Targets [grant type association]: PKCE is for the Authorization Code Grant, not the insecure Password Credentials Grant."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "PKCE adds a dynamic secret ('code_verifier') generated by the client for each authorization request, which is then transformed into a 'code_challenge' sent to the authorization server. The server binds this challenge to the authorization code. When the client redeems the code, it must provide the original 'code_verifier'. This binding prevents attackers from injecting stolen codes or replaying them, as they won't have the correct verifier.",
+        "distractor_analysis": "The first distractor overstates PKCE's role in CSRF, as 'state' is still relevant. The second incorrectly attributes sender constraint to PKCE. The third wrongly associates PKCE with the Password Credentials Grant.",
+        "analogy": "PKCE is like a unique, temporary keycard (code_verifier) that you must use to unlock a specific door (authorization code) after receiving it, ensuring only you can use that keycard to open that particular door."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "comparison",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "OAUTH_PKCE",
+        "OAUTH_AUTH_CODE_GRANT",
+        "OAUTH_IMPLICIT_GRANT"
+      ]
+    },
+    {
+      "question_text": "What is the primary security risk of an authorization server using HTTP status code 307 for redirects after user authentication, as per RFC 9700?",
+      "correct_answer": "User credentials submitted via POST can be forwarded to the client, potentially exposing them to a malicious client.",
+      "distractors": [
+        {
+          "text": "It prevents the client from receiving the authorization code securely.",
+          "misconception": "Targets [redirect behavior confusion]: The issue is credential forwarding, not blocking the authorization code."
+        },
+        {
+          "text": "It forces the use of the Implicit Grant, which is less secure.",
+          "misconception": "Targets [grant type association]: The redirect status code is independent of the grant type used."
+        },
+        {
+          "text": "It leads to CSRF attacks by allowing attackers to manipulate the redirect URI.",
+          "misconception": "Targets [attack vector confusion]: CSRF is related to state and redirect URI validation, not the HTTP status code's credential handling."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "HTTP status code 307 (Temporary Redirect) instructs the user agent to resend the original request method (e.g., POST) to the new location. If credentials were submitted via POST to the authorization server, the 307 redirect can cause the user agent to forward these credentials to the client, potentially exposing them if the client is malicious.",
+        "distractor_analysis": "The first distractor misrepresents the impact on authorization code delivery. The second incorrectly links the status code to grant type choice. The third confuses the issue with CSRF vulnerabilities.",
+        "analogy": "It's like asking a courier to deliver a package (credentials) to a new address, but the courier is instructed to hand the package directly to anyone waiting at the new address, even if that person is not the intended recipient."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "HTTP_REDIRECTS",
+        "OAUTH_CREDENTIAL_EXPOSURE"
+      ]
+    },
+    {
+      "question_text": "According to RFC 9700, what is the primary security risk of an authorization server allowing clients to register redirection URIs with wildcard characters?",
+      "correct_answer": "Attackers can exploit improperly matched patterns to redirect authorization responses to malicious sites.",
+      "distractors": [
+        {
+          "text": "It forces clients to use less secure authentication methods.",
+          "misconception": "Targets [unrelated impact]: Wildcard URIs don't directly force clients to use weaker authentication."
+        },
+        {
+          "text": "It increases the likelihood of authorization codes being leaked via Referer headers.",
+          "misconception": "Targets [attack vector confusion]: Referer header leakage is a separate issue from URI validation flaws."
+        },
+        {
+          "text": "It requires the authorization server to store more complex client configurations.",
+          "misconception": "Targets [operational burden vs. security risk]: While it increases complexity, the primary risk is security vulnerability, not just operational burden."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Improperly implemented wildcard matching in redirection URI validation can allow attackers to register malicious URIs that appear valid. This enables attacks where authorization codes or tokens are sent to attacker-controlled endpoints, bypassing security checks because the authorization server incorrectly trusts the malicious URI pattern.",
+        "distractor_analysis": "The first distractor misattributes the impact on authentication methods. The second confuses the issue with Referer header leakage. The third focuses on operational complexity rather than the direct security risk.",
+        "analogy": "It's like a security guard accepting a vague description ('anyone wearing a hat') instead of a specific photo ID, allowing unauthorized individuals to enter."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "OAUTH_REDIRECT_URI",
+        "OAUTH_VALIDATION_FLAWS"
+      ]
+    },
+    {
+      "question_text": "What is the purpose of 'sender-constrained access tokens' as described in RFC 9700 and RFC 8705?",
+      "correct_answer": "To bind an access token to a specific client instance, preventing its misuse if stolen by requiring proof of possession.",
+      "distractors": [
+        {
+          "text": "To ensure access tokens are only valid for a single resource server.",
+          "misconception": "Targets [audience vs. sender restriction]: This describes audience restriction, not sender constraint."
+        },
+        {
+          "text": "To automatically rotate refresh tokens for improved security.",
+          "misconception": "Targets [token type confusion]: Rotation is a separate security mechanism for refresh tokens."
+        },
+        {
+          "text": "To encrypt the access token itself, making it unreadable if intercepted.",
+          "misconception": "Targets [encryption vs. binding]: Sender constraint is about binding, not encrypting the token's content."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Sender-constrained access tokens, often implemented using mutual TLS (RFC 8705) or DPoP (RFC 9449), cryptographically bind the token to the client instance that requested it. This means that even if an attacker steals the token, they cannot use it without also possessing the client's secret key or certificate, thus preventing replay attacks.",
+        "distractor_analysis": "The first distractor describes audience restriction. The second relates to refresh token rotation. The third misinterprets sender constraint as token encryption.",
+        "analogy": "Sender constraint is like a VIP pass that only works if the holder also presents a specific, unforgeable ID card issued at the same time, proving they are the legitimate owner."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "defense",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "OAUTH_SENDER_CONSTRAINT",
+        "OAUTH_ACCESS_TOKENS",
+        "RFC8705"
+      ]
+    },
+    {
+      "question_text": "According to NIST SP 800-63B-4, what is the primary security benefit of using the Authorization Code Grant with PKCE (Proof Key for Code Exchange) compared to the Implicit Grant?",
+      "correct_answer": "It prevents authorization code injection and token replay attacks by binding the code to the client instance and transaction.",
+      "distractors": [
+        {
+          "text": "It eliminates the need for the 'state' parameter in CSRF protection.",
+          "misconception": "Targets [parameter interaction confusion]: PKCE can supplement or replace 'state' for code injection, but 'state' is still vital for CSRF in general."
+        },
+        {
+          "text": "It ensures access tokens are always sender-constrained by default.",
+          "misconception": "Targets [token property confusion]: PKCE secures the code exchange; sender constraint applies to the resulting access token and is a separate feature."
+        },
+        {
+          "text": "It allows clients to use the Resource Owner Password Credentials grant securely.",
+          "misconception": "Targets [grant type association]: PKCE is for the Authorization Code Grant, not the insecure Password Credentials Grant."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "PKCE adds a dynamic secret ('code_verifier') generated by the client for each authorization request, which is then transformed into a 'code_challenge' sent to the authorization server. The server binds this challenge to the authorization code. When the client redeems the code, it must provide the original 'code_verifier'. This binding prevents attackers from injecting stolen codes or replaying them, as they won't have the correct verifier.",
+        "distractor_analysis": "The first distractor overstates PKCE's role in CSRF, as 'state' is still relevant. The second incorrectly attributes sender constraint to PKCE. The third wrongly associates PKCE with the Password Credentials Grant.",
+        "analogy": "PKCE is like a unique, temporary keycard (code_verifier) that you must use to unlock a specific door (authorization code) after receiving it, ensuring only you can use that keycard to open that particular door."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "comparison",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "OAUTH_PKCE",
+        "OAUTH_AUTH_CODE_GRANT",
+        "OAUTH_IMPLICIT_GRANT"
+      ]
+    },
+    {
+      "question_text": "What is the primary security risk of an authorization server using HTTP status code 307 for redirects after user authentication, as per RFC 9700?",
+      "correct_answer": "User credentials submitted via POST can be forwarded to the client, potentially exposing them to a malicious client.",
+      "distractors": [
+        {
+          "text": "It prevents the client from receiving the authorization code securely.",
+          "misconception": "Targets [redirect behavior confusion]: The issue is credential forwarding, not blocking the authorization code."
+        },
+        {
+          "text": "It forces the use of the Implicit Grant, which is less secure.",
+          "misconception": "Targets [grant type association]: The redirect status code is independent of the grant type used."
+        },
+        {
+          "text": "It leads to CSRF attacks by allowing attackers to manipulate the redirect URI.",
+          "misconception": "Targets [attack vector confusion]: CSRF is related to state and redirect URI validation, not the HTTP status code's credential handling."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "HTTP status code 307 (Temporary Redirect) instructs the user agent to resend the original request method (e.g., POST) to the new location. If credentials were submitted via POST to the authorization server, the 307 redirect can cause the user agent to forward these credentials to the client, potentially exposing them if the client is malicious.",
+        "distractor_analysis": "The first distractor misrepresents the impact on authorization code delivery. The second incorrectly links the status code to grant type choice. The third confuses the issue with CSRF vulnerabilities.",
+        "analogy": "It's like asking a courier to deliver a package (credentials) to a new address, but the courier is instructed to hand the package directly to anyone waiting at the new address, even if that person is not the intended recipient."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "HTTP_REDIRECTS",
+        "OAUTH_CREDENTIAL_EXPOSURE"
+      ]
+    },
+    {
+      "question_text": "According to RFC 9700, what is the primary security risk of an authorization server allowing clients to register redirection URIs with wildcard characters?",
+      "correct_answer": "Attackers can exploit improperly matched patterns to redirect authorization responses to malicious sites.",
+      "distractors": [
+        {
+          "text": "It forces clients to use less secure authentication methods.",
+          "misconception": "Targets [unrelated impact]: Wildcard URIs don't directly force clients to use weaker authentication."
+        },
+        {
+          "text": "It increases the likelihood of authorization codes being leaked via Referer headers.",
+          "misconception": "Targets [attack vector confusion]: Referer header leakage is a separate issue from URI validation flaws."
+        },
+        {
+          "text": "It requires the authorization server to store more complex client configurations.",
+          "misconception": "Targets [operational burden vs. security risk]: While it increases complexity, the primary risk is security vulnerability, not just operational burden."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Improperly implemented wildcard matching in redirection URI validation can allow attackers to register malicious URIs that appear valid. This enables attacks where authorization codes or tokens are sent to attacker-controlled endpoints, bypassing security checks because the authorization server incorrectly trusts the malicious URI pattern.",
+        "distractor_analysis": "The first distractor misattributes the impact on authentication methods. The second confuses the issue with Referer header leakage. The third focuses on operational complexity rather than the direct security risk.",
+        "analogy": "It's like a security guard accepting a vague description ('anyone wearing a hat') instead of a specific photo ID, allowing unauthorized individuals to enter."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "OAUTH_REDIRECT_URI",
+        "OAUTH_VALIDATION_FLAWS"
+      ]
+    },
+    {
+      "question_text": "What is the purpose of 'sender-constrained access tokens' as described in RFC 9700 and RFC 8705?",
+      "correct_answer": "To bind an access token to a specific client instance, preventing its misuse if stolen by requiring proof of possession.",
+      "distractors": [
+        {
+          "text": "To ensure access tokens are only valid for a single resource server.",
+          "misconception": "Targets [audience vs. sender restriction]: This describes audience restriction, not sender constraint."
+        },
+        {
+          "text": "To automatically rotate refresh tokens for improved security.",
+          "misconception": "Targets [token type confusion]: Rotation is a separate security mechanism for refresh tokens."
+        },
+        {
+          "text": "To encrypt the access token itself, making it unreadable if intercepted.",
+          "misconception": "Targets [encryption vs. binding]: Sender constraint is about binding, not encrypting the token's content."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Sender-constrained access tokens, often implemented using mutual TLS (RFC 8705) or DPoP (RFC 9449), cryptographically bind the token to the client instance that requested it. This means that even if an attacker steals the token, they cannot use it without also possessing the client's secret key or certificate, thus preventing replay attacks.",
+        "distractor_analysis": "The first distractor describes audience restriction. The second relates to refresh token rotation. The third misinterprets sender constraint as token encryption.",
+        "analogy": "Sender constraint is like a VIP pass that only works if the holder also presents a specific, unforgeable ID card issued at the same time, proving they are the legitimate owner."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "defense",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "OAUTH_SENDER_CONSTRAINT",
+        "OAUTH_ACCESS_TOKENS",
+        "RFC8705"
+      ]
+    },
+    {
+      "question_text": "According to NIST SP 800-63B-4, what is the primary security benefit of using the Authorization Code Grant with PKCE (Proof Key for Code Exchange) compared to the Implicit Grant?",
+      "correct_answer": "It prevents authorization code injection and token replay attacks by binding the code to the client instance and transaction.",
+      "distractors": [
+        {
+          "text": "It eliminates the need for the 'state' parameter in CSRF protection.",
+          "misconception": "Targets [parameter interaction confusion]: PKCE can supplement or replace 'state' for code injection, but 'state' is still vital for CSRF in general."
+        },
+        {
+          "text": "It ensures access tokens are always sender-constrained by default.",
+          "misconception": "Targets [token property confusion]: PKCE secures the code exchange; sender constraint applies to the resulting access token and is a separate feature."
+        },
+        {
+          "text": "It allows clients to use the Resource Owner Password Credentials grant securely.",
+          "misconception": "Targets [grant type association]: PKCE is for the Authorization Code Grant, not the insecure Password Credentials Grant."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "PKCE adds a dynamic secret ('code_verifier') generated by the client for each authorization request, which is then transformed into a 'code_challenge' sent to the authorization server. The server binds this challenge to the authorization code. When the client redeems the code, it must provide the original 'code_verifier'. This binding prevents attackers from injecting stolen codes or replaying them, as they won't have the correct verifier.",
+        "distractor_analysis": "The first distractor overstates PKCE's role in CSRF, as 'state' is still relevant. The second incorrectly attributes sender constraint to PKCE. The third wrongly associates PKCE with the Password Credentials Grant.",
+        "analogy": "PKCE is like a unique, temporary keycard (code_verifier) that you must use to unlock a specific door (authorization code) after receiving it, ensuring only you can use that keycard to open that particular door."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "comparison",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "OAUTH_PKCE",
+        "OAUTH_AUTH_CODE_GRANT",
+        "OAUTH_IMPLICIT_GRANT"
+      ]
+    }
+  ],
+  "generation_metadata": {
+    "model": "google/gemini-2.5-flash-lite",
+    "num_generated": 32,
+    "temperature": 0.1,
+    "web_citations": [],
+    "research_method": "openrouter_web_plugin",
+    "search_query": "Identity Provider Integration Flaws Security Architecture And Engineering best practices",
+    "latency_ms": 42360.617
+  },
+  "timestamp": "2026-01-01T09:20:33.615308"
+}

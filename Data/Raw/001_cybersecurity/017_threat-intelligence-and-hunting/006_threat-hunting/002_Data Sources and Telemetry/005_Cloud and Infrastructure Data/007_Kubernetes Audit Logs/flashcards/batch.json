@@ -1,0 +1,481 @@
+{
+  "topic_title": "Kubernetes Audit Logs",
+  "category": "Cybersecurity - Threat Intelligence And Hunting - 011_Threat Hunting",
+  "flashcards": [
+    {
+      "question_text": "What is the primary purpose of Kubernetes audit logs in threat hunting?",
+      "correct_answer": "To provide a detailed audit trail of API calls made to the Kubernetes API, enabling detection of malicious activities.",
+      "distractors": [
+        {
+          "text": "To monitor resource utilization and performance metrics of cluster nodes.",
+          "misconception": "Targets [scope confusion]: Confuses audit logs with performance monitoring tools."
+        },
+        {
+          "text": "To automatically enforce security policies and prevent unauthorized access.",
+          "misconception": "Targets [function confusion]: Misunderstands audit logs as an enforcement mechanism rather than a detection tool."
+        },
+        {
+          "text": "To store application logs and container output for debugging purposes.",
+          "misconception": "Targets [log type confusion]: Differentiates audit logs from application or container runtime logs."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Kubernetes audit logs record API server activity, providing a crucial data source for threat hunting because they detail who did what, when, and where within the cluster. This functions by capturing every request and its outcome, enabling analysis of anomalous or malicious patterns.",
+        "distractor_analysis": "The distractors incorrectly associate audit logs with performance monitoring, policy enforcement, or application debugging, failing to recognize their core function as an auditable record of API interactions.",
+        "analogy": "Kubernetes audit logs are like the security camera footage of a building, recording every entry, exit, and action taken by individuals, which is essential for investigating any incidents."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "K8S_AUDIT_LOGS_BASICS"
+      ]
+    },
+    {
+      "question_text": "Which field in Kubernetes audit logs is most critical for identifying the entity that initiated an API request?",
+      "correct_answer": "user.username",
+      "distractors": [
+        {
+          "text": "sourceIPs.0",
+          "misconception": "Targets [identification method confusion]: IP addresses can be spoofed or NAT'd, making them less reliable for user identification than authenticated credentials."
+        },
+        {
+          "text": "verb",
+          "misconception": "Targets [action vs. actor confusion]: 'verb' describes the action taken, not the actor performing it."
+        },
+        {
+          "text": "responseStatus.code",
+          "misconception": "Targets [outcome vs. actor confusion]: This indicates the result of the request, not who made it."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The 'user.username' field directly identifies the authenticated principal (user or service account) making the API call, which is fundamental for attribution. Because this field is populated by the API server based on authentication, it's more reliable than source IPs for identifying the actor.",
+        "distractor_analysis": "sourceIPs.0 is unreliable due to NAT and spoofing. 'verb' describes the action, not the actor. responseStatus.code indicates the outcome, not the initiator.",
+        "analogy": "In a security log, 'user.username' is like the name of the person logged into a system, whereas 'sourceIPs.0' is like the network port they connected from, which can be shared or masked."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "K8S_AUDIT_LOGS_BASICS",
+        "K8S_RBAC"
+      ]
+    },
+    {
+      "question_text": "What is the significance of the 'authorization.k8s.io/decision' annotation in Kubernetes audit logs?",
+      "correct_answer": "It indicates whether the API request was allowed ('allow') or denied ('forbid') by the authorization system.",
+      "distractors": [
+        {
+          "text": "It logs the specific RBAC role that granted or denied the request.",
+          "misconception": "Targets [information granularity confusion]: This detail is often in 'authorization.k8s.io/reason', not the decision itself."
+        },
+        {
+          "text": "It records the latency of the authorization check.",
+          "misconception": "Targets [annotation purpose confusion]: Latency is logged in separate annotations like 'apiserver.latency.k8s.io/etcd'."
+        },
+        {
+          "text": "It signifies if the request was authenticated successfully.",
+          "misconception": "Targets [authentication vs. authorization confusion]: Authentication precedes authorization; this annotation pertains to the latter."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The 'authorization.k8s.io/decision' annotation directly reflects the outcome of the authorization phase, stating 'allow' or 'forbid'. This is crucial for threat hunting because it helps identify unauthorized access attempts or policy violations, functioning by the authorization plugin's evaluation of the request against defined policies.",
+        "distractor_analysis": "Distractors confuse the decision with the reason, latency metrics, or authentication status, misinterpreting the annotation's specific role in the authorization process.",
+        "analogy": "This annotation is like a security guard's final verdict: 'Access Granted' or 'Access Denied', not the reason why or how long it took them to decide."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "K8S_AUDIT_LOGS_BASICS",
+        "K8S_RBAC"
+      ]
+    },
+    {
+      "question_text": "When hunting for suspicious activity in Kubernetes, why is monitoring 'responseStatus.code' values like 403 (Forbidden) important?",
+      "correct_answer": "A surge in 403 errors can indicate reconnaissance attempts or unauthorized access being blocked, warranting further investigation.",
+      "distractors": [
+        {
+          "text": "It signifies successful resource creation or modification.",
+          "misconception": "Targets [status code meaning confusion]: 403 indicates denial, not success; success is typically 200 or 201."
+        },
+        {
+          "text": "It points to network connectivity issues between cluster components.",
+          "misconception": "Targets [error type confusion]: Network issues usually manifest as different error codes (e.g., timeouts, connection refused)."
+        },
+        {
+          "text": "It indicates that a resource has been deprecated and will be removed.",
+          "misconception": "Targets [deprecation vs. authorization confusion]: Deprecation is a lifecycle status, not an authorization failure."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Monitoring for an increase in 403 Forbidden responses is vital because it directly signals that authorization checks are failing for specific requests. This functions by the API server returning this code when a user or service account lacks the necessary permissions, thus highlighting potential reconnaissance or policy violations.",
+        "distractor_analysis": "The distractors incorrectly associate 403 errors with success, network problems, or deprecation, missing the core meaning of an authorization failure.",
+        "analogy": "A 403 error is like a 'No Entry' sign on a door; it tells you that you're not allowed in, which is a critical piece of information for security analysis."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "K8S_AUDIT_LOGS_BASICS",
+        "K8S_RBAC"
+      ]
+    },
+    {
+      "question_text": "In the context of Kubernetes audit logs, what does the 'verb' field typically represent?",
+      "correct_answer": "The HTTP method or action performed on a Kubernetes resource (e.g., 'get', 'list', 'create', 'delete').",
+      "distractors": [
+        {
+          "text": "The user agent string of the client making the request.",
+          "misconception": "Targets [field purpose confusion]: 'userAgent' captures this information, not 'verb'."
+        },
+        {
+          "text": "The priority level of the API request.",
+          "misconception": "Targets [concept confusion]: Priority is related to API Priority and Fairness (APF), not the verb itself."
+        },
+        {
+          "text": "The specific Kubernetes resource type being accessed.",
+          "misconception": "Targets [resource vs. action confusion]: 'objectRef.resource' captures the resource type."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The 'verb' field in Kubernetes audit logs corresponds to the HTTP method used in the API request, such as GET, POST, PUT, DELETE, LIST, WATCH. This is essential for understanding the intent of an action because it defines the operation performed on a resource, functioning by mapping API calls to standard HTTP verbs.",
+        "distractor_analysis": "The distractors confuse 'verb' with client identification ('userAgent'), request priority, or the target resource type, misrepresenting its function as an action descriptor.",
+        "analogy": "The 'verb' is like the action word in a sentence: 'GET the document', 'CREATE a new file', 'DELETE a record'."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "K8S_AUDIT_LOGS_BASICS",
+        "HTTP_BASICS"
+      ]
+    },
+    {
+      "question_text": "Which Kubernetes audit log annotation is used to identify if a request used a deprecated API version?",
+      "correct_answer": "k8s.io/deprecated",
+      "distractors": [
+        {
+          "text": "pod-security.kubernetes.io/enforce-policy",
+          "misconception": "Targets [annotation namespace confusion]: This annotation relates to Pod Security Admission, not API deprecation."
+        },
+        {
+          "text": "authorization.k8s.io/reason",
+          "misconception": "Targets [annotation purpose confusion]: This provides the reason for an authorization decision, not API version status."
+        },
+        {
+          "text": "apiserver.latency.k8s.io/etcd",
+          "misconception": "Targets [annotation namespace confusion]: This annotation measures latency related to etcd interactions."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The 'k8s.io/deprecated' annotation is specifically designed to flag requests made using deprecated API versions. This is important for proactive security and stability because it helps identify potential future compatibility issues or risks associated with using outdated API endpoints, functioning by being set by the API server when a deprecated API is invoked.",
+        "distractor_analysis": "The distractors refer to annotations related to Pod Security, authorization reasons, or API server latency, none of which indicate the use of deprecated API versions.",
+        "analogy": "This annotation is like a 'warning label' on a product, indicating that a feature or component is outdated and might be removed in the future."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "K8S_AUDIT_LOGS_BASICS",
+        "K8S_API_VERSIONS"
+      ]
+    },
+    {
+      "question_text": "How can Kubernetes audit logs be used to detect potential reconnaissance activities by an attacker?",
+      "correct_answer": "By analyzing patterns of 'get', 'list', and 'watch' verbs on sensitive resources (like Secrets or ServiceAccounts) across multiple namespaces, especially when combined with 'forbid' decisions.",
+      "distractors": [
+        {
+          "text": "By looking for an excessive number of 'create' and 'update' operations on Pods.",
+          "misconception": "Targets [activity type confusion]: Excessive creation/updates might indicate denial-of-service or resource exhaustion, not typically reconnaissance."
+        },
+        {
+          "text": "By monitoring for high volumes of 'delete' operations on ConfigMaps.",
+          "misconception": "Targets [attack vector confusion]: Deleting ConfigMaps is destructive, not usually a reconnaissance step."
+        },
+        {
+          "text": "By tracking 'exec' calls into running containers without proper authorization.",
+          "misconception": "Targets [attack phase confusion]: 'exec' calls are more indicative of execution or privilege escalation, not initial reconnaissance."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Reconnaissance is often characterized by an attacker trying to understand the environment. Audit logs reveal this by showing frequent 'get', 'list', or 'watch' requests on sensitive resources, as attackers probe for information. This functions by logging these read operations, allowing threat hunters to spot unusual patterns of information gathering.",
+        "distractor_analysis": "The distractors describe activities more aligned with other attack phases (DoS, destruction, execution) rather than the information-gathering nature of reconnaissance.",
+        "analogy": "Reconnaissance is like an intruder casing a building by checking which doors are unlocked, which windows are visible, and what's inside without actually breaking in yet."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "K8S_AUDIT_LOGS_BASICS",
+        "MITRE_ATTACK_RECONNAISSANCE"
+      ]
+    },
+    {
+      "question_text": "What is the role of the 'objectRef' field in Kubernetes audit logs?",
+      "correct_answer": "It identifies the specific Kubernetes resource (e.g., Pod, Service, Secret) that the API request was performed on.",
+      "distractors": [
+        {
+          "text": "It specifies the user agent string of the client making the request.",
+          "misconception": "Targets [field purpose confusion]: 'userAgent' is used for client identification."
+        },
+        {
+          "text": "It indicates the network protocol used for the API communication.",
+          "misconception": "Targets [protocol vs. resource confusion]: Audit logs primarily focus on API objects, not network protocols directly."
+        },
+        {
+          "text": "It provides a summary of the response status code.",
+          "misconception": "Targets [field purpose confusion]: 'responseStatus.code' holds this information."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The 'objectRef' field is crucial because it pinpoints the target of an API operation, specifying the resource type, namespace, and name. This allows threat hunters to understand exactly which Kubernetes object was affected by an action, functioning by providing structured metadata about the resource involved in the logged event.",
+        "distractor_analysis": "The distractors incorrectly assign roles related to client identification, network protocols, or response status to the 'objectRef' field, which is specifically for identifying the target resource.",
+        "analogy": "'objectRef' is like the 'item' field in a transaction log, specifying exactly what was bought, sold, or modified."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "K8S_AUDIT_LOGS_BASICS",
+        "K8S_RESOURCES"
+      ]
+    },
+    {
+      "question_text": "According to best practices, what is a key benefit of enabling Data Access audit logs in Google Kubernetes Engine (GKE)?",
+      "correct_answer": "They provide visibility into 'data read' and 'data write' operations, which can help detect unauthorized access or modification of user data.",
+      "distractors": [
+        {
+          "text": "They are always enabled and provide information on all API calls, including system events.",
+          "misconception": "Targets [configuration confusion]: Data Access logs are disabled by default and are distinct from Admin Activity or System Event logs."
+        },
+        {
+          "text": "They are primarily used for performance tuning and resource optimization.",
+          "misconception": "Targets [purpose confusion]: Data Access logs are for security and auditing, not performance tuning."
+        },
+        {
+          "text": "They are essential for enabling automatic scaling of GKE clusters.",
+          "misconception": "Targets [function confusion]: Audit logs do not directly control or enable cluster scaling features."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Data Access audit logs are critical for security because they capture operations that read or write user data, providing insight into potential data breaches or unauthorized access. Because they are often disabled by default, enabling them is a best practice for comprehensive threat detection and compliance, functioning by logging specific data-centric API interactions.",
+        "distractor_analysis": "The distractors incorrectly state that Data Access logs are always enabled, are for performance tuning, or enable auto-scaling, misrepresenting their security-focused purpose.",
+        "analogy": "Data Access audit logs are like a detailed ledger for sensitive information, tracking who accessed or changed what, which is vital for preventing and investigating data misuse."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "GKE_AUDIT_LOGGING",
+        "CLOUD_AUDIT_LOGS_BASICS"
+      ]
+    },
+    {
+      "question_text": "What is the purpose of the 'requestURI' field in Kubernetes audit logs?",
+      "correct_answer": "It shows the endpoint or path of the API request made to the Kubernetes API server.",
+      "distractors": [
+        {
+          "text": "It indicates the user agent string of the client making the request.",
+          "misconception": "Targets [field purpose confusion]: 'userAgent' captures this information."
+        },
+        {
+          "text": "It logs the full request body sent to the API server.",
+          "misconception": "Targets [data scope confusion]: The request body is a separate field, and 'requestURI' is just the path."
+        },
+        {
+          "text": "It records the time the request was received by the API server.",
+          "misconception": "Targets [field purpose confusion]: Timestamp fields like 'requestReceivedTimestamp' capture this."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The 'requestURI' field provides the specific path of the API call, such as '/api/v1/namespaces/default/pods'. This is important for understanding the context of an action because it details the exact API endpoint targeted, functioning by logging the requested resource path.",
+        "distractor_analysis": "The distractors misattribute the functions of 'userAgent', request body logging, or timestamps to the 'requestURI' field, which is solely for the API endpoint path.",
+        "analogy": "'requestURI' is like the street address of a service counter, specifying exactly which counter you interacted with."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "K8S_AUDIT_LOGS_BASICS",
+        "HTTP_BASICS"
+      ]
+    },
+    {
+      "question_text": "When analyzing Kubernetes audit logs for threat hunting, what is a common strategy for identifying potentially compromised service accounts?",
+      "correct_answer": "Look for service accounts making unusual API calls, accessing resources they normally don't, or originating from unexpected source IPs.",
+      "distractors": [
+        {
+          "text": "Monitor for service accounts that have been recently created or deleted.",
+          "misconception": "Targets [activity type confusion]: Creation/deletion is normal lifecycle management; unusual *actions* are the concern."
+        },
+        {
+          "text": "Analyze logs for service accounts that are frequently used for 'get' operations.",
+          "misconception": "Targets [normal vs. anomalous activity confusion]: 'get' operations are common; unusual patterns or targets are key."
+        },
+        {
+          "text": "Check for service accounts that have been assigned elevated RBAC privileges.",
+          "misconception": "Targets [cause vs. effect confusion]: Elevated privileges are a *precondition* for certain actions, not direct evidence of compromise on their own."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Compromised service accounts often exhibit anomalous behavior. Threat hunting involves identifying these deviations by looking for unusual verbs, targets, or source IPs associated with a service account, because these deviations can indicate that the account's credentials have been stolen and misused.",
+        "distractor_analysis": "The distractors focus on normal lifecycle events, common operations, or privilege assignments, rather than the anomalous actions that signal a potential compromise.",
+        "analogy": "Detecting a compromised service account is like noticing a trusted employee suddenly trying to access highly restricted areas or performing actions outside their job description."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "K8S_AUDIT_LOGS_BASICS",
+        "K8S_RBAC",
+        "THREAT_HUNTING_PRINCIPLES"
+      ]
+    },
+    {
+      "question_text": "What is the purpose of the 'stage' field in Kubernetes audit logs?",
+      "correct_answer": "It indicates the stage of the request processing lifecycle (e.g., RequestReceived, ResponseStarted, ResponseComplete).",
+      "distractors": [
+        {
+          "text": "It denotes the security level of the request (e.g., high, medium, low).",
+          "misconception": "Targets [field purpose confusion]: Security levels are not directly represented by the 'stage' field."
+        },
+        {
+          "text": "It specifies the type of Kubernetes resource being accessed.",
+          "misconception": "Targets [field purpose confusion]: 'objectRef.resource' identifies the resource type."
+        },
+        {
+          "text": "It indicates the user's role within the cluster (e.g., admin, developer).",
+          "misconception": "Targets [field purpose confusion]: 'user.username' and associated groups identify roles."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The 'stage' field provides context on where a request is in the API server's processing pipeline. Understanding these stages (like 'RequestReceived' or 'ResponseComplete') is important for debugging and analyzing the flow of requests, functioning by marking key points in the request lifecycle.",
+        "distractor_analysis": "The distractors misinterpret 'stage' as a security level, resource type, or user role, failing to recognize its function in tracking the request processing lifecycle.",
+        "analogy": "The 'stage' field is like timestamps on a package tracking system, showing each step of its journey from sender to receiver."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "K8S_AUDIT_LOGS_BASICS"
+      ]
+    },
+    {
+      "question_text": "How can Kubernetes audit logs be used to detect potential credential access or abuse, such as stolen service account tokens?",
+      "correct_answer": "By monitoring for unusual API calls originating from unexpected source IPs or user agents associated with service accounts, or by detecting excessive 'forbid' decisions for a service account.",
+      "distractors": [
+        {
+          "text": "By analyzing the frequency of 'create' operations on ServiceAccount objects.",
+          "misconception": "Targets [activity type confusion]: Creating ServiceAccounts is a normal administrative task, not indicative of token abuse."
+        },
+        {
+          "text": "By tracking the number of 'list' operations performed on Secrets.",
+          "misconception": "Targets [reconnaissance vs. abuse confusion]: Listing Secrets is reconnaissance; abuse implies successful unauthorized access or actions."
+        },
+        {
+          "text": "By examining the 'responseStatus.code' for all requests made by service accounts.",
+          "misconception": "Targets [outcome vs. behavior confusion]: Focusing only on status codes misses the behavioral anomalies of compromised credentials."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Detecting credential abuse involves identifying actions that deviate from normal behavior. For service accounts, this means looking for calls from unusual sources or to unusual resources, because compromised tokens allow attackers to impersonate legitimate service accounts, functioning by logging these impersonated actions.",
+        "distractor_analysis": "The distractors focus on normal administrative actions, reconnaissance, or solely on response codes, failing to capture the behavioral indicators of actual credential abuse.",
+        "analogy": "Detecting stolen credentials is like noticing someone using a known employee's ID badge to access areas they shouldn't, or at unusual times."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "K8S_AUDIT_LOGS_BASICS",
+        "K8S_RBAC",
+        "MITRE_ATTACK_CREDENTIAL_ACCESS"
+      ]
+    },
+    {
+      "question_text": "What is the primary difference between Admin Activity audit logs and Data Access audit logs in Google Cloud?",
+      "correct_answer": "Admin Activity logs record 'admin write' operations (metadata/configuration changes), while Data Access logs record 'admin read' and 'data read/write' operations (metadata/configuration reads and user data access).",
+      "distractors": [
+        {
+          "text": "Admin Activity logs are always enabled, while Data Access logs must be manually enabled and are not chargeable.",
+          "misconception": "Targets [cost/enablement confusion]: Data Access logs are chargeable and require explicit enablement."
+        },
+        {
+          "text": "Admin Activity logs track resource creation and deletion, while Data Access logs track network traffic.",
+          "misconception": "Targets [scope confusion]: Both log API operations, but Data Access logs focus on data interaction, not network traffic."
+        },
+        {
+          "text": "Admin Activity logs are specific to GKE, while Data Access logs apply to all Google Cloud services.",
+          "misconception": "Targets [service scope confusion]: Both types of logs are available across many Google Cloud services, not limited to GKE."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Admin Activity logs capture changes to resource configurations, while Data Access logs capture reads and writes of both configuration and user data. This distinction is crucial because Data Access logs provide deeper visibility into potential data exfiltration or unauthorized data modification, functioning by logging different categories of API operations.",
+        "distractor_analysis": "The distractors incorrectly describe enablement, cost, scope, and the types of operations logged, misrepresenting the fundamental differences between Admin Activity and Data Access audit logs.",
+        "analogy": "Admin Activity logs are like the 'change log' for a building's blueprints, while Data Access logs are like the visitor logbook and the inventory records of what's inside."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "comparison",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "CLOUD_AUDIT_LOGS_BASICS",
+        "GKE_AUDIT_LOGGING"
+      ]
+    },
+    {
+      "question_text": "In threat hunting with Kubernetes audit logs, what is the significance of the 'userAgent' field?",
+      "correct_answer": "It provides information about the client software that made the API request, which can help identify unusual or malicious clients.",
+      "distractors": [
+        {
+          "text": "It guarantees the authenticity of the API request.",
+          "misconception": "Targets [security guarantee confusion]: User agent strings are client-provided and easily spoofed, offering no guarantee of authenticity."
+        },
+        {
+          "text": "It logs the specific Kubernetes resource being accessed.",
+          "misconception": "Targets [field purpose confusion]: 'objectRef.resource' identifies the resource."
+        },
+        {
+          "text": "It indicates the success or failure of the API request.",
+          "misconception": "Targets [field purpose confusion]: 'responseStatus.code' indicates success or failure."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The 'userAgent' field indicates the client application making the request, such as 'kubectl' or a custom script. While easily spoofed, it's a valuable starting point for threat hunting because unusual or unexpected user agents can signal automated attacks or compromised clients, functioning by logging the client's self-reported identity.",
+        "distractor_analysis": "The distractors incorrectly claim the user agent guarantees authenticity, identifies resources, or indicates success/failure, misrepresenting its role as a client identifier.",
+        "analogy": "The 'userAgent' is like the 'vehicle type' reported by a driver – it can tell you if it's a standard car or something unusual, but it doesn't prove the driver is authorized or the vehicle is safe."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "K8S_AUDIT_LOGS_BASICS",
+        "THREAT_HUNTING_PRINCIPLES"
+      ]
+    }
+  ],
+  "generation_metadata": {
+    "model": "google/gemini-2.5-flash-lite",
+    "num_generated": 15,
+    "temperature": 0.1,
+    "web_citations": [],
+    "research_method": "openrouter_web_plugin",
+    "search_query": "Kubernetes Audit Logs Threat Intelligence And Hunting best practices",
+    "latency_ms": 62054.628000000004
+  },
+  "timestamp": "2026-01-04T03:29:15.258497"
+}

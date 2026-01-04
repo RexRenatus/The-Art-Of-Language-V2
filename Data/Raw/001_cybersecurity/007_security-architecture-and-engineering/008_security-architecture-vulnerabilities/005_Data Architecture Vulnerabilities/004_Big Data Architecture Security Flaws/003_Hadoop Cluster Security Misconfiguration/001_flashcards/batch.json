@@ -1,0 +1,944 @@
+{
+  "topic_title": "Hadoop Cluster 009_Security Misconfiguration",
+  "category": "Security Architecture And Engineering - Security Architecture Vulnerabilities",
+  "flashcards": [
+    {
+      "question_text": "What is a common security misconfiguration in Hadoop clusters related to Kerberos authentication, often leading to unauthorized access?",
+      "correct_answer": "Improperly configured <code>hadoop.security.auth_to_local</code> rules, failing to map Kerberos principals to correct OS user accounts.",
+      "distractors": [
+        {
+          "text": "Using weak encryption algorithms like DES for RPC protection.",
+          "misconception": "Targets [algorithm weakness]: Focuses on encryption strength rather than authentication mapping."
+        },
+        {
+          "text": "Allowing anonymous access to HDFS by default.",
+          "misconception": "Targets [default configuration error]: Overlooks that secure mode requires explicit Kerberos setup, not just disabling anonymous access."
+        },
+        {
+          "text": "Not enabling Service Level Authorization (SLA) for Hadoop services.",
+          "misconception": "Targets [authorization gap]: Confuses authentication mapping with the subsequent authorization step."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Incorrect <code>hadoop.security.auth_to_local</code> rules fail to map Kerberos principals to the correct OS user accounts, because this mapping is crucial for Hadoop services to identify and authorize users. This misconfiguration can lead to unauthorized access or service failures, since the system cannot correctly translate the authenticated identity.",
+        "distractor_analysis": "The first distractor focuses on encryption algorithms, not authentication mapping. The second is a common misconfiguration but less specific to Kerberos principal mapping. The third addresses authorization, which follows authentication.",
+        "analogy": "It's like having a valid passport (Kerberos ticket) but the border control officer (Hadoop) doesn't understand your passport's language (auth_to_local rules), preventing you from entering the country (accessing resources)."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "HADOOP_SECURE_MODE",
+        "KERBEROS_PRINCIPALS",
+        "HADOOP_AUTH_TO_LOCAL"
+      ]
+    },
+    {
+      "question_text": "Which misconfiguration in Hadoop's secure mode can lead to services running with excessive privileges, violating the principle of least privilege?",
+      "correct_answer": "Running Hadoop daemons (like NameNode or DataNode) as the 'root' user instead of dedicated, less-privileged service accounts.",
+      "distractors": [
+        {
+          "text": "Using default Kerberos keytab files without proper permissions.",
+          "misconception": "Targets [keytab management error]: Focuses on keytab access rather than the user account privileges."
+        },
+        {
+          "text": "Not enabling RPC protection for inter-service communication.",
+          "misconception": "Targets [data confidentiality gap]: Addresses data protection, not the privilege level of the service itself."
+        },
+        {
+          "text": "Exposing Hadoop web UIs to the public internet without authentication.",
+          "misconception": "Targets [exposure vulnerability]: Focuses on access control to interfaces, not the underlying service account privileges."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Running Hadoop daemons as 'root' grants them excessive privileges, because the 'root' account has unrestricted access to the system. This violates the principle of least privilege, since services only need specific permissions to function. Dedicated service accounts (e.g., 'hdfs', 'yarn') limit the blast radius if a daemon is compromised.",
+        "distractor_analysis": "The first distractor concerns keytab file access, not the daemon's OS user privileges. The second focuses on data encryption, not service account privilege. The third addresses external access, not internal service privilege.",
+        "analogy": "It's like giving the janitor a master key to every room in a building, including the CEO's office and the vault, when they only need access to the supply closet. If the janitor's keys are stolen, the entire building is compromised."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "HADOOP_DAEMON_ACCOUNTS",
+        "LEAST_PRIVILEGE",
+        "LINUX_USER_MANAGEMENT"
+      ]
+    },
+    {
+      "question_text": "What is a critical security misconfiguration when setting up Hadoop's secure mode related to Kerberos principals for daemons?",
+      "correct_answer": "Using the generic <code>_HOST</code> wildcard in Kerberos principals without ensuring the corresponding keytab files are correctly generated and deployed for each specific node.",
+      "distractors": [
+        {
+          "text": "Not configuring Kerberos principals for end-user accounts.",
+          "misconception": "Targets [scope confusion]: Focuses on end-user authentication instead of daemon service principals."
+        },
+        {
+          "text": "Using identical keytab files across all nodes for the same service.",
+          "misconception": "Targets [keytab management error]: Overlooks that each service principal requires a unique keytab."
+        },
+        {
+          "text": "Omitting the realm name (e.g., <code>@REALM.TLD</code>) from service principals.",
+          "misconception": "Targets [principal format error]: Focuses on a minor format issue rather than the deployment of unique keys."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "While <code>_HOST</code> simplifies configuration deployment, each service instance must have a unique keytab file containing its specific Kerberos principal, because this allows secure authentication between services. Misconfiguring this can lead to authentication failures or security vulnerabilities if keytabs are not unique or correctly generated for each node.",
+        "distractor_analysis": "The first distractor incorrectly focuses on end-user principals. The second highlights a critical error in keytab management. The third points to a format issue that might cause errors but is less severe than incorrect keytab deployment.",
+        "analogy": "It's like having a master key that fits all doors (<code>_HOST</code> wildcard) but forgetting to give each specific door its own unique lock cylinder (keytab file). Anyone with the master key could potentially open any door, or if the wrong cylinder is used, the lock won't work."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "KERBEROS_PRINCIPALS",
+        "HADOOP_SECURE_MODE",
+        "KEYTAB_FILES"
+      ]
+    },
+    {
+      "question_text": "In Hadoop's secure mode, what is a common misconfiguration related to authorization that can lead to unintended data access?",
+      "correct_answer": "Insufficiently granular HDFS permissions or ACLs, allowing broader access than intended for specific user groups or roles.",
+      "distractors": [
+        {
+          "text": "Over-reliance on Kerberos for authorization instead of HDFS permissions.",
+          "misconception": "Targets [authentication vs. authorization confusion]: Misunderstands that Kerberos handles authentication, while HDFS/Sentry/Ranger handle authorization."
+        },
+        {
+          "text": "Not implementing auditing for HDFS access logs.",
+          "misconception": "Targets [auditing gap]: Focuses on post-incident analysis rather than preventative access control."
+        },
+        {
+          "text": "Using weak encryption algorithms for data at rest.",
+          "misconception": "Targets [encryption weakness]: Addresses data confidentiality, not access control to data."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "HDFS permissions and ACLs are the primary mechanism for controlling access to data within the Hadoop Distributed File System, because they define which users or groups can read, write, or execute files. Misconfigurations here, such as overly broad permissions, directly lead to unauthorized data access, violating data security principles.",
+        "distractor_analysis": "The first distractor incorrectly conflates authentication (Kerberos) with authorization. The second focuses on auditing, which is reactive. The third addresses data encryption, not access control.",
+        "analogy": "It's like giving everyone a key to the entire filing cabinet (HDFS) instead of just the specific drawer they need access to. This means sensitive documents in other drawers are exposed."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "HDFS_PERMISSIONS",
+        "HADOOP_AUTHORIZATION",
+        "IAM_PRINCIPLES"
+      ]
+    },
+    {
+      "question_text": "What security misconfiguration related to data encryption in Hadoop clusters can expose sensitive data in transit?",
+      "correct_answer": "Disabling or improperly configuring Transport Layer Security (TLS) for RPC and HTTP communication between Hadoop services and clients.",
+      "distractors": [
+        {
+          "text": "Using weak cipher suites for HDFS transparent encryption.",
+          "misconception": "Targets [encryption at rest vs. in transit confusion]: Focuses on data at rest encryption, not network traffic."
+        },
+        {
+          "text": "Not encrypting data stored in Cloud Storage buckets.",
+          "misconception": "Targets [cloud storage specific error]: Assumes Hadoop encryption applies directly to external cloud storage without considering cloud provider defaults."
+        },
+        {
+          "text": "Failing to rotate encryption keys for HDFS encryption zones.",
+          "misconception": "Targets [key management error]: Addresses key rotation for data at rest, not network encryption."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "TLS encrypts data in transit between Hadoop components and clients, because it establishes a secure, authenticated channel. Disabling or misconfiguring TLS means that sensitive data can be intercepted and read by attackers, because the communication is unencrypted.",
+        "distractor_analysis": "The first distractor incorrectly focuses on HDFS encryption (at rest). The second is specific to cloud environments and not core Hadoop transport. The third addresses key management for data at rest.",
+        "analogy": "It's like sending sensitive documents via regular mail instead of a secure, tracked courier service. Anyone intercepting the mail can read the contents easily."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "TLS_ENCRYPTION",
+        "HADOOP_RPC_SECURITY",
+        "HADOOP_HTTP_SECURITY"
+      ]
+    },
+    {
+      "question_text": "A Hadoop cluster is configured with Kerberos, but users are unable to access services. The <code>hadoop.security.auth_to_local</code> configuration is set to <code>DEFAULT</code>. What is the most likely misconfiguration causing this issue?",
+      "correct_answer": "The <code>DEFAULT</code> rule in <code>hadoop.security.auth_to_local</code> is too simplistic and doesn't correctly map the specific Kerberos principals to the required OS user accounts, leading to authentication failures.",
+      "distractors": [
+        {
+          "text": "The Kerberos Key Distribution Center (KDC) is unreachable.",
+          "misconception": "Targets [infrastructure failure]: Assumes a network or KDC issue rather than a configuration error within Hadoop."
+        },
+        {
+          "text": "The <code>dfs.block.access.token.enable</code> property is set to false.",
+          "misconception": "Targets [specific HDFS setting]: Focuses on a specific HDFS security feature, not the general Kerberos principal mapping."
+        },
+        {
+          "text": "The <code>hadoop.rpc.protection</code> is set to <code>integrity</code> instead of <code>privacy</code>.",
+          "misconception": "Targets [RPC protection level]: Confuses authentication mapping with the level of RPC security."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The <code>DEFAULT</code> rule in <code>hadoop.security.auth_to_local</code> often fails to map complex Kerberos principals to the correct OS user accounts, because it relies solely on the default realm. This misconfiguration prevents Hadoop services from correctly identifying users, leading to authentication errors and access denial, since the system cannot translate the Kerberos identity to a local user.",
+        "distractor_analysis": "The first distractor points to a network/infrastructure problem. The second is an HDFS-specific setting. The third relates to RPC security levels, not principal mapping.",
+        "analogy": "It's like having a universal translator that only knows one language (<code>DEFAULT</code> rule) and trying to use it for every foreign language (complex Kerberos principals). It will fail to translate most of them correctly, causing miscommunication."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "scenario",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "HADOOP_AUTH_TO_LOCAL",
+        "KERBEROS_PRINCIPALS",
+        "HADOOP_SECURE_MODE"
+      ]
+    },
+    {
+      "question_text": "What is a critical security misconfiguration when implementing Kerberos for Hadoop daemons that could allow unauthorized access?",
+      "correct_answer": "Using the same keytab file for multiple service instances or nodes, as each service principal requires a unique keytab for secure authentication.",
+      "distractors": [
+        {
+          "text": "Not enabling SPNEGO for web browser access.",
+          "misconception": "Targets [web access specific issue]: Focuses on web UI access, not core daemon authentication."
+        },
+        {
+          "text": "Setting <code>hadoop.security.authorization</code> to <code>false</code>.",
+          "misconception": "Targets [authorization enablement]: Addresses enabling authorization, not the underlying authentication mechanism's key management."
+        },
+        {
+          "text": "Using weak encryption algorithms within the keytab files.",
+          "misconception": "Targets [keytab encryption strength]: Confuses the security of the keytab file's contents with the uniqueness of the keytab itself."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Each Hadoop service principal requires a unique keytab file because it contains the secret key for that specific principal, because this allows the service to authenticate itself securely to Kerberos. Sharing keytabs across services or nodes means that if one keytab is compromised, all associated services are vulnerable, effectively granting attackers access to multiple components.",
+        "distractor_analysis": "The first distractor is about web access, not daemon authentication. The second is about enabling authorization, not the authentication mechanism's key management. The third focuses on the encryption *within* the keytab, not the uniqueness of the keytab itself.",
+        "analogy": "It's like having one master key for your entire house and giving copies to everyone. If one copy is lost or stolen, an intruder could potentially access any room, not just one specific closet."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "KEYTAB_FILES",
+        "KERBEROS_PRINCIPALS",
+        "HADOOP_SECURE_MODE"
+      ]
+    },
+    {
+      "question_text": "In a Hadoop cluster secured with Kerberos, what misconfiguration of <code>hadoop.proxyuser</code> settings could lead to unauthorized impersonation?",
+      "correct_answer": "Granting overly broad permissions to proxy users (e.g., <code>hadoop.proxyuser.*.hosts=*</code> or <code>hadoop.proxyuser.*.groups=*</code>), allowing any user or host to impersonate critical service accounts.",
+      "distractors": [
+        {
+          "text": "Not enabling Kerberos authentication for proxy users.",
+          "misconception": "Targets [authentication enablement]: Assumes Kerberos itself is the proxy user control, rather than specific configuration."
+        },
+        {
+          "text": "Using <code>hadoop.proxyuser.superuser.hosts</code> without specifying groups.",
+          "misconception": "Targets [configuration completeness]: Focuses on missing group restrictions, not the broad host restriction."
+        },
+        {
+          "text": "Disabling Service Level Authorization (SLA) for proxy user operations.",
+          "misconception": "Targets [authorization gap]: Confuses proxy user configuration with general SLA settings."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The <code>hadoop.proxyuser</code> configuration allows certain superusers to impersonate other users, which is necessary for services like Oozie. However, overly permissive settings (like <code>*</code> for hosts or groups) mean that any user or host can impersonate critical accounts, because the system cannot verify the legitimacy of the impersonation request, leading to security breaches.",
+        "distractor_analysis": "The first distractor incorrectly assumes Kerberos handles proxy user control directly. The second focuses on a specific part of the configuration (groups) while ignoring the broader host issue. The third conflates proxy user settings with general SLA.",
+        "analogy": "It's like giving a security guard a master key to the entire building and telling them they can let anyone in or out (<code>*</code> for hosts/groups), rather than restricting them to only letting authorized personnel through specific doors."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "HADOOP_PROXY_USER",
+        "KERBEROS_AUTHENTICATION",
+        "IMPERSONATION_SECURITY"
+      ]
+    },
+    {
+      "question_text": "What is a common misconfiguration in Hadoop's secure mode that can lead to data leakage via the DataNode's data transfer protocol?",
+      "correct_answer": "Failing to enable SASL for the data transfer protocol (<code>dfs.data.transfer.protection</code>) when not running DataNodes as root, or using privileged ports for <code>dfs.datanode.address</code> when SASL is enabled.",
+      "distractors": [
+        {
+          "text": "Disabling RPC encryption (<code>hadoop.rpc.protection</code>).",
+          "misconception": "Targets [RPC vs. data transfer confusion]: Confuses encryption for RPC communication with encryption for block data transfer."
+        },
+        {
+          "text": "Using weak cipher suites for HDFS encryption zones.",
+          "misconception": "Targets [encryption at rest vs. in transit confusion]: Focuses on data at rest encryption, not the data transfer protocol."
+        },
+        {
+          "text": "Not configuring <code>dfs.encrypt.data.transfer</code> to <code>true</code>.",
+          "misconception": "Targets [data encryption enablement]: Addresses enabling data encryption, but not the specific protocol for data transfer."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The DataNode data transfer protocol traditionally lacked strong authentication, relying on privileged ports or root execution. Enabling SASL (<code>dfs.data.transfer.protection</code>) provides secure authentication for this protocol, because it uses Kerberos. Misconfiguring this (e.g., not enabling SASL when not using root, or using privileged ports with SASL) leaves data transfer vulnerable to interception or manipulation.",
+        "distractor_analysis": "The first distractor addresses RPC encryption, not the DataNode data transfer protocol. The second focuses on encryption zones (at rest). The third enables data encryption but doesn't specifically address the data transfer protocol's authentication mechanism.",
+        "analogy": "It's like having a secure vault for your valuables (data at rest) but sending them across town in an unlocked truck (unsecured data transfer protocol). The truck itself is vulnerable to theft."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "HDFS_DATANODE",
+        "SASL_AUTHENTICATION",
+        "HADOOP_SECURE_MODE"
+      ]
+    },
+    {
+      "question_text": "What is a critical security misconfiguration related to LinuxContainerExecutor in Hadoop YARN that could lead to privilege escalation?",
+      "correct_answer": "Incorrect file permissions or ownership for the <code>container-executor</code> binary or its configuration file (<code>container-executor.cfg</code>), allowing unauthorized modification or execution.",
+      "distractors": [
+        {
+          "text": "Not specifying a <code>yarn.nodemanager.linux-container-executor.group</code> in <code>yarn-site.xml</code>.",
+          "misconception": "Targets [configuration completeness]: Focuses on a missing configuration parameter, not the security implications of incorrect permissions."
+        },
+        {
+          "text": "Using the <code>DefaultContainerExecutor</code> instead of <code>LinuxContainerExecutor</code>.",
+          "misconception": "Targets [executor choice]: Assumes the choice of executor is the primary security misconfiguration, rather than its secure setup."
+        },
+        {
+          "text": "Allowing banned users (e.g., 'hdfs', 'yarn') in <code>container-executor.cfg</code>.",
+          "misconception": "Targets [banned user list]: Focuses on a specific configuration item within `container-executor.cfg`, not the critical file permissions."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The <code>LinuxContainerExecutor</code> relies on a setuid binary with specific permissions (<code>--Sr-s---</code>) owned by root and a designated group (e.g., 'hadoop'), because this allows it to securely launch containers as the application owner. Incorrect permissions or ownership on this binary or its config file can allow attackers to escalate privileges, since they could potentially modify the executor's behavior or bypass security checks.",
+        "distractor_analysis": "The first distractor points to a missing configuration, not a permission issue. The second suggests choosing a different executor, which might be a design choice but not inherently a misconfiguration. The third focuses on a specific setting within the config file, not the critical file permissions.",
+        "analogy": "It's like having a security guard (container-executor) who is supposed to check IDs at the door (launch containers). If the guard's uniform (permissions/ownership) is wrong, or their ID badge (config file) is easily forged, anyone could pretend to be the guard and get in."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "YARN_CONTAINER_EXECUTION",
+        "LINUX_PERMISSIONS",
+        "PRIVILEGE_ESCALATION"
+      ]
+    },
+    {
+      "question_text": "What is a common misconfiguration in Hadoop's secure mode that can lead to unauthorized access to web consoles?",
+      "correct_answer": "Not enabling HTTPS_ONLY for <code>dfs.http.policy</code> or <code>yarn.http.policy</code>, leaving web interfaces accessible via unencrypted HTTP.",
+      "distractors": [
+        {
+          "text": "Using default Kerberos principals for web UI SPNEGO.",
+          "misconception": "Targets [principal format error]: Focuses on principal names, not the transport security of the web interface."
+        },
+        {
+          "text": "Disabling HDFS block access tokens (<code>dfs.block.access.token.enable</code>).",
+          "misconception": "Targets [HDFS specific feature]: Addresses HDFS data access tokens, not web UI security."
+        },
+        {
+          "text": "Not configuring <code>hadoop.security.authorization</code> to <code>true</code>.",
+          "misconception": "Targets [SLA enablement]: Addresses general service-level authorization, not specific web UI transport security."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Web consoles for Hadoop services (like NameNode, ResourceManager) often transmit sensitive information and can be used to manage the cluster. By default, they might use HTTP, which is unencrypted. Configuring <code>dfs.http.policy</code> or <code>yarn.http.policy</code> to <code>HTTPS_ONLY</code> ensures that all web traffic is encrypted using TLS, because it forces the use of HTTPS, thereby protecting data in transit and preventing eavesdropping.",
+        "distractor_analysis": "The first distractor focuses on Kerberos principals for SPNEGO, not transport security. The second addresses HDFS data access tokens. The third is about general service authorization, not web UI transport security.",
+        "analogy": "It's like having a secure mailbox for your sensitive mail (HTTPS) but leaving it unlocked and open to the street (HTTP). Anyone can walk by and read your mail."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "HTTPS_SECURITY",
+        "HADOOP_WEB_UI_SECURITY",
+        "TLS_ENCRYPTION"
+      ]
+    },
+    {
+      "question_text": "What is a critical misconfiguration in Hadoop's secure mode related to Service Level Authorization (SLA) that can lead to unauthorized access to Hadoop services?",
+      "correct_answer": "Setting <code>hadoop.security.authorization</code> to <code>false</code>, which disables the authorization checks performed by Hadoop services after authentication.",
+      "distractors": [
+        {
+          "text": "Not enabling Kerberos authentication for end users.",
+          "misconception": "Targets [authentication enablement]: Focuses on authentication, not the subsequent authorization step."
+        },
+        {
+          "text": "Using weak encryption algorithms for RPC protection.",
+          "misconception": "Targets [encryption weakness]: Addresses data confidentiality, not access control to services."
+        },
+        {
+          "text": "Incorrectly mapping Kerberos principals to OS users.",
+          "misconception": "Targets [authentication mapping error]: Addresses issues in translating identity, not the authorization checks themselves."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Service Level Authorization (SLA) is a critical security feature that checks whether an authenticated user or service has the necessary permissions to access a specific Hadoop service or perform an action, because Kerberos only confirms identity, not permissions. Disabling SLA (<code>hadoop.security.authorization=false</code>) means that once authenticated, any user or service can potentially access any resource, bypassing fine-grained access controls.",
+        "distractor_analysis": "The first distractor focuses on authentication, not authorization. The second addresses encryption strength, not access control. The third deals with authentication mapping, which is a prerequisite for authorization but not authorization itself.",
+        "analogy": "It's like having a security guard (authentication) who checks your ID at the building entrance, but then not having any internal access controls (SLA) to check if you're allowed into specific offices or rooms once inside."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "HADOOP_SLA",
+        "KERBEROS_AUTHENTICATION",
+        "ACCESS_CONTROL"
+      ]
+    },
+    {
+      "question_text": "In Hadoop's secure mode, what is a common misconfiguration related to auditing that hinders security investigations?",
+      "correct_answer": "Failing to enable or properly configure auditing for Hadoop services and data access, resulting in a lack of visibility into user actions and potential security incidents.",
+      "distractors": [
+        {
+          "text": "Using default audit log retention policies.",
+          "misconception": "Targets [log retention]: Focuses on log management rather than the fundamental enablement of auditing."
+        },
+        {
+          "text": "Not encrypting audit logs at rest.",
+          "misconception": "Targets [log confidentiality]: Addresses protecting the logs themselves, not the act of logging."
+        },
+        {
+          "text": "Disabling Kerberos authentication for audit log access.",
+          "misconception": "Targets [log access security]: Focuses on securing access to logs, not generating them."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Auditing provides a crucial record of who accessed what data and performed what actions within the Hadoop cluster, because it logs security-relevant events. Failing to enable or configure auditing means there's no historical data to analyze for security incidents, compliance checks, or troubleshooting, because no records are being kept.",
+        "distractor_analysis": "The first distractor concerns log retention, not the enablement of logging. The second addresses log confidentiality, not the generation of logs. The third focuses on securing access to logs, not the logging process itself.",
+        "analogy": "It's like having no security cameras in a building. You can't review who entered or left, or what happened, making it impossible to investigate any incidents."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "HADOOP_AUDITING",
+        "SECURITY_LOGGING",
+        "INCIDENT_RESPONSE"
+      ]
+    },
+    {
+      "question_text": "What is a common misconfiguration in Hadoop clusters related to user and group mapping that can lead to authorization issues?",
+      "correct_answer": "Inconsistent or incorrect mapping of OS users and groups to Kerberos principals across different nodes or services, causing authorization failures.",
+      "distractors": [
+        {
+          "text": "Using weak passwords for OS user accounts.",
+          "misconception": "Targets [OS user security]: Focuses on individual OS user credentials, not the mapping mechanism."
+        },
+        {
+          "text": "Not enabling Kerberos authentication for all Hadoop services.",
+          "misconception": "Targets [authentication enablement]: Focuses on authentication, not the mapping of identities for authorization."
+        },
+        {
+          "text": "Using default HDFS permissions for all directories.",
+          "misconception": "Targets [HDFS permissions]: Addresses file-level permissions, not the mapping of users/groups to those permissions."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Hadoop relies on consistent mapping between OS users/groups and Kerberos principals to enforce authorization policies, because authorization systems (like Sentry/Ranger) often rely on these mappings. Inconsistent mapping means that a user authenticated via Kerberos might not be correctly identified by the authorization system, leading to access denied errors or unintended access, because the system cannot reliably determine the user's identity and associated permissions.",
+        "distractor_analysis": "The first distractor focuses on OS user password strength, not the mapping process. The second addresses authentication enablement, not the mapping for authorization. The third deals with HDFS permissions, not the user/group mapping that informs those permissions.",
+        "analogy": "It's like having a directory where some names are spelled correctly, some are misspelled, and some are in different languages. When you try to find someone based on their name, you might not find them, or you might find the wrong person."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "HADOOP_GROUP_MAPPING",
+        "KERBEROS_INTEGRATION",
+        "AUTHORIZATION_POLICY"
+      ]
+    },
+    {
+      "question_text": "What is a common security misconfiguration in Hadoop clusters related to the <code>container-executor</code> binary that could lead to security vulnerabilities?",
+      "correct_answer": "The <code>container-executor</code> binary not having the correct setuid/setgid permissions (e.g., <code>--Sr-s---</code>) or being owned by the wrong user/group, compromising container isolation.",
+      "distractors": [
+        {
+          "text": "Using the <code>DefaultContainerExecutor</code> instead of <code>LinuxContainerExecutor</code>.",
+          "misconception": "Targets [executor choice]: Suggests a different executor is inherently insecure, rather than focusing on the secure configuration of the chosen one."
+        },
+        {
+          "text": "Not defining <code>banned.users</code> in <code>container-executor.cfg</code>.",
+          "misconception": "Targets [configuration detail]: Focuses on a specific setting within the config file, not the critical file permissions."
+        },
+        {
+          "text": "Allowing <code>yarn.nodemanager.linux-container-executor.group</code> to be set to 'users'.",
+          "misconception": "Targets [group naming convention]: Focuses on the group name rather than the security implications of group membership and permissions."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The <code>LinuxContainerExecutor</code> relies on the <code>container-executor</code> binary having specific setuid/setgid permissions and ownership (<code>root:hadoop</code>, <code>--Sr-s---</code>), because this allows it to securely launch containers with the correct user context, because it needs elevated privileges to switch users. Incorrect permissions or ownership can allow attackers to escalate privileges or bypass container isolation, since the binary might be modifiable or executable by unauthorized entities.",
+        "distractor_analysis": "The first distractor suggests an alternative executor, not a misconfiguration of the current one. The second focuses on a specific config item, not the critical file permissions. The third focuses on a group name, not the security implications of its membership and the binary's ownership.",
+        "analogy": "It's like a security guard (container-executor) who is supposed to have a specific uniform (permissions) and badge (ownership) to verify their authority. If the uniform is wrong or the badge is easily faked, anyone could impersonate the guard and gain unauthorized access."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "YARN_CONTAINER_EXECUTION",
+        "LINUX_PERMISSIONS",
+        "PRIVILEGE_ESCALATION"
+      ]
+    },
+    {
+      "question_text": "What is a common misconfiguration in Hadoop clusters related to data encryption at rest that can lead to data exposure?",
+      "correct_answer": "Failing to enable HDFS transparent encryption (<code>dfs.encrypt.data.transfer=true</code>) or using weak/unsupported cipher suites for data encryption.",
+      "distractors": [
+        {
+          "text": "Disabling RPC encryption (<code>hadoop.rpc.protection</code>).",
+          "misconception": "Targets [RPC vs. data encryption confusion]: Confuses encryption for RPC communication with encryption for data at rest."
+        },
+        {
+          "text": "Not enabling TLS for HTTP communication.",
+          "misconception": "Targets [HTTP encryption]: Addresses encryption for web traffic, not data stored on HDFS."
+        },
+        {
+          "text": "Using default Kerberos principals for HDFS services.",
+          "misconception": "Targets [Kerberos principal format]: Focuses on authentication identity, not data encryption at rest."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "HDFS transparent encryption (<code>dfs.encrypt.data.transfer=true</code>) encrypts data stored on DataNodes, because it protects data at rest from unauthorized access if the underlying storage is compromised. Using weak cipher suites or failing to enable encryption means that sensitive data stored on disk can be read directly if the storage medium is accessed, because it is not protected by strong cryptographic algorithms.",
+        "distractor_analysis": "The first distractor addresses RPC encryption (in transit). The second addresses HTTP encryption (in transit). The third focuses on Kerberos principals (authentication), not data encryption.",
+        "analogy": "It's like storing your valuables in a safe (HDFS encryption) but leaving the safe unlocked or using a very flimsy lock (weak cipher suites). The valuables are still vulnerable if someone accesses the safe."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "HDFS_ENCRYPTION",
+        "DATA_AT_REST_ENCRYPTION",
+        "CYPHER_SUITES"
+      ]
+    },
+    {
+      "question_text": "In Hadoop's secure mode, what is a common misconfiguration related to proxy users that can lead to unauthorized impersonation?",
+      "correct_answer": "Granting overly broad permissions to proxy users (e.g., <code>hadoop.proxyuser.*.hosts=*</code> or <code>hadoop.proxyuser.*.groups=*</code>), allowing any user or host to impersonate critical service accounts.",
+      "distractors": [
+        {
+          "text": "Not enabling Kerberos authentication for proxy users.",
+          "misconception": "Targets [authentication enablement]: Assumes Kerberos itself is the proxy user control, rather than specific configuration."
+        },
+        {
+          "text": "Using <code>hadoop.proxyuser.superuser.hosts</code> without specifying groups.",
+          "misconception": "Targets [configuration completeness]: Focuses on missing group restrictions, not the broad host restriction."
+        },
+        {
+          "text": "Disabling Service Level Authorization (SLA) for proxy user operations.",
+          "misconception": "Targets [authorization gap]: Confuses proxy user configuration with general SLA settings."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The <code>hadoop.proxyuser</code> configuration allows certain superusers to impersonate other users, which is necessary for services like Oozie. However, overly permissive settings (like <code>*</code> for hosts or groups) mean that any user or host can impersonate critical accounts, because the system cannot verify the legitimacy of the impersonation request, leading to security breaches.",
+        "distractor_analysis": "The first distractor incorrectly assumes Kerberos handles proxy user control directly. The second focuses on a specific part of the configuration (groups) while ignoring the broader host issue. The third conflates proxy user settings with general SLA.",
+        "analogy": "It's like giving a security guard a master key to the entire building and telling them they can let anyone in or out (<code>*</code> for hosts/groups), rather than restricting them to only letting authorized personnel through specific doors."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "HADOOP_PROXY_USER",
+        "KERBEROS_AUTHENTICATION",
+        "IMPERSONATION_SECURITY"
+      ]
+    },
+    {
+      "question_text": "What is a common misconfiguration in Hadoop clusters related to the <code>container-executor</code> binary that could lead to security vulnerabilities?",
+      "correct_answer": "The <code>container-executor</code> binary not having the correct setuid/setgid permissions (e.g., <code>--Sr-s---</code>) or being owned by the wrong user/group, compromising container isolation.",
+      "distractors": [
+        {
+          "text": "Using the <code>DefaultContainerExecutor</code> instead of <code>LinuxContainerExecutor</code>.",
+          "misconception": "Targets [executor choice]: Suggests a different executor is inherently insecure, rather than focusing on the secure configuration of the chosen one."
+        },
+        {
+          "text": "Not defining <code>banned.users</code> in <code>container-executor.cfg</code>.",
+          "misconception": "Targets [configuration detail]: Focuses on a specific setting within the config file, not the critical file permissions."
+        },
+        {
+          "text": "Allowing <code>yarn.nodemanager.linux-container-executor.group</code> to be set to 'users'.",
+          "misconception": "Targets [group naming convention]: Focuses on the group name rather than the security implications of group membership and permissions."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The <code>LinuxContainerExecutor</code> relies on the <code>container-executor</code> binary having specific setuid/setgid permissions and ownership (<code>root:hadoop</code>, <code>--Sr-s---</code>), because this allows it to securely launch containers with the correct user context, because it needs elevated privileges to switch users. Incorrect permissions or ownership can allow attackers to escalate privileges or bypass container isolation, since the binary might be modifiable or executable by unauthorized entities.",
+        "distractor_analysis": "The first distractor suggests an alternative executor, not a misconfiguration of the current one. The second focuses on a specific config item, not the critical file permissions. The third focuses on a group name, not the security implications of its membership and the binary's ownership.",
+        "analogy": "It's like a security guard (container-executor) who is supposed to have a specific uniform (permissions) and badge (ownership) to verify their authority. If the uniform is wrong or the badge is easily forged, anyone could impersonate the guard and gain unauthorized access."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "YARN_CONTAINER_EXECUTION",
+        "LINUX_PERMISSIONS",
+        "PRIVILEGE_ESCALATION"
+      ]
+    },
+    {
+      "question_text": "What is a common misconfiguration in Hadoop clusters related to data encryption at rest that can lead to data exposure?",
+      "correct_answer": "Failing to enable HDFS transparent encryption (<code>dfs.encrypt.data.transfer=true</code>) or using weak/unsupported cipher suites for data encryption.",
+      "distractors": [
+        {
+          "text": "Disabling RPC encryption (<code>hadoop.rpc.protection</code>).",
+          "misconception": "Targets [RPC vs. data encryption confusion]: Confuses encryption for RPC communication with encryption for data at rest."
+        },
+        {
+          "text": "Not enabling TLS for HTTP communication.",
+          "misconception": "Targets [HTTP encryption]: Addresses encryption for web traffic, not data stored on HDFS."
+        },
+        {
+          "text": "Using default Kerberos principals for HDFS services.",
+          "misconception": "Targets [Kerberos principal format]: Focuses on authentication identity, not data encryption at rest."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "HDFS transparent encryption (<code>dfs.encrypt.data.transfer=true</code>) encrypts data stored on DataNodes, because it protects data at rest from unauthorized access if the underlying storage is compromised. Using weak cipher suites or failing to enable encryption means that sensitive data stored on disk can be read directly if the storage medium is accessed, because it is not protected by strong cryptographic algorithms.",
+        "distractor_analysis": "The first distractor addresses RPC encryption (in transit). The second addresses HTTP encryption (in transit). The third focuses on Kerberos principals (authentication), not data encryption.",
+        "analogy": "It's like storing your valuables in a safe (HDFS encryption) but leaving the safe unlocked or using a very flimsy lock (weak cipher suites). The valuables are still vulnerable if someone accesses the safe."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "HDFS_ENCRYPTION",
+        "DATA_AT_REST_ENCRYPTION",
+        "CYPHER_SUITES"
+      ]
+    },
+    {
+      "question_text": "What is a critical security misconfiguration in Hadoop's secure mode that can lead to unauthorized access to web consoles?",
+      "correct_answer": "Not enabling HTTPS_ONLY for <code>dfs.http.policy</code> or <code>yarn.http.policy</code>, leaving web interfaces accessible via unencrypted HTTP.",
+      "distractors": [
+        {
+          "text": "Using default Kerberos principals for web UI SPNEGO.",
+          "misconception": "Targets [principal format error]: Focuses on principal names, not the transport security of the web interface."
+        },
+        {
+          "text": "Disabling HDFS block access tokens (<code>dfs.block.access.token.enable</code>).",
+          "misconception": "Targets [HDFS specific feature]: Addresses HDFS data access tokens, not web UI security."
+        },
+        {
+          "text": "Not configuring <code>hadoop.security.authorization</code> to <code>true</code>.",
+          "misconception": "Targets [SLA enablement]: Addresses general service-level authorization, not specific web UI transport security."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Web consoles for Hadoop services (like NameNode, ResourceManager) often transmit sensitive information and can be used to manage the cluster. By default, they might use HTTP, which is unencrypted. Configuring <code>dfs.http.policy</code> or <code>yarn.http.policy</code> to <code>HTTPS_ONLY</code> ensures that all web traffic is encrypted using TLS, because it forces the use of HTTPS, thereby protecting data in transit and preventing eavesdropping.",
+        "distractor_analysis": "The first distractor focuses on Kerberos principals for SPNEGO, not transport security. The second addresses HDFS data access tokens. The third is about general service authorization, not web UI transport security.",
+        "analogy": "It's like having a secure mailbox for your sensitive mail (HTTPS) but leaving it unlocked and open to the street (HTTP). Anyone can walk by and read your mail."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "HTTPS_SECURITY",
+        "HADOOP_WEB_UI_SECURITY",
+        "TLS_ENCRYPTION"
+      ]
+    },
+    {
+      "question_text": "What is a critical security misconfiguration in Hadoop's secure mode that can lead to unauthorized access to Hadoop services?",
+      "correct_answer": "Setting <code>hadoop.security.authorization</code> to <code>false</code>, which disables the authorization checks performed by Hadoop services after authentication.",
+      "distractors": [
+        {
+          "text": "Not enabling Kerberos authentication for end users.",
+          "misconception": "Targets [authentication enablement]: Focuses on authentication, not the subsequent authorization step."
+        },
+        {
+          "text": "Using weak encryption algorithms for RPC protection.",
+          "misconception": "Targets [encryption weakness]: Addresses data confidentiality, not access control to services."
+        },
+        {
+          "text": "Incorrectly mapping Kerberos principals to OS users.",
+          "misconception": "Targets [authentication mapping error]: Addresses issues in translating identity, not the authorization checks themselves."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Service Level Authorization (SLA) is a critical security feature that checks whether an authenticated user or service has the necessary permissions to access a specific Hadoop service or perform an action, because Kerberos only confirms identity, not permissions. Disabling SLA (<code>hadoop.security.authorization=false</code>) means that once authenticated, any user or service can potentially access any resource, bypassing fine-grained access controls.",
+        "distractor_analysis": "The first distractor focuses on authentication, not authorization. The second addresses encryption strength, not access control. The third deals with authentication mapping, which is a prerequisite for authorization but not authorization itself.",
+        "analogy": "It's like having a security guard (authentication) who checks your ID at the building entrance, but then not having any internal access controls (SLA) to check if you're allowed into specific offices or rooms once inside."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "HADOOP_SLA",
+        "KERBEROS_AUTHENTICATION",
+        "ACCESS_CONTROL"
+      ]
+    },
+    {
+      "question_text": "What is a common misconfiguration in Hadoop clusters related to auditing that hinders security investigations?",
+      "correct_answer": "Failing to enable or properly configure auditing for Hadoop services and data access, resulting in a lack of visibility into user actions and potential security incidents.",
+      "distractors": [
+        {
+          "text": "Using default audit log retention policies.",
+          "misconception": "Targets [log retention]: Focuses on log management rather than the fundamental enablement of auditing."
+        },
+        {
+          "text": "Not encrypting audit logs at rest.",
+          "misconception": "Targets [log confidentiality]: Addresses protecting the logs themselves, not the act of logging."
+        },
+        {
+          "text": "Disabling Kerberos authentication for audit log access.",
+          "misconception": "Targets [log access security]: Focuses on securing access to logs, not generating them."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Auditing provides a crucial record of who accessed what data and performed what actions within the Hadoop cluster, because it logs security-relevant events. Failing to enable or configure auditing means there's no historical data to analyze for security incidents, compliance checks, or troubleshooting, because no records are being kept.",
+        "distractor_analysis": "The first distractor concerns log retention, not the enablement of logging. The second addresses log confidentiality, not the generation of logs. The third focuses on securing access to logs, not the logging process itself.",
+        "analogy": "It's like having no security cameras in a building. You can't review who entered or left, or what happened, making it impossible to investigate any incidents."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "HADOOP_AUDITING",
+        "SECURITY_LOGGING",
+        "INCIDENT_RESPONSE"
+      ]
+    },
+    {
+      "question_text": "What is a common misconfiguration in Hadoop clusters related to user and group mapping that can lead to authorization issues?",
+      "correct_answer": "Inconsistent or incorrect mapping of OS users and groups to Kerberos principals across different nodes or services, causing authorization failures.",
+      "distractors": [
+        {
+          "text": "Using weak passwords for OS user accounts.",
+          "misconception": "Targets [OS user security]: Focuses on individual OS user credentials, not the mapping mechanism."
+        },
+        {
+          "text": "Not enabling Kerberos authentication for all Hadoop services.",
+          "misconception": "Targets [authentication enablement]: Focuses on authentication, not the mapping of identities for authorization."
+        },
+        {
+          "text": "Using default HDFS permissions for all directories.",
+          "misconception": "Targets [HDFS permissions]: Addresses file-level permissions, not the mapping of users/groups to those permissions."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Hadoop relies on consistent mapping between OS users/groups and Kerberos principals to enforce authorization policies, because authorization systems (like Sentry/Ranger) often rely on these mappings. Inconsistent mapping means that a user authenticated via Kerberos might not be correctly identified by the authorization system, leading to access denied errors or unintended access, because the system cannot reliably determine the user's identity and associated permissions.",
+        "distractor_analysis": "The first distractor focuses on OS user password strength, not the mapping process. The second addresses authentication enablement, not the mapping for authorization. The third deals with HDFS permissions, not the user/group mapping that informs those permissions.",
+        "analogy": "It's like having a directory where some names are spelled correctly, some are misspelled, and some are in different languages. When you try to find someone based on their name, you might not find them, or you might find the wrong person."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "HADOOP_GROUP_MAPPING",
+        "KERBEROS_INTEGRATION",
+        "AUTHORIZATION_POLICY"
+      ]
+    },
+    {
+      "question_text": "In the context of Hadoop security architecture, what is a critical misconfiguration related to the <code>container-executor</code> binary that could lead to privilege escalation?",
+      "correct_answer": "The <code>container-executor</code> binary not having the correct setuid/setgid permissions (e.g., <code>--Sr-s---</code>) or being owned by the wrong user/group, compromising container isolation.",
+      "distractors": [
+        {
+          "text": "Using the <code>DefaultContainerExecutor</code> instead of <code>LinuxContainerExecutor</code>.",
+          "misconception": "Targets [executor choice]: Suggests a different executor is inherently insecure, rather than focusing on the secure configuration of the chosen one."
+        },
+        {
+          "text": "Not defining <code>banned.users</code> in <code>container-executor.cfg</code>.",
+          "misconception": "Targets [configuration detail]: Focuses on a specific setting within the config file, not the critical file permissions."
+        },
+        {
+          "text": "Allowing <code>yarn.nodemanager.linux-container-executor.group</code> to be set to 'users'.",
+          "misconception": "Targets [group naming convention]: Focuses on the group name rather than the security implications of group membership and permissions."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The <code>LinuxContainerExecutor</code> relies on the <code>container-executor</code> binary having specific setuid/setgid permissions and ownership (<code>root:hadoop</code>, <code>--Sr-s---</code>), because this allows it to securely launch containers with the correct user context, as it needs elevated privileges to switch users. Incorrect permissions or ownership can allow attackers to escalate privileges or bypass container isolation, since the binary might be modifiable or executable by unauthorized entities.",
+        "distractor_analysis": "The first distractor suggests an alternative executor, not a misconfiguration of the current one. The second focuses on a specific config item, not the critical file permissions. The third focuses on a group name, not the security implications of its membership and the binary's ownership.",
+        "analogy": "It's like a security guard (container-executor) who is supposed to have a specific uniform (permissions) and badge (ownership) to verify their authority. If the uniform is wrong or the badge is easily forged, anyone could impersonate the guard and gain unauthorized access."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "YARN_CONTAINER_EXECUTION",
+        "LINUX_PERMISSIONS",
+        "PRIVILEGE_ESCALATION"
+      ]
+    },
+    {
+      "question_text": "What is a common misconfiguration in Hadoop clusters related to data encryption at rest that can lead to data exposure?",
+      "correct_answer": "Failing to enable HDFS transparent encryption (<code>dfs.encrypt.data.transfer=true</code>) or using weak/unsupported cipher suites for data encryption.",
+      "distractors": [
+        {
+          "text": "Disabling RPC encryption (<code>hadoop.rpc.protection</code>).",
+          "misconception": "Targets [RPC vs. data encryption confusion]: Confuses encryption for RPC communication with encryption for data at rest."
+        },
+        {
+          "text": "Not enabling TLS for HTTP communication.",
+          "misconception": "Targets [HTTP encryption]: Addresses encryption for web traffic, not data stored on HDFS."
+        },
+        {
+          "text": "Using default Kerberos principals for HDFS services.",
+          "misconception": "Targets [Kerberos principal format]: Focuses on authentication identity, not data encryption at rest."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "HDFS transparent encryption (<code>dfs.encrypt.data.transfer=true</code>) encrypts data stored on DataNodes, because it protects data at rest from unauthorized access if the underlying storage is compromised. Using weak cipher suites or failing to enable encryption means that sensitive data stored on disk can be read directly if the storage medium is accessed, because it is not protected by strong cryptographic algorithms.",
+        "distractor_analysis": "The first distractor addresses RPC encryption (in transit). The second addresses HTTP encryption (in transit). The third focuses on Kerberos principals (authentication), not data encryption.",
+        "analogy": "It's like storing your valuables in a safe (HDFS encryption) but leaving the safe unlocked or using a very flimsy lock (weak cipher suites). The valuables are still vulnerable if someone accesses the safe."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "HDFS_ENCRYPTION",
+        "DATA_AT_REST_ENCRYPTION",
+        "CYPHER_SUITES"
+      ]
+    },
+    {
+      "question_text": "What is a critical security misconfiguration in Hadoop's secure mode that can lead to unauthorized access to web consoles?",
+      "correct_answer": "Not enabling HTTPS_ONLY for <code>dfs.http.policy</code> or <code>yarn.http.policy</code>, leaving web interfaces accessible via unencrypted HTTP.",
+      "distractors": [
+        {
+          "text": "Using default Kerberos principals for web UI SPNEGO.",
+          "misconception": "Targets [principal format error]: Focuses on principal names, not the transport security of the web interface."
+        },
+        {
+          "text": "Disabling HDFS block access tokens (<code>dfs.block.access.token.enable</code>).",
+          "misconception": "Targets [HDFS specific feature]: Addresses HDFS data access tokens, not web UI security."
+        },
+        {
+          "text": "Not configuring <code>hadoop.security.authorization</code> to <code>true</code>.",
+          "misconception": "Targets [SLA enablement]: Addresses general service-level authorization, not specific web UI transport security."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Web consoles for Hadoop services (like NameNode, ResourceManager) often transmit sensitive information and can be used to manage the cluster. By default, they might use HTTP, which is unencrypted. Configuring <code>dfs.http.policy</code> or <code>yarn.http.policy</code> to <code>HTTPS_ONLY</code> ensures that all web traffic is encrypted using TLS, because it forces the use of HTTPS, thereby protecting data in transit and preventing eavesdropping.",
+        "distractor_analysis": "The first distractor focuses on Kerberos principals for SPNEGO, not transport security. The second addresses HDFS data access tokens. The third is about general service authorization, not web UI transport security.",
+        "analogy": "It's like having a secure mailbox for your sensitive mail (HTTPS) but leaving it unlocked and open to the street (HTTP). Anyone can walk by and read your mail."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "HTTPS_SECURITY",
+        "HADOOP_WEB_UI_SECURITY",
+        "TLS_ENCRYPTION"
+      ]
+    },
+    {
+      "question_text": "What is a critical security misconfiguration in Hadoop's secure mode that can lead to unauthorized access to Hadoop services?",
+      "correct_answer": "Setting <code>hadoop.security.authorization</code> to <code>false</code>, which disables the authorization checks performed by Hadoop services after authentication.",
+      "distractors": [
+        {
+          "text": "Not enabling Kerberos authentication for end users.",
+          "misconception": "Targets [authentication enablement]: Focuses on authentication, not the subsequent authorization step."
+        },
+        {
+          "text": "Using weak encryption algorithms for RPC protection.",
+          "misconception": "Targets [encryption weakness]: Addresses data confidentiality, not access control to services."
+        },
+        {
+          "text": "Incorrectly mapping Kerberos principals to OS users.",
+          "misconception": "Targets [authentication mapping error]: Addresses issues in translating identity, not the authorization checks themselves."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Service Level Authorization (SLA) is a critical security feature that checks whether an authenticated user or service has the necessary permissions to access a specific Hadoop service or perform an action, because Kerberos only confirms identity, not permissions. Disabling SLA (<code>hadoop.security.authorization=false</code>) means that once authenticated, any user or service can potentially access any resource, bypassing fine-grained access controls.",
+        "distractor_analysis": "The first distractor focuses on authentication, not authorization. The second addresses encryption strength, not access control. The third deals with authentication mapping, which is a prerequisite for authorization but not authorization itself.",
+        "analogy": "It's like having a security guard (authentication) who checks your ID at the building entrance, but then not having any internal access controls (SLA) to check if you're allowed into specific offices or rooms once inside."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "HADOOP_SLA",
+        "KERBEROS_AUTHENTICATION",
+        "ACCESS_CONTROL"
+      ]
+    },
+    {
+      "question_text": "What is a common misconfiguration in Hadoop clusters related to auditing that hinders security investigations?",
+      "correct_answer": "Failing to enable or properly configure auditing for Hadoop services and data access, resulting in a lack of visibility into user actions and potential security incidents.",
+      "distractors": [
+        {
+          "text": "Using default audit log retention policies.",
+          "misconception": "Targets [log retention]: Focuses on log management rather than the fundamental enablement of auditing."
+        },
+        {
+          "text": "Not encrypting audit logs at rest.",
+          "misconception": "Targets [log confidentiality]: Addresses protecting the logs themselves, not the act of logging."
+        },
+        {
+          "text": "Disabling Kerberos authentication for audit log access.",
+          "misconception": "Targets [log access security]: Focuses on securing access to logs, not generating them."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Auditing provides a crucial record of who accessed what data and performed what actions within the Hadoop cluster, because it logs security-relevant events. Failing to enable or configure auditing means there's no historical data to analyze for security incidents, compliance checks, or troubleshooting, because no records are being kept.",
+        "distractor_analysis": "The first distractor concerns log retention, not the enablement of logging. The second addresses log confidentiality, not the generation of logs. The third focuses on securing access to logs, not the logging process itself.",
+        "analogy": "It's like having no security cameras in a building. You can't review who entered or left, or what happened, making it impossible to investigate any incidents."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "HADOOP_AUDITING",
+        "SECURITY_LOGGING",
+        "INCIDENT_RESPONSE"
+      ]
+    },
+    {
+      "question_text": "What is a common misconfiguration in Hadoop clusters related to user and group mapping that can lead to authorization issues?",
+      "correct_answer": "Inconsistent or incorrect mapping of OS users and groups to Kerberos principals across different nodes or services, causing authorization failures.",
+      "distractors": [
+        {
+          "text": "Using weak passwords for OS user accounts.",
+          "misconception": "Targets [OS user security]: Focuses on individual OS user credentials, not the mapping mechanism."
+        },
+        {
+          "text": "Not enabling Kerberos authentication for all Hadoop services.",
+          "misconception": "Targets [authentication enablement]: Focuses on authentication, not the mapping of identities for authorization."
+        },
+        {
+          "text": "Using default HDFS permissions for all directories.",
+          "misconception": "Targets [HDFS permissions]: Addresses file-level permissions, not the mapping of users/groups to those permissions."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Hadoop relies on consistent mapping between OS users/groups and Kerberos principals to enforce authorization policies, because authorization systems (like Sentry/Ranger) often rely on these mappings. Inconsistent mapping means that a user authenticated via Kerberos might not be correctly identified by the authorization system, leading to access denied errors or unintended access, because the system cannot reliably determine the user's identity and associated permissions.",
+        "distractor_analysis": "The first distractor focuses on OS user password strength, not the mapping process. The second addresses authentication enablement, not the mapping for authorization. The third deals with HDFS permissions, not the user/group mapping that informs those permissions.",
+        "analogy": "It's like having a directory where some names are spelled correctly, some are misspelled, and some are in different languages. When you try to find someone based on their name, you might not find them, or you might find the wrong person."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "HADOOP_GROUP_MAPPING",
+        "KERBEROS_INTEGRATION",
+        "AUTHORIZATION_POLICY"
+      ]
+    }
+  ],
+  "generation_metadata": {
+    "model": "google/gemini-2.5-flash-lite",
+    "num_generated": 29,
+    "temperature": 0.1,
+    "web_citations": [],
+    "research_method": "openrouter_web_plugin",
+    "search_query": "Hadoop Cluster 009_Security Misconfiguration Security Architecture And Engineering best practices",
+    "latency_ms": 42146.496999999996
+  },
+  "timestamp": "2026-01-01T15:24:53.766371"
+}
