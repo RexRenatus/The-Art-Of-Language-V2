@@ -12,7 +12,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Topics-139,403-blue?style=for-the-badge" alt="Topics">
-  <img src="https://img.shields.io/badge/Flashcards-180,753+-green?style=for-the-badge" alt="Flashcards">
+  <img src="https://img.shields.io/badge/Flashcards-235,049+-green?style=for-the-badge" alt="Flashcards">
   <img src="https://img.shields.io/badge/Domains-47-orange?style=for-the-badge" alt="Domains">
   <img src="https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge" alt="License">
 </p>
@@ -23,7 +23,7 @@
 
 - **139,403 curriculum topics** across cybersecurity, networking, and software engineering
 - **8-voter AI consensus system** for pedagogical quality assurance
-- **180,753+ validated flashcards** with Phase 15 quality protocol
+- **235,049+ validated flashcards** with Phase 15 quality protocol
 - **Web-grounded research** via Exa semantic search and Context7
 - **Production pipeline** processing 29 topics/minute
 
@@ -284,7 +284,7 @@ Gemini generates 15-20 validated flashcards per topic.
 | 🏛️ **Domains** | 47 |
 | 📚 **Subdomains** | 355 |
 | 📝 **Topics** | 139,403 |
-| 🎴 **Flashcards** | 180,753+ |
+| 🎴 **Flashcards** | 235,049+ |
 | 💾 **Data Size** | 23.42 MB |
 | ⏱️ **Throughput** | 29 topics/min |
 | ✅ **Validation Pass** | 80% threshold |
@@ -294,34 +294,34 @@ Gemini generates 15-20 validated flashcards per topic.
 ## Curriculum Categories
 
 <details>
-<summary><strong>🔐 001_cybersecurity</strong> (19 domains, 145 subdomains, 72,099 topics)</summary>
+<summary><strong>🔐 001_cybersecurity</strong> (19 domains, 145 subdomains)</summary>
 
 | # | Domain | Link |
 |---|--------|------|
 | 001 | Security and Risk Management | [Browse →](Data/Raw/001_cybersecurity/001_security-and-risk-management/) |
-| 002 | Security Architecture and Engineering | [Browse →](Data/Raw/001_cybersecurity/002_security-architecture-and-engineering/) |
-| 003 | Asset Security | [Browse →](Data/Raw/001_cybersecurity/003_asset-security/) |
-| 004 | Cryptography | [Browse →](Data/Raw/001_cybersecurity/004_cryptography/) |
-| 005 | Identity and Access Management (IAM) | [Browse →](Data/Raw/001_cybersecurity/005_identity-and-access-management-iam/) |
+| 002 | Asset Security | [Browse →](Data/Raw/001_cybersecurity/002_asset-security/) |
+| 003 | Privacy and Data Protection | [Browse →](Data/Raw/001_cybersecurity/003_privacy-and-data-protection/) |
+| 004 | Identity and Access Management (IAM) | [Browse →](Data/Raw/001_cybersecurity/004_identity-and-access-management-iam/) |
+| 005 | Cryptography | [Browse →](Data/Raw/001_cybersecurity/005_cryptography/) |
 | 006 | Communication and Network Security | [Browse →](Data/Raw/001_cybersecurity/006_communication-and-network-security/) |
-| 007 | Security Operations | [Browse →](Data/Raw/001_cybersecurity/007_security-operations/) |
-| 008 | Security Monitoring and Analytics | [Browse →](Data/Raw/001_cybersecurity/008_security-monitoring-and-analytics/) |
-| 009 | Software Development Security | [Browse →](Data/Raw/001_cybersecurity/009_software-development-security/) |
-| 010 | Application Security | [Browse →](Data/Raw/001_cybersecurity/010_application-security/) |
-| 011 | Cloud Security | [Browse →](Data/Raw/001_cybersecurity/011_cloud-security/) |
-| 012 | Security Assessment and Testing | [Browse →](Data/Raw/001_cybersecurity/012_security-assessment-and-testing/) |
-| 013 | Penetration Testing and Ethical Hacking | [Browse →](Data/Raw/001_cybersecurity/013_penetration-testing-and-ethical-hacking/) |
-| 014 | Threat Intelligence and Hunting | [Browse →](Data/Raw/001_cybersecurity/014_threat-intelligence-and-hunting/) |
+| 007 | Security Architecture and Engineering | [Browse →](Data/Raw/001_cybersecurity/007_security-architecture-and-engineering/) |
+| 008 | Software Development Security | [Browse →](Data/Raw/001_cybersecurity/008_software-development-security/) |
+| 009 | Application Security | [Browse →](Data/Raw/001_cybersecurity/009_application-security/) |
+| 010 | Cloud Security | [Browse →](Data/Raw/001_cybersecurity/010_cloud-security/) |
+| 011 | Operational Technology (OT) and ICS Security | [Browse →](Data/Raw/001_cybersecurity/011_operational-technology-ot-and-ics-security/) |
+| 012 | Security Operations | [Browse →](Data/Raw/001_cybersecurity/012_security-operations/) |
+| 013 | Security Monitoring and Analytics | [Browse →](Data/Raw/001_cybersecurity/013_security-monitoring-and-analytics/) |
+| 014 | Security Assessment and Testing | [Browse →](Data/Raw/001_cybersecurity/014_security-assessment-and-testing/) |
 | 015 | Incident Response and Forensics | [Browse →](Data/Raw/001_cybersecurity/015_incident-response-and-forensics/) |
-| 016 | Privacy and Data Protection | [Browse →](Data/Raw/001_cybersecurity/016_privacy-and-data-protection/) |
-| 017 | Operational Technology (OT) and ICS Security | [Browse →](Data/Raw/001_cybersecurity/017_operational-technology-ot-and-ics-security/) |
-| 018 | Emerging Technologies and Trends | [Browse →](Data/Raw/001_cybersecurity/018_emerging-technologies-and-trends/) |
-| 019 | Advanced Security Architecture and Design Patterns | [Browse →](Data/Raw/001_cybersecurity/019_advanced-security-architecture-and-design-patterns/) |
+| 016 | Penetration Testing and Ethical Hacking | [Browse →](Data/Raw/001_cybersecurity/016_penetration-testing-and-ethical-hacking/) |
+| 017 | Threat Intelligence and Hunting | [Browse →](Data/Raw/001_cybersecurity/017_threat-intelligence-and-hunting/) |
+| 018 | Advanced Security Architecture and Design Patterns | [Browse →](Data/Raw/001_cybersecurity/018_advanced-security-architecture-and-design-patterns/) |
+| 019 | Emerging Technologies and Trends | [Browse →](Data/Raw/001_cybersecurity/019_emerging-technologies-and-trends/) |
 
 </details>
 
 <details>
-<summary><strong>🌐 002_network-engineering</strong> (16 domains, 140 subdomains, 67,304 topics)</summary>
+<summary><strong>🌐 002_network-engineering</strong> (16 domains, 140 subdomains)</summary>
 
 | # | Domain | Link |
 |---|--------|------|
@@ -334,9 +334,9 @@ Gemini generates 15-20 validated flashcards per topic.
 | 007 | EIGRP (Enhanced Interior Gateway Routing Protocol) | [Browse →](Data/Raw/002_network-engineering/007_eigrp-enhanced-interior-gateway-routing-protocol/) |
 | 008 | BGP (Border Gateway Protocol) | [Browse →](Data/Raw/002_network-engineering/008_bgp-border-gateway-protocol/) |
 | 009 | IP Multicast | [Browse →](Data/Raw/002_network-engineering/009_ip-multicast/) |
-| 010 | Network Services and Infrastructure | [Browse →](Data/Raw/002_network-engineering/010_network-services-and-infrastructure/) |
-| 011 | WAN Technologies and MPLS | [Browse →](Data/Raw/002_network-engineering/011_wan-technologies-and-mpls/) |
-| 012 | Wireless Networking | [Browse →](Data/Raw/002_network-engineering/012_wireless-networking/) |
+| 010 | WAN Technologies and MPLS | [Browse →](Data/Raw/002_network-engineering/010_wan-technologies-and-mpls/) |
+| 011 | Wireless Networking | [Browse →](Data/Raw/002_network-engineering/011_wireless-networking/) |
+| 012 | Network Services and Infrastructure | [Browse →](Data/Raw/002_network-engineering/012_network-services-and-infrastructure/) |
 | 013 | Network Security | [Browse →](Data/Raw/002_network-engineering/013_network-security/) |
 | 014 | Data Center Networking | [Browse →](Data/Raw/002_network-engineering/014_data-center-networking/) |
 | 015 | Software-Defined Networking and Automation | [Browse →](Data/Raw/002_network-engineering/015_software-defined-networking-and-automation/) |
@@ -352,15 +352,15 @@ Gemini generates 15-20 validated flashcards per topic.
 | 001 | Foundational Computer Science | [Browse →](Data/Raw/003_software-engineering/001_foundational-computer-science/) |
 | 002 | System Fundamentals | [Browse →](Data/Raw/003_software-engineering/002_system-fundamentals/) |
 | 003 | Core Software Engineering | [Browse →](Data/Raw/003_software-engineering/003_core-software-engineering/) |
-| 004 | Web Development | [Browse →](Data/Raw/003_software-engineering/004_web-development/) |
-| 005 | Mobile Application Development | [Browse →](Data/Raw/003_software-engineering/005_mobile-application-development/) |
-| 006 | Data Science and Analytics | [Browse →](Data/Raw/003_software-engineering/006_data-science-and-analytics/) |
-| 007 | Artificial Intelligence and Machine Learning | [Browse →](Data/Raw/003_software-engineering/007_artificial-intelligence-and-machine-learning/) |
-| 008 | Cloud Engineering and Infrastructure | [Browse →](Data/Raw/003_software-engineering/008_cloud-engineering-and-infrastructure/) |
-| 009 | Cybersecurity and Information Security | [Browse →](Data/Raw/003_software-engineering/009_cybersecurity-and-information-security/) |
-| 010 | Game Development | [Browse →](Data/Raw/003_software-engineering/010_game-development/) |
-| 011 | Specialized Domains and Emerging Technologies | [Browse →](Data/Raw/003_software-engineering/011_specialized-domains-and-emerging-technologies/) |
-| 012 | Project Management and Professional Practice | [Browse →](Data/Raw/003_software-engineering/012_project-management-and-professional-practice/) |
+| 004 | Project Management and Professional Practice | [Browse →](Data/Raw/003_software-engineering/004_project-management-and-professional-practice/) |
+| 005 | Web Development | [Browse →](Data/Raw/003_software-engineering/005_web-development/) |
+| 006 | Mobile Application Development | [Browse →](Data/Raw/003_software-engineering/006_mobile-application-development/) |
+| 007 | Game Development | [Browse →](Data/Raw/003_software-engineering/007_game-development/) |
+| 008 | Data Science and Analytics | [Browse →](Data/Raw/003_software-engineering/008_data-science-and-analytics/) |
+| 009 | Artificial Intelligence and Machine Learning | [Browse →](Data/Raw/003_software-engineering/009_artificial-intelligence-and-machine-learning/) |
+| 010 | Cloud Engineering and Infrastructure | [Browse →](Data/Raw/003_software-engineering/010_cloud-engineering-and-infrastructure/) |
+| 011 | Cybersecurity and Information Security | [Browse →](Data/Raw/003_software-engineering/011_cybersecurity-and-information-security/) |
+| 012 | Specialized Domains and Emerging Technologies | [Browse →](Data/Raw/003_software-engineering/012_specialized-domains-and-emerging-technologies/) |
 
 </details>
 
@@ -435,10 +435,10 @@ As of January 2026:
 
 | Metric | Value |
 |--------|-------|
-| Domains Completed | 3 of 47 (6.4%) |
-| Topics Processed | 11,786 |
-| Flashcards Generated | 180,753 |
-| Processing Time | 6.8 hours |
+| Domains Completed | 4 of 47 (8.5%) |
+| Topics Processed | 14,916 |
+| Flashcards Generated | 235,049 |
+| Processing Time | 8.9 hours |
 | Throughput | ~29 topics/minute |
 
 ---

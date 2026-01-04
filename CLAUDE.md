@@ -11,14 +11,14 @@ Data/
 ├── Raw/                              # Active data files (numbered for learning order)
 │   ├── 001_cybersecurity/            # 19 domains, 145 subdomains
 │   ├── 002_network-engineering/      # 16 domains, 140 subdomains
-│   └── 003_software-engineering/     # 12 domains, 261 subdomains
+│   └── 003_software-engineering/     # 12 domains, 70 subdomains
 └── Backup/                           # Timestamped backups
-    └── pre-reorganization-20251230/  # Original structure backup
+    └── pre-summary-update-20260104/  # Summary update backup
 ```
 
 **Statistics:**
-- 3 categories, 47 domains, ~546 subdomains
-- 655 JSON files
+- 3 categories, 47 domains, 355 subdomains
+- 139,403 topics
 - ~23 MB total data
 
 **Categories (Learning Order):**
@@ -27,24 +27,24 @@ Data/
 | # | Domain |
 |---|--------|
 | 001 | security-and-risk-management |
-| 002 | security-architecture-and-engineering |
-| 003 | asset-security |
-| 004 | cryptography |
-| 005 | identity-and-access-management-iam |
+| 002 | asset-security |
+| 003 | privacy-and-data-protection |
+| 004 | identity-and-access-management-iam |
+| 005 | cryptography |
 | 006 | communication-and-network-security |
-| 007 | security-operations |
-| 008 | security-monitoring-and-analytics |
-| 009 | software-development-security |
-| 010 | application-security |
-| 011 | cloud-security |
-| 012 | security-assessment-and-testing |
-| 013 | penetration-testing-and-ethical-hacking |
-| 014 | threat-intelligence-and-hunting |
+| 007 | security-architecture-and-engineering |
+| 008 | software-development-security |
+| 009 | application-security |
+| 010 | cloud-security |
+| 011 | operational-technology-ot-and-ics-security |
+| 012 | security-operations |
+| 013 | security-monitoring-and-analytics |
+| 014 | security-assessment-and-testing |
 | 015 | incident-response-and-forensics |
-| 016 | privacy-and-data-protection |
-| 017 | operational-technology-ot-and-ics-security |
-| 018 | emerging-technologies-and-trends |
-| 019 | advanced-security-architecture-and-design-patterns |
+| 016 | penetration-testing-and-ethical-hacking |
+| 017 | threat-intelligence-and-hunting |
+| 018 | advanced-security-architecture-and-design-patterns |
+| 019 | emerging-technologies-and-trends |
 
 ### 002_network-engineering (16 domains)
 | # | Domain |
@@ -58,9 +58,9 @@ Data/
 | 007 | eigrp-enhanced-interior-gateway-routing-protocol |
 | 008 | bgp-border-gateway-protocol |
 | 009 | ip-multicast |
-| 010 | network-services-and-infrastructure |
-| 011 | wan-technologies-and-mpls |
-| 012 | wireless-networking |
+| 010 | wan-technologies-and-mpls |
+| 011 | wireless-networking |
+| 012 | network-services-and-infrastructure |
 | 013 | network-security |
 | 014 | data-center-networking |
 | 015 | software-defined-networking-and-automation |
@@ -72,15 +72,15 @@ Data/
 | 001 | foundational-computer-science |
 | 002 | system-fundamentals |
 | 003 | core-software-engineering |
-| 004 | web-development |
-| 005 | mobile-application-development |
-| 006 | data-science-and-analytics |
-| 007 | artificial-intelligence-and-machine-learning |
-| 008 | cloud-engineering-and-infrastructure |
-| 009 | cybersecurity-and-information-security |
-| 010 | game-development |
-| 011 | specialized-domains-and-emerging-technologies |
-| 012 | project-management-and-professional-practice |
+| 004 | project-management-and-professional-practice |
+| 005 | web-development |
+| 006 | mobile-application-development |
+| 007 | game-development |
+| 008 | data-science-and-analytics |
+| 009 | artificial-intelligence-and-machine-learning |
+| 010 | cloud-engineering-and-infrastructure |
+| 011 | cybersecurity-and-information-security |
+| 012 | specialized-domains-and-emerging-technologies |
 
 ---
 

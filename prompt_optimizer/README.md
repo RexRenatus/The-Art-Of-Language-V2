@@ -6,20 +6,20 @@
 
 ## Processing Progress Tracker
 
-**Last Updated:** 2026-01-01
+**Last Updated:** 2026-01-04
 
 ### Overall Progress
 
 ```
-[======>-----------------------------------------] 6.4% (3/47 domains)
+[========>---------------------------------------] 8.5% (4/47 domains)
 ```
 
 | Metric | Value |
 |--------|-------|
-| **Domains Completed** | 3 of 47 |
-| **Topics Processed** | 11,786 |
-| **Flashcards Generated** | 180,753 |
-| **Total Processing Time** | 6.8 hours |
+| **Domains Completed** | 4 of 47 |
+| **Topics Processed** | 14,916 |
+| **Flashcards Generated** | 235,049 |
+| **Total Processing Time** | 8.9 hours |
 
 ---
 
@@ -27,7 +27,7 @@
 
 | Category | Progress | Completed | Remaining |
 |----------|----------|-----------|-----------|
-| 001_cybersecurity | `[====>---------------]` 16% | 3/19 | 16 |
+| 001_cybersecurity | `[=====>--------------]` 21% | 4/19 | 15 |
 | 002_network-engineering | `[--------------------]` 0% | 0/16 | 16 |
 | 003_software-engineering | `[--------------------]` 0% | 0/12 | 12 |
 
@@ -38,26 +38,26 @@
 | # | Domain | Topics | Flashcards | Status |
 |---|--------|-------:|----------:|:------:|
 | 001 | security-and-risk-management | 5,471 | 83,021 | Done |
-| 002 | security-architecture-and-engineering | 3,718 | 57,847 | Done |
-| 003 | asset-security | 2,597 | 39,885 | Done |
-| 004 | cryptography | - | - | Pending |
-| 005 | identity-and-access-management-iam | - | - | Pending |
+| 002 | asset-security | 2,597 | 39,885 | Done |
+| 003 | privacy-and-data-protection | - | - | Pending |
+| 004 | identity-and-access-management-iam | - | - | Pending |
+| 005 | cryptography | - | - | Pending |
 | 006 | communication-and-network-security | - | - | Pending |
-| 007 | security-operations | - | - | Pending |
-| 008 | security-monitoring-and-analytics | - | - | Pending |
-| 009 | software-development-security | - | - | Pending |
-| 010 | application-security | - | - | Pending |
-| 011 | cloud-security | - | - | Pending |
-| 012 | security-assessment-and-testing | - | - | Pending |
-| 013 | penetration-testing-and-ethical-hacking | - | - | Pending |
-| 014 | threat-intelligence-and-hunting | - | - | Pending |
+| 007 | security-architecture-and-engineering | 3,718 | 57,847 | Done |
+| 008 | software-development-security | - | - | Pending |
+| 009 | application-security | - | - | Pending |
+| 010 | cloud-security | - | - | Pending |
+| 011 | operational-technology-ot-and-ics-security | - | - | Pending |
+| 012 | security-operations | - | - | Pending |
+| 013 | security-monitoring-and-analytics | - | - | Pending |
+| 014 | security-assessment-and-testing | - | - | Pending |
 | 015 | incident-response-and-forensics | - | - | Pending |
-| 016 | privacy-and-data-protection | - | - | Pending |
-| 017 | operational-technology-ot-and-ics-security | - | - | Pending |
-| 018 | emerging-technologies-and-trends | - | - | Pending |
-| 019 | advanced-security-architecture-and-design-patterns | - | - | Pending |
+| 016 | penetration-testing-and-ethical-hacking | - | - | Pending |
+| 017 | threat-intelligence-and-hunting | 3,130 | 54,296 | Done |
+| 018 | advanced-security-architecture-and-design-patterns | - | - | Pending |
+| 019 | emerging-technologies-and-trends | - | - | Pending |
 
-**Category Subtotal:** 11,786 topics | 180,753 flashcards
+**Category Subtotal:** 14,916 topics | 235,049 flashcards
 
 ---
 
@@ -74,9 +74,9 @@
 | 007 | eigrp-enhanced-interior-gateway-routing-protocol | - | - | Pending |
 | 008 | bgp-border-gateway-protocol | - | - | Pending |
 | 009 | ip-multicast | - | - | Pending |
-| 010 | network-services-and-infrastructure | - | - | Pending |
-| 011 | wan-technologies-and-mpls | - | - | Pending |
-| 012 | wireless-networking | - | - | Pending |
+| 010 | wan-technologies-and-mpls | - | - | Pending |
+| 011 | wireless-networking | - | - | Pending |
+| 012 | network-services-and-infrastructure | - | - | Pending |
 | 013 | network-security | - | - | Pending |
 | 014 | data-center-networking | - | - | Pending |
 | 015 | software-defined-networking-and-automation | - | - | Pending |
@@ -93,15 +93,15 @@
 | 001 | foundational-computer-science | - | - | Pending |
 | 002 | system-fundamentals | - | - | Pending |
 | 003 | core-software-engineering | - | - | Pending |
-| 004 | web-development | - | - | Pending |
-| 005 | mobile-application-development | - | - | Pending |
-| 006 | data-science-and-analytics | - | - | Pending |
-| 007 | artificial-intelligence-and-machine-learning | - | - | Pending |
-| 008 | cloud-engineering-and-infrastructure | - | - | Pending |
-| 009 | cybersecurity-and-information-security | - | - | Pending |
-| 010 | game-development | - | - | Pending |
-| 011 | specialized-domains-and-emerging-technologies | - | - | Pending |
-| 012 | project-management-and-professional-practice | - | - | Pending |
+| 004 | project-management-and-professional-practice | - | - | Pending |
+| 005 | web-development | - | - | Pending |
+| 006 | mobile-application-development | - | - | Pending |
+| 007 | game-development | - | - | Pending |
+| 008 | data-science-and-analytics | - | - | Pending |
+| 009 | artificial-intelligence-and-machine-learning | - | - | Pending |
+| 010 | cloud-engineering-and-infrastructure | - | - | Pending |
+| 011 | cybersecurity-and-information-security | - | - | Pending |
+| 012 | specialized-domains-and-emerging-technologies | - | - | Pending |
 
 **Category Subtotal:** 0 topics | 0 flashcards
 
@@ -118,16 +118,17 @@
 
 ---
 
-## Production Run Statistics (2026-01-01)
+## Production Run Statistics (2026-01-04)
 
-The unified pipeline has been validated with a complete production run:
+The unified pipeline has been validated with complete production runs:
 
 | Domain | Topics | Flashcards | Duration |
 |--------|--------|------------|----------|
 | 001_security-and-risk-management | 5,471 | 83,021 | 3.2 hrs |
-| 002_security-architecture-and-engineering | 3,718 | 57,847 | 2.2 hrs |
-| 003_asset-security | 2,597 | 39,885 | 1.5 hrs |
-| **Total** | **11,786** | **180,753** | **6.8 hrs** |
+| 002_asset-security | 2,597 | 39,885 | 1.5 hrs |
+| 007_security-architecture-and-engineering | 3,718 | 57,847 | 2.2 hrs |
+| 017_threat-intelligence-and-hunting | 3,130 | 54,296 | 2.1 hrs |
+| **Total** | **14,916** | **235,049** | **8.9 hrs** |
 
 **Throughput**: ~29 topics/minute average
 
