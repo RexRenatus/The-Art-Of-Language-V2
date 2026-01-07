@@ -13,6 +13,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Topics-139,403-blue?style=for-the-badge" alt="Topics">
   <img src="https://img.shields.io/badge/Flashcards-235,049+-green?style=for-the-badge" alt="Flashcards">
+  <img src="https://img.shields.io/badge/Deduplicated-166,050-brightgreen?style=for-the-badge" alt="Deduplicated">
   <img src="https://img.shields.io/badge/Domains-47-orange?style=for-the-badge" alt="Domains">
   <img src="https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge" alt="License">
 </p>
@@ -24,6 +25,7 @@
 - **139,403 curriculum topics** across cybersecurity, networking, and software engineering
 - **8-voter AI consensus system** for pedagogical quality assurance
 - **235,049+ validated flashcards** with Phase 15 quality protocol
+- **GPU-accelerated deduplication** - 35.7% duplicate removal on H100 (258K → 166K)
 - **Web-grounded research** via Exa semantic search and Context7
 - **Production pipeline** processing 29 topics/minute
 
@@ -274,6 +276,90 @@ Gemini generates 15-20 validated flashcards per topic.
 
 </details>
 
+<details>
+<summary><strong>Stage 8: 🚀 GPU Deduplication & Anki Export (H100)</strong></summary>
+
+### What Happens
+Semantic deduplication removes duplicate flashcards using GPU-accelerated embeddings, then exports to Anki APKG format.
+
+### Infrastructure
+| Component | Specification |
+|-----------|---------------|
+| GPU | NVIDIA H100 80GB HBM3 |
+| Platform | Runpod Cloud GPU |
+| Batch Size | 8192 (auto-detected) |
+| Precision | FP16 Mixed Precision |
+
+### Deduplication Pipeline
+```
+258,104 Flashcards
+    ↓
+┌─────────────────────────────────────┐
+│  Sentence Embeddings (all-mpnet)    │
+│  • 768-dimensional vectors          │
+│  • Batch encoding (8192/batch)      │
+│  • FP16 for tensor core acceleration│
+└─────────────────────────────────────┘
+    ↓
+┌─────────────────────────────────────┐
+│  Similarity Matrix (PyTorch GPU)    │
+│  • Cosine similarity                │
+│  • 0.85 threshold                   │
+│  • Chunked for large datasets       │
+└─────────────────────────────────────┘
+    ↓
+┌─────────────────────────────────────┐
+│  Clustering & Canonical Selection   │
+│  • BFS cluster discovery            │
+│  • Best question per cluster        │
+│  • Source authority weighting       │
+└─────────────────────────────────────┘
+    ↓
+166,050 Unique Flashcards (35.7% reduction)
+```
+
+### Deduplication Results (Cybersecurity)
+| Domain | Input | Output | Reduction |
+|--------|-------|--------|-----------|
+| Security & Risk Management | 97,005 | 60,447 | 37.7% |
+| Asset Security | 39,885 | 26,538 | 33.5% |
+| Security Architecture | 66,749 | 46,623 | 30.2% |
+| Threat Intelligence | 54,465 | 32,442 | 40.4% |
+| **Total** | **258,104** | **166,050** | **35.7%** |
+
+### Output Formats
+- **APKG** - Native Anki package (per domain)
+- **JSONL** - Deduplicated flashcards for reprocessing
+
+### CLI Usage
+```bash
+# Run on Runpod H100
+python -m flashcard_maker \
+  --runpod \
+  --runpod-gpu "NVIDIA H100 80GB HBM3" \
+  --category 001_cybersecurity \
+  --workers 4 \
+  --deduplicate \
+  --random-seed 42
+
+# Local execution (requires GPU)
+python -m flashcard_maker \
+  --category 001_cybersecurity \
+  --deduplicate \
+  --clustering-method threshold \
+  --similarity-threshold 0.85
+```
+
+### Performance (H100)
+| Metric | Value |
+|--------|-------|
+| Total Processing Time | ~7 minutes |
+| Embedding Speed | ~17,000 texts/second |
+| Memory Usage | 35 GB peak |
+| Output Size | 71 MB (4 APKG files) |
+
+</details>
+
 ---
 
 ## Statistics
@@ -284,9 +370,12 @@ Gemini generates 15-20 validated flashcards per topic.
 | 🏛️ **Domains** | 47 |
 | 📚 **Subdomains** | 355 |
 | 📝 **Topics** | 139,403 |
-| 🎴 **Flashcards** | 235,049+ |
+| 🎴 **Flashcards (Raw)** | 258,104 |
+| ✨ **Flashcards (Deduplicated)** | 166,050 |
+| 🔄 **Deduplication Rate** | 35.7% |
 | 💾 **Data Size** | 23.42 MB |
 | ⏱️ **Throughput** | 29 topics/min |
+| 🚀 **GPU Processing** | ~7 min (H100) |
 | ✅ **Validation Pass** | 80% threshold |
 
 ---
@@ -403,17 +492,36 @@ The-Art-Of-Language-V2/
 │   │   ├── 001_cybersecurity/    # 19 domains
 │   │   ├── 002_network-engineering/  # 16 domains
 │   │   └── 003_software-engineering/ # 12 domains
+│   ├── JSONL/                    # Consolidated flashcard data
+│   │   └── 001_cybersecurity.jsonl   # 740 MB, 258K flashcards
 │   └── Backup/                   # Timestamped backups
 │
-└── prompt_optimizer/             # AI optimization pipeline
-    ├── main.py                   # CLI entry point
-    ├── orchestrator.py           # Pipeline coordinator
-    ├── config/                   # YAML configurations
-    ├── services/                 # API clients (Exa, OpenRouter)
-    ├── voters/                   # 8 voter implementations
-    ├── synthesis/                # Vote aggregation
-    ├── export/                   # File exporters
-    └── database/                 # SQLite completion tracking
+├── prompt_optimizer/             # AI optimization pipeline
+│   ├── main.py                   # CLI entry point
+│   ├── orchestrator.py           # Pipeline coordinator
+│   ├── config/                   # YAML configurations
+│   ├── services/                 # API clients (Exa, OpenRouter)
+│   ├── voters/                   # 8 voter implementations
+│   ├── synthesis/                # Vote aggregation
+│   ├── export/                   # File exporters
+│   └── database/                 # SQLite completion tracking
+│
+└── flashcard_maker/              # GPU deduplication & Anki export
+    ├── __main__.py               # CLI entry point
+    ├── main.py                   # Pipeline orchestrator
+    ├── runpod_runner.py          # Runpod GPU cloud integration
+    ├── core/
+    │   ├── semantic_deduplicator.py  # GPU-accelerated deduplication
+    │   └── embedding_cache.py    # SQLite embedding cache
+    ├── loaders/
+    │   ├── batch_loader.py       # JSON/JSONL data loading
+    │   └── curriculum_hierarchy.py
+    ├── generators/
+    │   └── apkg_generator.py     # Anki package generation
+    ├── tools/
+    │   └── consolidate_to_jsonl.py   # Batch JSON → JSONL
+    └── output/                   # Generated APKG files
+        └── 001_cybersecurity/    # 4 domain packages (71 MB)
 ```
 
 ---
@@ -426,6 +534,7 @@ The-Art-Of-Language-V2/
 | **Synthesis** | `x-ai/grok-4.1-fast` | 4,000 | 0.5 |
 | **Research** | `google/gemini-2.5-flash` | 3,000 | 0.7 |
 | **Flashcards** | `google/gemini-2.5-flash-lite` | 50,000 | 0.1 |
+| **Embeddings** | `all-mpnet-base-v2` | 768 dims | - |
 
 ---
 
@@ -437,9 +546,19 @@ As of January 2026:
 |--------|-------|
 | Domains Completed | 4 of 47 (8.5%) |
 | Topics Processed | 14,916 |
-| Flashcards Generated | 235,049 |
-| Processing Time | 8.9 hours |
+| Flashcards Generated | 258,104 |
+| Flashcards After Dedup | 166,050 |
+| Deduplication Rate | 35.7% |
+| GPU Processing Time | ~7 minutes (H100) |
 | Throughput | ~29 topics/minute |
+
+### Deduplication by Domain
+| Domain | Before | After | Reduction |
+|--------|--------|-------|-----------|
+| Security & Risk Management | 97,005 | 60,447 | 37.7% |
+| Asset Security | 39,885 | 26,538 | 33.5% |
+| Security Architecture | 66,749 | 46,623 | 30.2% |
+| Threat Intelligence | 54,465 | 32,442 | 40.4% |
 
 ---
 
@@ -450,5 +569,5 @@ As of January 2026:
 ---
 
 <p align="center">
-  <sub>Built with 🔥 Firecrawl, 🤖 Grok, and ✨ Gemini</sub>
+  <sub>Built with 🔥 Firecrawl, 🤖 Grok, ✨ Gemini, and 🚀 H100 GPU</sub>
 </p>
