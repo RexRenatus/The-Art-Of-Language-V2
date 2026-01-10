@@ -31,6 +31,71 @@
 
 ---
 
+## Downloads (Anki Flashcards)
+
+Ready-to-use Anki packages for the Cybersecurity curriculum. Import directly into [Anki](https://apps.ankiweb.net/).
+
+<p align="center">
+  <img src="Threat-Hunting-Front.png" alt="Flashcard Front" width="400">
+  <img src="Threat-Hunting-Back.png" alt="Flashcard Back" width="400">
+</p>
+
+### Deduplicated (Recommended)
+Semantically deduplicated using GPU-accelerated embeddings. 35.7% fewer cards with no redundancy.
+
+| Domain | Cards | Size | Download |
+|--------|-------|------|----------|
+| Security & Risk Management | 60,459 | 25 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/001_cybersecurity/deduplicated/001_security-and-risk-management.apkg) |
+| Asset Security | 26,535 | 11 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/001_cybersecurity/deduplicated/002_asset-security.apkg) |
+| Security Architecture | 46,628 | 19 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/001_cybersecurity/deduplicated/007_security-architecture-and-engineering.apkg) |
+| Threat Intelligence | 32,439 | 14 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/001_cybersecurity/deduplicated/017_threat-intelligence-and-hunting.apkg) |
+| **Total** | **166,061** | **69 MB** | |
+
+### Non-Deduplicated (Full Dataset)
+Complete flashcard set without deduplication.
+
+| Domain | Cards | Size | Download |
+|--------|-------|------|----------|
+| Security & Risk Management | 97,005 | 38 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/001_cybersecurity/non-deduplicated/001_security-and-risk-management.apkg) |
+| Asset Security | 39,885 | 15 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/001_cybersecurity/non-deduplicated/002_asset-security.apkg) |
+| Security Architecture | 66,749 | 26 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/001_cybersecurity/non-deduplicated/007_security-architecture-and-engineering.apkg) |
+| Threat Intelligence | 54,465 | 22 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/001_cybersecurity/non-deduplicated/017_threat-intelligence-and-hunting.apkg) |
+| **Total** | **258,104** | **101 MB** | |
+
+<details>
+<summary><strong>Generation Details</strong></summary>
+
+### Pipeline Configuration
+| Parameter | Value |
+|-----------|-------|
+| Random Seed | `42` |
+| Embedding Model | `all-mpnet-base-v2` (768 dims) |
+| Similarity Threshold | `0.85` |
+| Clustering Method | `threshold` |
+| GPU | NVIDIA H100 80GB HBM3 |
+| Precision | FP16 Mixed |
+| Batch Size | 8192 |
+
+### Reproducibility
+All flashcards are generated with `--random-seed 42` for deterministic ordering. The deduplication pipeline uses cosine similarity with a 0.85 threshold to identify semantic duplicates.
+
+### Deck Hierarchy
+Cards are organized hierarchically:
+```
+001 Cybersecurity
+  └── 017 Threat Intelligence And Hunting
+        └── 006 Threat Hunting
+              └── 001 Threat Hunting Fundamentals
+                    └── Core Intelligence Components
+```
+
+### Generation Date
+January 2026
+
+</details>
+
+---
+
 ## How It Works
 
 ```mermaid
