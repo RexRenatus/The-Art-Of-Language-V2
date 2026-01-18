@@ -1,0 +1,491 @@
+{
+  "topic_title": "SSRF via URL Parameters",
+  "category": "008_Application Security - Web 008_Application Security",
+  "flashcards": [
+    {
+      "question_text": "What is Server-Side Request Forgery (SSRF) when a URL parameter is manipulated?",
+      "correct_answer": "An attack where an attacker tricks a server into making unintended requests to internal or external services.",
+      "distractors": [
+        {
+          "text": "An attack where an attacker injects malicious SQL code into a URL parameter.",
+          "misconception": "Targets [injection type confusion]: Confuses SSRF with SQL injection, which targets databases."
+        },
+        {
+          "text": "An attack where an attacker exploits vulnerabilities in the client-side JavaScript.",
+          "misconception": "Targets [client-side vs server-side confusion]: Mixes SSRF, which occurs on the server, with client-side attacks like XSS."
+        },
+        {
+          "text": "An attack where an attacker forces the server to reveal its source code.",
+          "misconception": "Targets [vulnerability outcome confusion]: Misunderstands the primary goal of SSRF, which is to make requests, not directly reveal source code."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "SSRF occurs because the server trusts user-supplied URLs. The server then makes a request to that URL, potentially accessing internal resources or bypassing firewalls, because it acts with the server's own network privileges.",
+        "distractor_analysis": "The distractors confuse SSRF with SQL injection (targeting databases), client-side attacks (like XSS), or incorrect outcomes like direct source code revelation.",
+        "analogy": "Imagine asking a trusted butler to fetch a document from a restricted room in your house. SSRF is like tricking the butler into fetching a document from a neighbor's house or a secret vault within your own house that they shouldn't access."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "SSRF_BASICS"
+      ]
+    },
+    {
+      "question_text": "Which of the following is a primary risk associated with SSRF vulnerabilities when URL parameters are involved?",
+      "correct_answer": "Accessing internal services or cloud metadata that are not directly exposed to the internet.",
+      "distractors": [
+        {
+          "text": "Compromising the confidentiality of user passwords stored in the database.",
+          "misconception": "Targets [vulnerability scope confusion]: Associates SSRF with direct database credential theft, which is more typical of SQL injection."
+        },
+        {
+          "text": "Executing arbitrary code on the client's web browser.",
+          "misconception": "Targets [attack vector confusion]: Confuses SSRF (server-side) with client-side attacks like Cross-Site Scripting (XSS)."
+        },
+        {
+          "text": "Overloading the server with excessive legitimate traffic.",
+          "misconception": "Targets [attack type confusion]: Mistakenly identifies SSRF as a Denial of Service (DoS) attack, though DoS can be a secondary effect."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "SSRF exploits trust relationships where the server can reach internal resources. Because the request originates from the server, it can access internal services or cloud metadata endpoints (like AWS metadata at http://169.254.169.254/) that are protected by network topology, not direct authentication.",
+        "distractor_analysis": "The distractors incorrectly point to direct database compromise, client-side code execution, or primary DoS, rather than the core risk of accessing internal, restricted network resources.",
+        "analogy": "It's like an attacker tricking a company's internal mailroom (the server) into sending a package to a highly secure internal server room (internal service) or a sensitive document repository (cloud metadata) that the attacker couldn't reach directly."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SSRF_BASICS",
+        "NETWORK_SEGMENTATION"
+      ]
+    },
+    {
+      "question_text": "Consider a web application that accepts a URL parameter to fetch content, like <code>GET /fetch?url=http://example.com/resource</code>. Which of the following payloads is MOST likely to be used in an SSRF attack to access local files?",
+      "correct_answer": "<code>GET /fetch?url=file:///etc/passwd</code>",
+      "distractors": [
+        {
+          "text": "<code>GET /fetch?url=http://localhost/admin</code>",
+          "misconception": "Targets [protocol confusion]: This payload targets internal HTTP services, not local file access."
+        },
+        {
+          "text": "<code>GET /fetch?url=https://malicious.com/script.js</code>",
+          "misconception": "Targets [target confusion]: This payload attempts to load external malicious content, not local files."
+        },
+        {
+          "text": "<code>GET /fetch?url=http://127.0.0.1:8080/internal</code>",
+          "misconception": "Targets [protocol confusion]: This payload targets internal network services, not local file system access."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The <code>file://</code> URI scheme allows applications to access local files on the server's file system. By providing <code>file:///etc/passwd</code> (a common Linux file), an attacker attempts to read sensitive system information because the server processes the <code>file://</code> URL.",
+        "distractor_analysis": "The distractors represent attempts to access internal HTTP services (<code>localhost</code>, <code>127.0.0.1</code>) or external malicious sites, rather than directly accessing local files using the <code>file://</code> protocol.",
+        "analogy": "It's like giving a librarian a request to find a book. Instead of asking for a book title (like <code>http://example.com/resource</code>), you give them a direct path to a file cabinet drawer in the library's back office (like <code>file:///etc/passwd</code>)."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "scenario",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "SSRF_BASICS",
+        "URI_SCHEMES"
+      ]
+    },
+    {
+      "question_text": "How can an attacker leverage redirects to bypass SSRF input validation when a URL parameter is involved?",
+      "correct_answer": "The attacker hosts a malicious domain that redirects to an internal or restricted URL, tricking the server into making the request.",
+      "distractors": [
+        {
+          "text": "The attacker injects redirect commands directly into the URL parameter.",
+          "misconception": "Targets [injection method confusion]: Assumes direct command injection within the parameter, rather than exploiting the server's URL handling."
+        },
+        {
+          "text": "The attacker uses a cross-site scripting (XSS) vulnerability to trigger a redirect.",
+          "misconception": "Targets [attack vector confusion]: Links SSRF bypass to XSS, which operates on the client-side, not server-side request initiation."
+        },
+        {
+          "text": "The attacker exploits a vulnerability in the server's DNS resolution to redirect requests.",
+          "misconception": "Targets [technical mechanism confusion]: Focuses on DNS manipulation rather than the application's handling of HTTP redirects."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Many SSRF defenses rely on validating the initial URL provided by the user. By using a redirect (e.g., from <code>https://attacker.com/redirect</code> to <code>http://localhost:8080/admin</code>), the server first fetches the attacker's URL, follows the redirect, and then makes the request to the internal resource, bypassing initial validation.",
+        "distractor_analysis": "The distractors incorrectly suggest direct command injection, client-side XSS, or DNS manipulation as the primary redirect bypass method, rather than the application following HTTP redirects.",
+        "analogy": "It's like sending a letter to a P.O. box (the attacker's domain) that you know will be automatically forwarded to a secret address (the internal resource) without the mail sorter checking the final destination."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SSRF_BASICS",
+        "HTTP_REDIRECTS",
+        "INPUT_VALIDATION"
+      ]
+    },
+    {
+      "question_text": "Which OWASP Top 10 category directly addresses Server-Side Request Forgery (SSRF)?",
+      "correct_answer": "A10:2021 – Server-Side Request Forgery (SSRF)",
+      "distractors": [
+        {
+          "text": "A01:2021 – Broken Access Control",
+          "misconception": "Targets [category confusion]: While SSRF can lead to access control bypass, it's a distinct vulnerability category."
+        },
+        {
+          "text": "A03:2021 – Injection",
+          "misconception": "Targets [category overlap confusion]: SSRF is a type of injection, but has its own specific category due to its unique mechanism and impact."
+        },
+        {
+          "text": "A05:2021 – Security Misconfiguration",
+          "misconception": "Targets [category confusion]: While misconfiguration can enable SSRF, the vulnerability itself is classified separately."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The OWASP Top 10 is updated periodically to reflect the most critical security risks. The 2021 update introduced 'A10:2021 – Server-Side Request Forgery (SSRF)' as a distinct category, recognizing its significant impact and prevalence.",
+        "distractor_analysis": "The distractors incorrectly map SSRF to related but distinct OWASP categories like Broken Access Control, general Injection, or Security Misconfiguration, missing its specific classification.",
+        "analogy": "Think of the OWASP Top 10 as a list of the most dangerous 'types' of monsters. SSRF is now recognized as its own specific monster type (A10), rather than just being lumped in with general 'Injection' monsters (A03) or 'Access Control' monsters (A01)."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "remember",
+      "prerequisites": [
+        "OWASP_TOP_10",
+        "SSRF_BASICS"
+      ]
+    },
+    {
+      "question_text": "What is the primary defense mechanism against SSRF vulnerabilities related to URL parameters, according to OWASP best practices?",
+      "correct_answer": "Implementing strict input validation, preferably using an allow-list of permitted URLs or domains.",
+      "distractors": [
+        {
+          "text": "Sanitizing all user input to remove potentially harmful characters.",
+          "misconception": "Targets [validation method confusion]: Input sanitization is less effective than allow-listing for SSRF, as it's hard to anticipate all malicious URL formats."
+        },
+        {
+          "text": "Using a Web Application Firewall (WAF) to block known SSRF patterns.",
+          "misconception": "Targets [defense layer confusion]: WAFs can help but are often bypassed; server-side validation is the primary defense."
+        },
+        {
+          "text": "Encrypting all outgoing requests made by the server.",
+          "misconception": "Targets [defense mechanism confusion]: Encryption secures data in transit but does not prevent the server from making unauthorized requests."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "OWASP recommends allow-listing as the most effective defense because it explicitly defines what is permitted, drastically reducing the attack surface. Input validation ensures that the URL parameter conforms to expected formats and targets only approved destinations, preventing the server from making unintended requests.",
+        "distractor_analysis": "The distractors suggest less effective or irrelevant defenses: sanitization is prone to bypasses, WAFs are a secondary layer, and encryption doesn't stop the request itself.",
+        "analogy": "Instead of trying to list all the 'bad' foods someone shouldn't eat (sanitization), it's better to provide a menu of only the 'good' foods they are allowed to choose from (allow-listing)."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "SSRF_DEFENSE",
+        "INPUT_VALIDATION",
+        "OWASP_BEST_PRACTICES"
+      ]
+    },
+    {
+      "question_text": "Why is using <code>localhost</code> or <code>127.0.0.1</code> in a URL parameter particularly dangerous in the context of SSRF?",
+      "correct_answer": "These addresses refer to the server itself, potentially allowing access to internal services running without strong authentication.",
+      "distractors": [
+        {
+          "text": "They are reserved IP addresses and always indicate a malicious request.",
+          "misconception": "Targets [protocol understanding confusion]: Misunderstands that `localhost` is a valid internal reference, not inherently malicious."
+        },
+        {
+          "text": "They force the server to perform a DNS lookup, which can be exploited.",
+          "misconception": "Targets [technical mechanism confusion]: Focuses on DNS resolution, which is not the primary danger of `localhost` in SSRF."
+        },
+        {
+          "text": "They are commonly used in denial-of-service attacks against servers.",
+          "misconception": "Targets [attack type confusion]: Associates `localhost` with DoS rather than its role in accessing local services."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Requests to <code>localhost</code> or <code>127.0.0.1</code> are directed to the server's own network interface. Many internal applications or administrative interfaces run on these loopback addresses, often with weaker or no authentication, assuming they are only accessible locally. SSRF allows an external attacker to leverage the server's ability to reach these services.",
+        "distractor_analysis": "The distractors incorrectly label <code>localhost</code> as inherently malicious, link it to DNS exploits, or confuse its purpose with Denial of Service attacks.",
+        "analogy": "It's like an attacker tricking a guard (the server) into opening a door to the guard's own private office (localhost services) which might contain sensitive information or controls, because the guard trusts anyone asking from inside the building."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SSRF_BASICS",
+        "LOOPBACK_ADDRESSES"
+      ]
+    },
+    {
+      "question_text": "What is the risk if a web application uses a URL parameter to fetch data from an external API, and this parameter is not properly validated?",
+      "correct_answer": "The server could be tricked into sending requests to internal network resources or cloud metadata endpoints.",
+      "distractors": [
+        {
+          "text": "The external API could be overloaded, causing a denial-of-service.",
+          "misconception": "Targets [impact scope confusion]: Focuses on the impact on the external API, not the security risk to the application's own environment."
+        },
+        {
+          "text": "The application's client-side JavaScript could be corrupted.",
+          "misconception": "Targets [attack vector confusion]: Incorrectly attributes client-side corruption to a server-side request vulnerability."
+        },
+        {
+          "text": "The user's browser could be infected with malware.",
+          "misconception": "Targets [attack origin confusion]: Assumes the attack originates from or directly impacts the user's browser, rather than the server."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "When a server fetches data from a user-supplied URL, it acts as a proxy. If the URL is not validated, an attacker can provide internal IP addresses (like <code>10.0.0.5</code>) or metadata service endpoints (<code>169.254.169.254</code>) that the server can reach but the attacker cannot directly. This allows the attacker to probe internal systems or steal credentials.",
+        "distractor_analysis": "The distractors misdirect the impact to the external API, client-side code, or user's browser, failing to identify the core SSRF risk of compromising the server's internal network access.",
+        "analogy": "It's like asking a company's receptionist (the server) to call a phone number you provide. If the receptionist doesn't check the number, you could ask them to call a sensitive internal extension (internal resource) that you can't dial yourself."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "scenario",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "SSRF_BASICS",
+        "EXTERNAL_APIS",
+        "NETWORK_ACCESS_CONTROL"
+      ]
+    },
+    {
+      "question_text": "Which of the following is a common technique used to prevent SSRF when handling URL parameters?",
+      "correct_answer": "Validating the URL scheme (e.g., allowing only 'http' and 'https').",
+      "distractors": [
+        {
+          "text": "Disabling all redirects on the server.",
+          "misconception": "Targets [defense oversimplification]: While disabling redirects can help, it's often impractical and doesn't cover all SSRF vectors."
+        },
+        {
+          "text": "Encoding all URL parameters before processing.",
+          "misconception": "Targets [defense mechanism confusion]: Encoding prevents certain injection types but doesn't inherently stop the server from making requests to unintended URLs."
+        },
+        {
+          "text": "Using a Content Delivery Network (CDN) for all external requests.",
+          "misconception": "Targets [defense layer confusion]: A CDN is for performance and availability, not a primary defense against SSRF originating from server-side logic."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Restricting the allowed URL schemes (like <code>http</code>, <code>https</code>) prevents the use of potentially dangerous schemes such as <code>file://</code>, <code>gopher://</code>, or <code>dict://</code>, which can be used for local file access or interacting with internal services in unintended ways. This is a crucial part of input validation for SSRF prevention.",
+        "distractor_analysis": "The distractors suggest incomplete or irrelevant defenses: disabling redirects is too restrictive, encoding doesn't stop the request itself, and CDNs are not a direct SSRF mitigation.",
+        "analogy": "It's like a security guard only allowing people with specific types of badges (http/https schemes) to enter a building, preventing anyone with a generic 'access all areas' pass (like <code>file://</code>) from getting in."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "SSRF_DEFENSE",
+        "INPUT_VALIDATION",
+        "URI_SCHEMES"
+      ]
+    },
+    {
+      "question_text": "What is the purpose of testing for Server-Side Request Forgery (SSRF) in web applications?",
+      "correct_answer": "To identify if the application can be coerced into making unintended requests to internal or external resources.",
+      "distractors": [
+        {
+          "text": "To determine if the application is vulnerable to Cross-Site Scripting (XSS) attacks.",
+          "misconception": "Targets [vulnerability type confusion]: Confuses SSRF with XSS, which targets the user's browser."
+        },
+        {
+          "text": "To assess the application's resilience against SQL injection attacks.",
+          "misconception": "Targets [vulnerability type confusion]: Confuses SSRF with SQL injection, which targets database integrity."
+        },
+        {
+          "text": "To evaluate the strength of the application's password hashing algorithms.",
+          "misconception": "Targets [security domain confusion]: Relates SSRF testing to cryptographic practices, not network request manipulation."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "SSRF testing aims to discover if an attacker can manipulate URL parameters or other inputs to force the server to initiate network requests to arbitrary destinations. This is crucial because such requests can bypass network security controls and access sensitive internal systems.",
+        "distractor_analysis": "The distractors incorrectly associate SSRF testing with other distinct vulnerabilities like XSS, SQL injection, or password hashing strength.",
+        "analogy": "It's like testing if a company's internal phone system can be tricked into calling any number, including secret internal lines or external premium-rate numbers, by manipulating the digits you input."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "procedure",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "SSRF_TESTING",
+        "WEB_APP_SECURITY"
+      ]
+    },
+    {
+      "question_text": "How can cloud metadata endpoints, such as AWS metadata services, be exploited via SSRF using URL parameters?",
+      "correct_answer": "By tricking the server into making requests to the metadata endpoint (e.g., <code>http://169.254.169.254/</code>) to retrieve sensitive information like credentials.",
+      "distractors": [
+        {
+          "text": "By directly accessing the metadata endpoint from the client's browser.",
+          "misconception": "Targets [attack vector confusion]: Assumes the client can directly access the metadata endpoint, ignoring the server-side nature of SSRF."
+        },
+        {
+          "text": "By using the metadata endpoint to launch denial-of-service attacks against the cloud provider.",
+          "misconception": "Targets [attack objective confusion]: Misunderstands that the primary goal is data exfiltration, not DoS against the provider."
+        },
+        {
+          "text": "By injecting malicious code into the metadata service itself.",
+          "misconception": "Targets [injection target confusion]: Assumes direct injection into the metadata service, rather than leveraging the application server to query it."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Cloud providers often expose metadata services on a special loopback address (<code>169.254.169.254</code> for AWS). These services contain instance configuration and potentially temporary security credentials. If an application accepts a URL parameter and doesn't validate it, an attacker can craft a request to this metadata endpoint, causing the server to fetch and potentially leak sensitive data.",
+        "distractor_analysis": "The distractors incorrectly place the attack on the client, misstate the objective as DoS, or assume direct injection into the metadata service rather than using the vulnerable server as a proxy.",
+        "analogy": "It's like tricking a company's internal help desk (the server) into calling a special internal number (metadata endpoint) that reveals the company's secret master key (credentials) to the help desk, which then relays it back to you."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "attack",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "SSRF_BASICS",
+        "CLOUD_SECURITY",
+        "METADATA_SERVICES"
+      ]
+    },
+    {
+      "question_text": "Which of the following is a potential consequence of an SSRF vulnerability exploited via a URL parameter that targets an internal database's HTTP interface?",
+      "correct_answer": "An attacker could potentially extract sensitive data if the database interface lacks authentication.",
+      "distractors": [
+        {
+          "text": "The attacker could gain administrative control over the web server.",
+          "misconception": "Targets [consequence scope confusion]: While RCE is possible in some SSRF scenarios, direct admin control of the web server isn't the primary outcome of targeting a database interface."
+        },
+        {
+          "text": "The web application's client-side code would be rewritten.",
+          "misconception": "Targets [attack vector confusion]: Incorrectly attributes client-side code modification to a server-side request vulnerability."
+        },
+        {
+          "text": "The server's operating system would be immediately compromised.",
+          "misconception": "Targets [consequence severity confusion]: Overstates the immediate impact; direct OS compromise is less common than data exfiltration from the targeted service."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Many NoSQL databases (like MongoDB) expose HTTP interfaces. If these are accessible internally but not externally, they might lack robust authentication. An SSRF attack can force the vulnerable server to query this internal database interface, allowing an attacker to read or manipulate data if authentication is weak or absent.",
+        "distractor_analysis": "The distractors suggest outcomes like direct web server admin control, client-side code rewriting, or immediate OS compromise, which are not the typical or direct results of exploiting an internal database's HTTP interface via SSRF.",
+        "analogy": "It's like tricking a company's internal messenger (the server) into delivering a message to the company's private, unmonitored filing cabinet (the database HTTP interface), allowing the messenger to read sensitive files."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "scenario",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SSRF_BASICS",
+        "DATABASE_SECURITY",
+        "NETWORK_ACCESS_CONTROL"
+      ]
+    },
+    {
+      "question_text": "According to MDN Web Docs, what is a key defense strategy against SSRF vulnerabilities involving URL parameters?",
+      "correct_answer": "Restrict the URLs that the server API will use by implementing an allow list of expected domains.",
+      "distractors": [
+        {
+          "text": "Always use HTTPS for all outgoing requests.",
+          "misconception": "Targets [defense strategy confusion]: HTTPS encrypts traffic but doesn't prevent the server from making requests to unintended destinations."
+        },
+        {
+          "text": "Implement rate limiting on all external API calls.",
+          "misconception": "Targets [defense objective confusion]: Rate limiting can mitigate DoS aspects but doesn't prevent the initial unauthorized request."
+        },
+        {
+          "text": "Perform input validation only on the client-side.",
+          "misconception": "Targets [defense location confusion]: Client-side validation can be bypassed; server-side validation is critical for SSRF."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "MDN emphasizes that restricting URLs via an allow list is a primary defense. This ensures the server only interacts with pre-approved, trusted domains or specific endpoints, significantly reducing the risk of the server being tricked into accessing internal or malicious resources.",
+        "distractor_analysis": "The distractors suggest incomplete defenses (HTTPS, rate limiting) or incorrect placement (client-side validation), missing the core recommendation of server-side allow-listing.",
+        "analogy": "It's like a company policy stating that employees can only call specific, approved phone numbers from the office phone system, preventing them from calling any random number provided by an outsider."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "SSRF_DEFENSE",
+        "INPUT_VALIDATION",
+        "MDN_WEB_DOCS"
+      ]
+    },
+    {
+      "question_text": "What is the primary difference between SSRF and Cross-Site Scripting (XSS) when considering URL parameters?",
+      "correct_answer": "SSRF exploits the server's ability to make requests, while XSS exploits the client's browser to execute malicious scripts.",
+      "distractors": [
+        {
+          "text": "SSRF targets databases, while XSS targets the web server.",
+          "misconception": "Targets [target confusion]: Incorrectly assigns targets; SSRF targets network requests, XSS targets the browser."
+        },
+        {
+          "text": "SSRF uses <code>file://</code> protocol, while XSS uses <code>http://</code> protocol.",
+          "misconception": "Targets [protocol confusion]: Both can involve `http://`, and SSRF is not limited to `file://`."
+        },
+        {
+          "text": "SSRF is a server-side vulnerability, while XSS is also a server-side vulnerability.",
+          "misconception": "Targets [vulnerability location confusion]: Incorrectly classifies XSS as solely server-side; its primary impact is client-side."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "SSRF occurs when the server itself makes an unintended request based on user input (e.g., a URL parameter). XSS occurs when malicious scripts are injected into a web page viewed by a user, and the user's browser executes these scripts. They exploit different trust relationships: SSRF exploits the server's trust in user-provided URLs, while XSS exploits the browser's trust in the web page content.",
+        "distractor_analysis": "The distractors incorrectly assign targets, confuse protocols, or misclassify XSS as purely server-side, failing to distinguish the core difference in attack vectors and execution environments.",
+        "analogy": "SSRF is like tricking a company's internal operator (the server) into dialing a number. XSS is like slipping a malicious note (script) into a document that a visitor (the user) will read and act upon."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SSRF_BASICS",
+        "XSS_BASICS",
+        "WEB_APP_SECURITY"
+      ]
+    },
+    {
+      "question_text": "What is the OWASP Web Security Testing Guide (WSTG) recommendation for testing Server-Side Request Forgery (SSRF)?",
+      "correct_answer": "Identify SSRF injection points, test exploitability, and assess the severity of the vulnerability.",
+      "distractors": [
+        {
+          "text": "Focus solely on preventing remote code execution (RCE) via SSRF.",
+          "misconception": "Targets [testing scope confusion]: RCE is a possible outcome, but testing should cover broader impacts like internal resource access."
+        },
+        {
+          "text": "Only test for SSRF vulnerabilities that involve the <code>file://</code> protocol.",
+          "misconception": "Targets [protocol limitation confusion]: SSRF can exploit various protocols (HTTP, Gopher, etc.), not just `file://`."
+        },
+        {
+          "text": "Assume SSRF is only exploitable if the server returns detailed error messages.",
+          "misconception": "Targets [detection method confusion]: SSRF can often be exploited without verbose error messages, by observing timing or status codes."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The WSTG (specifically WSTG-INPV-19) outlines a testing methodology for SSRF that includes identifying potential injection points (where user input influences server requests), verifying if these points can be exploited to make unintended requests, and then evaluating the potential impact (severity) of such exploits.",
+        "distractor_analysis": "The distractors incorrectly narrow the testing scope to only RCE or specific protocols, or rely on a single detection method (error messages), missing the comprehensive approach recommended by the WSTG.",
+        "analogy": "Testing for SSRF is like a building inspector checking all doors and windows (injection points) to see if they can be opened from the outside (exploitability) and assessing how much damage could be done if they were (severity)."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "procedure",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "SSRF_TESTING",
+        "WSTG",
+        "VULNERABILITY_ASSESSMENT"
+      ]
+    }
+  ],
+  "generation_metadata": {
+    "model": "google/gemini-2.5-flash-lite",
+    "num_generated": 15,
+    "temperature": 0.1,
+    "web_citations": [],
+    "research_method": "openrouter_web_plugin",
+    "search_query": "SSRF via URL Parameters 008_Application Security best practices",
+    "latency_ms": 30744.516
+  },
+  "timestamp": "2026-01-18T12:11:00.895131",
+  "_av_safe_encoded": true,
+  "_encoding_note": "Educational content encoded with HTML entities to prevent antivirus false positives. Content renders normally in Anki."
+}

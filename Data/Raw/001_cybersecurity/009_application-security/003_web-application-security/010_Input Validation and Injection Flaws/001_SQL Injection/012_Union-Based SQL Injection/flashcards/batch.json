@@ -1,0 +1,487 @@
+{
+  "topic_title": "Union-Based SQL Injection",
+  "category": "008_Application Security - Web 008_Application Security",
+  "flashcards": [
+    {
+      "question_text": "What is the primary mechanism exploited in a UNION-based SQL injection attack?",
+      "correct_answer": "Leveraging the UNION SQL operator to combine the results of the original query with results from a query controlled by the attacker.",
+      "distractors": [
+        {
+          "text": "Injecting malicious SQL commands that alter the database schema.",
+          "misconception": "Targets [attack vector confusion]: Confuses UNION-based injection with schema manipulation attacks like ALTER TABLE."
+        },
+        {
+          "text": "Exploiting flaws in the application's session management to hijack user sessions.",
+          "misconception": "Targets [vulnerability type confusion]: Mixes SQL injection with session hijacking vulnerabilities."
+        },
+        {
+          "text": "Overwriting application configuration files through direct file system access.",
+          "misconception": "Targets [attack surface confusion]: Confuses database injection with file system access vulnerabilities."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "UNION-based SQL injection works by appending a crafted SQL query to the original query using the UNION operator. This allows the attacker to retrieve data from different tables or databases because the application merges the results, since it trusts the combined output.",
+        "distractor_analysis": "The distractors incorrectly describe schema alteration, session hijacking, and file system access as the mechanism for UNION-based SQL injection, missing the core concept of query result combination.",
+        "analogy": "Imagine a restaurant menu where a waiter (the application) takes your order (original query) and then secretly adds another dish from a different menu (attacker's query) to your plate, presenting both as one meal."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "SQL_BASICS",
+        "SQL_INJECTION_FUNDAMENTALS"
+      ]
+    },
+    {
+      "question_text": "Which of the following conditions is NECESSARY for a UNION-based SQL injection to be successful?",
+      "correct_answer": "The application must use user-supplied input directly within a SQL query that is then executed by the database.",
+      "distractors": [
+        {
+          "text": "The database must be configured to allow remote administration access.",
+          "misconception": "Targets [unnecessary condition]: Remote admin access is not required for UNION injection, only database interaction."
+        },
+        {
+          "text": "The application must expose its database schema publicly.",
+          "misconception": "Targets [unnecessary condition]: While helpful, schema exposure is not strictly necessary for basic UNION injection."
+        },
+        {
+          "text": "The web server must be running an outdated version of Apache.",
+          "misconception": "Targets [irrelevant factor]: Web server version is generally irrelevant to SQL injection vulnerabilities."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "UNION-based SQL injection requires that user input is incorporated into a SQL query without proper sanitization or parameterization. This allows the attacker to inject the UNION clause because the application trusts and executes the combined query.",
+        "distractor_analysis": "The distractors propose conditions like remote admin access, public schema, or outdated web server versions, which are not fundamental requirements for a UNION-based SQL injection to occur.",
+        "analogy": "It's like trying to add an extra ingredient to a recipe. The recipe must be followed loosely (user input in query) for you to sneak in your extra ingredient (UNION clause)."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SQL_INJECTION_FUNDAMENTALS",
+        "INPUT_VALIDATION"
+      ]
+    },
+    {
+      "question_text": "When performing UNION-based SQL injection, why is it crucial to match the number of columns in the injected query to the original query?",
+      "correct_answer": "The UNION operator requires that both SELECT statements have the same number of columns to combine their results.",
+      "distractors": [
+        {
+          "text": "To ensure the injected query executes faster than the original query.",
+          "misconception": "Targets [performance confusion]: Column count affects query compatibility, not necessarily speed."
+        },
+        {
+          "text": "To prevent the database from logging the malicious query.",
+          "misconception": "Targets [logging confusion]: Column count does not directly influence database logging behavior."
+        },
+        {
+          "text": "To bypass Web Application Firewalls (WAFs) that inspect query structure.",
+          "misconception": "Targets [WAF bypass confusion]: While WAFs can detect structural anomalies, column mismatch is a functional requirement, not a bypass technique."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The SQL UNION operator requires that the number and data types of columns in both SELECT statements are compatible. Matching the column count is essential because the database cannot merge results from queries with differing structures, therefore the attacker must align them.",
+        "distractor_analysis": "The distractors incorrectly link column count matching to query speed, log evasion, or WAF bypass, rather than the fundamental SQL requirement for UNION operations.",
+        "analogy": "It's like trying to stack two different-sized boxes. You can only stack them if they have the same base dimensions; otherwise, the stack will collapse (the query will fail)."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SQL_UNION_OPERATOR",
+        "SQL_INJECTION_FUNDAMENTALS"
+      ]
+    },
+    {
+      "question_text": "Consider the SQL query: <code>SELECT product_name, price FROM products WHERE id = &#x27;123&#x27;;</code>. If an attacker injects <code>&#x27; UNION SELECT username, password FROM users --</code>, what is the likely outcome?",
+      "correct_answer": "The application will display product names and prices, followed by usernames and passwords from the users table.",
+      "distractors": [
+        {
+          "text": "The application will display only usernames and passwords, as the original query is overridden.",
+          "misconception": "Targets [query execution confusion]: The UNION operator combines results, it doesn't replace the original query's results entirely."
+        },
+        {
+          "text": "The application will return an error due to mismatched data types between products and users tables.",
+          "misconception": "Targets [data type assumption]: Assumes data types will mismatch, which might be true but not the guaranteed outcome if types are compatible."
+        },
+        {
+          "text": "The database will be dropped because the injected query contains malicious commands.",
+          "misconception": "Targets [command injection confusion]: UNION injection is for data retrieval/manipulation, not typically for dropping databases directly."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The injected query uses UNION to append the results of <code>SELECT username, password FROM users</code> to the original <code>SELECT product_name, price FROM products</code>. Since the attacker likely matched column counts and compatible types, the application displays both sets of data because the UNION operator merges them.",
+        "distractor_analysis": "The distractors incorrectly suggest the original query is overridden, that errors are guaranteed due to type mismatches, or that database dropping is the outcome, missing the data combination aspect of UNION.",
+        "analogy": "The waiter brings your ordered food (products) and then also brings the secret dish you requested (users' credentials) to be served alongside it."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "scenario",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "SQL_INJECTION_FUNDAMENTALS",
+        "SQL_UNION_OPERATOR"
+      ]
+    },
+    {
+      "question_text": "Which of the following is a common technique used to determine the number of columns in a UNION-based SQL injection attack?",
+      "correct_answer": "Systematically trying different numbers of NULL values in the injected SELECT statement until the query executes without error.",
+      "distractors": [
+        {
+          "text": "Analyzing the application's source code for SQL query definitions.",
+          "misconception": "Targets [information source confusion]: Assumes source code is available and readable, which is often not the case in real-world scenarios."
+        },
+        {
+          "text": "Using a brute-force tool to guess common column names.",
+          "misconception": "Targets [method confusion]: Brute-forcing column names is a separate step after determining column count."
+        },
+        {
+          "text": "Checking the web server's error logs for query syntax errors.",
+          "misconception": "Targets [log access confusion]: Attackers typically don't have direct access to web server error logs."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Attackers often use a trial-and-error method, injecting <code>UNION SELECT NULL, NULL, ...</code> with an increasing number of NULLs. When the number of NULLs matches the original query's columns, the query succeeds, revealing the column count because the database can process the compatible structure.",
+        "distractor_analysis": "The distractors suggest analyzing source code (often unavailable), brute-forcing names (premature), or checking server logs (unlikely access), missing the common technique of using NULLs to find column count.",
+        "analogy": "It's like trying to fit a key into a lock. You try different keys (number of NULLs) until one fits perfectly (query executes without error)."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "procedure",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "SQL_INJECTION_FUNDAMENTALS",
+        "SQL_UNION_OPERATOR"
+      ]
+    },
+    {
+      "question_text": "What is the purpose of using <code>NULL</code> values in the injected SELECT statement during UNION-based SQL injection?",
+      "correct_answer": "To satisfy the column count requirement of the UNION operator without introducing incompatible data types.",
+      "distractors": [
+        {
+          "text": "To trigger specific database errors that reveal information about the schema.",
+          "misconception": "Targets [error-based confusion]: NULLs are for structural compatibility, not typically for triggering specific error messages."
+        },
+        {
+          "text": "To encrypt the injected data, making it harder for the application to detect.",
+          "misconception": "Targets [encryption confusion]: NULL values have no encryption properties."
+        },
+        {
+          "text": "To automatically extract all data from the target table.",
+          "misconception": "Targets [extraction confusion]: NULLs only satisfy structural requirements; they don't inherently extract data."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "NULL values are used because they are compatible with almost any data type in SQL. This allows the attacker to satisfy the structural requirement of the UNION operator (matching column count) without worrying about data type mismatches, thus enabling the query to proceed.",
+        "distractor_analysis": "The distractors incorrectly associate NULLs with triggering errors, encryption, or automatic data extraction, missing their role in structural compatibility for UNION operations.",
+        "analogy": "Think of NULLs as generic placeholders. You use them to fill empty slots in a form (columns) to make sure the form is complete, even if you don't have the specific information yet."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SQL_INJECTION_FUNDAMENTALS",
+        "SQL_UNION_OPERATOR"
+      ]
+    },
+    {
+      "question_text": "How can an application defend against UNION-based SQL injection attacks?",
+      "correct_answer": "Using parameterized queries (prepared statements) and validating/sanitizing all user input.",
+      "distractors": [
+        {
+          "text": "Implementing strict firewall rules to block all incoming SQL traffic.",
+          "misconception": "Targets [overly broad defense]: Blocking all SQL traffic would break legitimate application functionality."
+        },
+        {
+          "text": "Encrypting the entire database to prevent unauthorized access.",
+          "misconception": "Targets [defense scope confusion]: Database encryption protects data at rest but doesn't prevent injection attacks targeting application logic."
+        },
+        {
+          "text": "Regularly updating the web server software to the latest version.",
+          "misconception": "Targets [irrelevant defense]: Web server updates do not directly patch SQL injection vulnerabilities in the application code."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Parameterized queries separate SQL code from user data, preventing input from being interpreted as executable SQL. Input validation and sanitization further reduce risks by ensuring data conforms to expected formats, thereby stopping malicious payloads like UNION clauses.",
+        "distractor_analysis": "The distractors suggest impractical defense (blocking all SQL), incomplete defense (database encryption), or irrelevant defense (web server updates), missing the core principles of parameterized queries and input validation.",
+        "analogy": "It's like having a secure mailbox (parameterized query) where letters (user input) are placed in a separate slot and never mixed with the instructions on how to sort the mail (SQL code)."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "SQL_INJECTION_DEFENSE",
+        "PARAMETERIZED_QUERIES",
+        "INPUT_VALIDATION"
+      ]
+    },
+    {
+      "question_text": "What is 'Blind UNION Injection' and how does it differ from standard UNION Injection?",
+      "correct_answer": "Blind UNION Injection is used when the application does not directly display query results, requiring the attacker to infer data through other means, unlike standard UNION Injection which relies on visible results.",
+      "distractors": [
+        {
+          "text": "Blind UNION Injection involves injecting UNION statements into error messages, while standard UNION Injection displays results directly.",
+          "misconception": "Targets [error vs. result confusion]: Blind injection is about *lack* of direct results, not necessarily using error messages."
+        },
+        {
+          "text": "Blind UNION Injection uses different SQL syntax than standard UNION Injection.",
+          "misconception": "Targets [syntax confusion]: The core UNION syntax is the same; the difference lies in result handling."
+        },
+        {
+          "text": "Blind UNION Injection is only possible on NoSQL databases, not SQL databases.",
+          "misconception": "Targets [database type confusion]: Blind UNION injection is a technique applicable to SQL databases."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Standard UNION injection relies on the application displaying the results of the injected query. Blind UNION injection is employed when results aren't shown, forcing the attacker to infer data, perhaps by observing time delays or changes in application behavior, because the direct data channel is unavailable.",
+        "distractor_analysis": "The distractors incorrectly link blind injection to error messages, different syntax, or NoSQL databases, failing to grasp the core distinction: the absence of directly displayed results.",
+        "analogy": "Standard UNION is like asking a waiter for your order and seeing it on your plate. Blind UNION is like asking the waiter, and they don't show you the plate, so you have to guess what's on it based on how long they take or if they look suspicious."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "comparison",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SQL_INJECTION_FUNDAMENTALS",
+        "BLIND_SQL_INJECTION"
+      ]
+    },
+    {
+      "question_text": "Which OWASP Top 10 category most directly relates to UNION-based SQL injection vulnerabilities?",
+      "correct_answer": "A03: Injection",
+      "distractors": [
+        {
+          "text": "A01: Broken Access Control",
+          "misconception": "Targets [category confusion]: Access control is about permissions, not data manipulation via input flaws."
+        },
+        {
+          "text": "A02: Cryptographic Failures",
+          "misconception": "Targets [category confusion]: Cryptographic failures relate to encryption/hashing, not input validation flaws."
+        },
+        {
+          "text": "A07: Identification and Authentication Failures",
+          "misconception": "Targets [category confusion]: Authentication issues concern verifying user identity, not exploiting input handling."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "UNION-based SQL injection is a classic example of an 'Injection' vulnerability (OWASP A03). This category covers flaws where untrusted data is sent to an interpreter as part of a command or query, leading to unintended execution, because the application fails to properly validate or sanitize the input.",
+        "distractor_analysis": "The distractors incorrectly assign SQL injection to categories related to access control, cryptography, and authentication, missing the direct link to the 'Injection' category.",
+        "analogy": "Think of the OWASP Top 10 as a list of common house break-in methods. Injection is like picking the lock on the front door (input validation flaw) to get inside, rather than disabling the alarm system (cryptography) or leaving the door unlocked (access control)."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "OWASP_TOP_10",
+        "SQL_INJECTION_FUNDAMENTALS"
+      ]
+    },
+    {
+      "question_text": "What is the primary risk associated with successful UNION-based SQL injection?",
+      "correct_answer": "Unauthorized access to and manipulation of sensitive data stored in the database.",
+      "distractors": [
+        {
+          "text": "Denial of Service (DoS) by overwhelming the database server with complex queries.",
+          "misconception": "Targets [risk confusion]: While possible, DoS is not the primary or most common risk; data compromise is."
+        },
+        {
+          "text": "Execution of arbitrary operating system commands on the database server.",
+          "misconception": "Targets [attack type confusion]: This is a more advanced SQL injection outcome, not the primary risk of UNION injection."
+        },
+        {
+          "text": "Defacement of the web application's user interface.",
+          "misconception": "Targets [impact confusion]: UI defacement is typically associated with XSS, not SQL injection."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The main danger of UNION-based SQL injection is that it allows attackers to extract, modify, or delete data from the database, potentially including sensitive information like user credentials or financial records, because the application trusts the injected query.",
+        "distractor_analysis": "The distractors focus on DoS, OS command execution, or UI defacement, which are either less common outcomes or associated with different vulnerability types, missing the core risk of data compromise.",
+        "analogy": "The biggest danger is like a thief not just breaking into your house, but also reading all your private documents and potentially changing them."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SQL_INJECTION_FUNDAMENTALS",
+        "DATA_SECURITY"
+      ]
+    },
+    {
+      "question_text": "When using UNION-based SQL injection to extract data, what is the typical goal regarding the data types of the columns being selected?",
+      "correct_answer": "To find columns with compatible data types (e.g., strings, numbers) that can be displayed or processed by the application.",
+      "distractors": [
+        {
+          "text": "To find columns with incompatible data types to cause application errors.",
+          "misconception": "Targets [goal confusion]: Causing errors is a different technique; UNION injection aims for data retrieval."
+        },
+        {
+          "text": "To find columns that are encrypted or obfuscated.",
+          "misconception": "Targets [data format confusion]: Attackers aim for readable data, not necessarily encrypted data unless they have the key."
+        },
+        {
+          "text": "To find columns that are no longer in use by the application.",
+          "misconception": "Targets [data relevance confusion]: Attackers target active, sensitive data, not necessarily unused columns."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "For the UNION operator to successfully combine query results, the corresponding columns must have compatible data types. Attackers seek columns that can hold and display the data they wish to extract (like usernames, passwords, credit card numbers) because the application expects certain data formats.",
+        "distractor_analysis": "The distractors suggest aiming for incompatible types (error-based), encrypted data (unhelpful without keys), or unused columns (irrelevant), missing the goal of finding displayable, compatible data.",
+        "analogy": "When combining two shopping lists, you want items that make sense together (compatible types) to create a coherent final list, not random items that don't fit."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SQL_INJECTION_FUNDAMENTALS",
+        "SQL_UNION_OPERATOR",
+        "DATA_TYPES"
+      ]
+    },
+    {
+      "question_text": "What is the role of the comment character (e.g., <code>--</code>, <code>#</code>, <code>/* */</code>) in a UNION-based SQL injection attack?",
+      "correct_answer": "To terminate the original SQL query, preventing syntax errors caused by leftover SQL code.",
+      "distractors": [
+        {
+          "text": "To encrypt the injected SQL payload.",
+          "misconception": "Targets [encryption confusion]: Comment characters are for code termination, not encryption."
+        },
+        {
+          "text": "To execute multiple SQL statements in a single request.",
+          "misconception": "Targets [statement execution confusion]: While comments end a statement, they don't enable multiple independent statements unless the DB supports it (e.g., via semicolon)."
+        },
+        {
+          "text": "To hide the injected SQL code from intrusion detection systems.",
+          "misconception": "Targets [obfuscation confusion]: Comments can sometimes aid obfuscation but their primary role is syntax termination."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Comment characters are crucial because they effectively 'comment out' the remainder of the original SQL query after the injection point. This prevents syntax errors that would occur if the original query's closing clauses interfered with the injected UNION statement, thus allowing the malicious query to execute.",
+        "distractor_analysis": "The distractors incorrectly attribute encryption, multi-statement execution, or IDS evasion as the primary function of comment characters in this context, missing their role in query termination.",
+        "analogy": "It's like adding a period at the end of a sentence. It signals the end of the original thought, allowing your new sentence (the injected query) to start cleanly."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "procedure",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "SQL_INJECTION_FUNDAMENTALS",
+        "SQL_SYNTAX"
+      ]
+    },
+    {
+      "question_text": "Consider a scenario where a web application displays user profiles, and the profile ID is passed in the URL like <code>example.com/profile?id=101</code>. An attacker attempts UNION-based SQL injection. Which of the following injected payloads is MOST likely to be effective?",
+      "correct_answer": "<code>101&#x27; UNION SELECT username, password FROM users --</code>",
+      "distractors": [
+        {
+          "text": "<code>101 OR 1=1 --</code>",
+          "misconception": "Targets [attack type confusion]: This is a common technique for bypassing WHERE clauses (e.g., login bypass), not for UNION injection data retrieval."
+        },
+        {
+          "text": "<code>101; DROP TABLE users; --</code>",
+          "misconception": "Targets [command injection confusion]: This attempts to execute a destructive command, not combine query results for data extraction."
+        },
+        {
+          "text": "<code>101 UNION SELECT &#64;&#64;version --</code>",
+          "misconception": "Targets [data extraction goal confusion]: While valid SQL, this payload extracts database version info, not typically sensitive user data as the primary goal."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The payload <code>101&#x27; UNION SELECT username, password FROM users --</code> correctly closes the initial string literal (<code>&#x27;</code>), injects the UNION clause to combine results, selects desired sensitive data (username, password) from the <code>users</code> table, and uses <code>--</code> to comment out the rest of the original query, making it a highly effective UNION-based injection.",
+        "distractor_analysis": "The distractors represent different SQL injection techniques (clause bypass, destructive commands) or a less impactful data extraction goal, failing to match the objective of retrieving specific sensitive data via UNION.",
+        "analogy": "You're asking for profile #101. The attacker adds a request: '...and also give me the list of all usernames and passwords, appended to the profile info.'"
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "scenario",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "SQL_INJECTION_FUNDAMENTALS",
+        "SQL_UNION_OPERATOR"
+      ]
+    },
+    {
+      "question_text": "What is the significance of the <code>ORDER BY</code> clause in relation to UNION-based SQL injection?",
+      "correct_answer": "It can be used to determine the number of columns in the original query by observing errors when the order-by number exceeds the column count.",
+      "distractors": [
+        {
+          "text": "It is essential for specifying which columns to retrieve in the injected query.",
+          "misconception": "Targets [clause function confusion]: ORDER BY sorts results; it doesn't specify columns to retrieve."
+        },
+        {
+          "text": "It helps bypass Web Application Firewalls (WAFs) by obfuscating the UNION keyword.",
+          "misconception": "Targets [WAF bypass confusion]: ORDER BY is not typically used for WAF obfuscation in UNION injection."
+        },
+        {
+          "text": "It is required to ensure the injected data is displayed in a specific order.",
+          "misconception": "Targets [clause purpose confusion]: While ORDER BY sorts, its primary use in this context is column count discovery."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "An attacker can append <code>ORDER BY N--</code> (where N is a number) to a query. If N exceeds the number of columns in the original query, the database will return an error. By incrementing N, the attacker can find the maximum valid column number, thus determining the column count needed for a UNION injection, because the error indicates a structural mismatch.",
+        "distractor_analysis": "The distractors misrepresent the function of the ORDER BY clause, attributing it to column selection, WAF bypass, or mandatory data ordering, rather than its utility in discovering the original query's column count.",
+        "analogy": "It's like trying to count the number of items in a list by asking someone to sort them by item number. If you ask them to sort by item #10, but there are only 5 items, they'll tell you it's impossible, revealing there are only 5 items."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "procedure",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "SQL_INJECTION_FUNDAMENTALS",
+        "SQL_UNION_OPERATOR",
+        "SQL_ORDER_BY"
+      ]
+    },
+    {
+      "question_text": "What is the primary difference between error-based SQL injection and UNION-based SQL injection?",
+      "correct_answer": "Error-based injection relies on database error messages to extract information, while UNION-based injection combines query results to display data.",
+      "distractors": [
+        {
+          "text": "Error-based injection is used for authentication bypass, while UNION-based is for data retrieval.",
+          "misconception": "Targets [attack goal confusion]: Both can be used for data retrieval, though error-based is often for info gathering."
+        },
+        {
+          "text": "UNION-based injection requires knowledge of the database schema, while error-based does not.",
+          "misconception": "Targets [knowledge requirement confusion]: Both often benefit from schema knowledge, but neither strictly requires it initially."
+        },
+        {
+          "text": "Error-based injection is only possible on MySQL, while UNION-based works on all SQL databases.",
+          "misconception": "Targets [database specificity confusion]: Both techniques are applicable across various SQL database systems."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Error-based SQL injection exploits verbose error messages generated by the database when malformed queries are executed, allowing attackers to infer data. UNION-based SQL injection, conversely, leverages the UNION operator to append data from a second query to the results of the first, making the data directly visible in the application's response.",
+        "distractor_analysis": "The distractors incorrectly differentiate based on authentication bypass, schema knowledge requirements, or database specificity, missing the fundamental difference in how data is exfiltrated (via errors vs. combined results).",
+        "analogy": "Error-based is like trying to learn about a hidden room by listening for sounds coming from behind the wall. UNION-based is like opening a secret passage that connects your room directly to the hidden room, allowing you to see everything inside."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "comparison",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SQL_INJECTION_FUNDAMENTALS",
+        "ERROR_BASED_SQL_INJECTION",
+        "SQL_UNION_OPERATOR"
+      ]
+    }
+  ],
+  "generation_metadata": {
+    "model": "google/gemini-2.5-flash-lite",
+    "num_generated": 15,
+    "temperature": 0.1,
+    "web_citations": [],
+    "research_method": "openrouter_web_plugin",
+    "search_query": "Union-Based SQL Injection 008_Application Security best practices",
+    "latency_ms": 26888.86
+  },
+  "timestamp": "2026-01-18T12:10:53.335058",
+  "_av_safe_encoded": true,
+  "_encoding_note": "Educational content encoded with HTML entities to prevent antivirus false positives. Content renders normally in Anki."
+}

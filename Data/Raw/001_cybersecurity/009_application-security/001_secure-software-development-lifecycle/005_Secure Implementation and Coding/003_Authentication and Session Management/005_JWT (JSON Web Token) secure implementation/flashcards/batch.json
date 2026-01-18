@@ -1,0 +1,580 @@
+{
+  "topic_title": "JWT (JSON Web Token) secure implementation",
+  "category": "008_Application Security - Secure Software Development Lifecycle",
+  "flashcards": [
+    {
+      "question_text": "According to RFC 7519, what is the primary purpose of a JSON Web Token (JWT)?",
+      "correct_answer": "To provide a compact, URL-safe means of representing claims to be transferred between two parties.",
+      "distractors": [
+        {
+          "text": "To encrypt sensitive data transmitted between client and server.",
+          "misconception": "Targets [encryption confusion]: Confuses JWT's primary role with encryption, which is an optional JWT feature."
+        },
+        {
+          "text": "To manage server-side sessions and maintain user state.",
+          "misconception": "Targets [stateful vs stateless confusion]: JWTs are a stateless authentication mechanism, contrasting with traditional server-side sessions."
+        },
+        {
+          "text": "To enforce access control policies based on user roles.",
+          "misconception": "Targets [authentication vs authorization confusion]: JWTs primarily carry authentication claims; authorization is a separate enforcement step."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "JWTs function by encoding claims (information about a subject) into a JSON object, which is then signed or encrypted. This allows for stateless authentication because the server doesn't need to store session data, since the token itself contains the necessary claims.",
+        "distractor_analysis": "The distractors represent common misunderstandings: confusing JWTs with pure encryption, mistaking them for stateful session managers, or conflating authentication claims with authorization enforcement.",
+        "analogy": "Think of a JWT like a digital ID card that contains your name and basic credentials. It's compact and verifiable, allowing parties to quickly confirm who you are without needing to call a central office for verification each time."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "JWT_BASICS",
+        "AUTHENTICATION_CONCEPTS"
+      ]
+    },
+    {
+      "question_text": "Which signing algorithm is considered insecure for JWTs due to its susceptibility to manipulation and should be avoided, as recommended by RFC 8725?",
+      "correct_answer": "None ('none' algorithm)",
+      "distractors": [
+        {
+          "text": "HS256 (HMAC using SHA-256)",
+          "misconception": "Targets [algorithm strength confusion]: HS256 is a strong symmetric algorithm, not inherently insecure for JWTs when implemented correctly."
+        },
+        {
+          "text": "RS256 (RSA Signature with SHA-256)",
+          "misconception": "Targets [algorithm type confusion]: RS256 is a strong asymmetric algorithm, widely used and secure when implemented properly."
+        },
+        {
+          "text": "EdDSA (Edwards-curve Digital Signature Algorithm)",
+          "misconception": "Targets [algorithm modernity confusion]: EdDSA is a modern, secure asymmetric algorithm suitable for JWTs."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The 'none' algorithm explicitly indicates that the JWT is not signed, making it vulnerable to manipulation. RFC 8725 strongly advises against its use because it bypasses signature verification, undermining the integrity and authenticity of the token.",
+        "distractor_analysis": "The distractors are all valid and secure JWT signing algorithms. Students might incorrectly flag them as insecure due to unfamiliarity or by confusing them with the 'none' algorithm's specific vulnerability.",
+        "analogy": "Using the 'none' algorithm is like sending a postcard with a signature that says 'I promise this is from me' but without actually signing it. Anyone can claim it's from you because there's no proof."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "JWT_SIGNATURES",
+        "JWT_ALGORITHMS"
+      ]
+    },
+    {
+      "question_text": "What is the primary security risk associated with a weak secret key used in HMAC-based JWT signing (e.g., HS256)?",
+      "correct_answer": "The secret key can be brute-forced or guessed, allowing an attacker to forge valid JWTs.",
+      "distractors": [
+        {
+          "text": "The token's payload can be easily decrypted without the key.",
+          "misconception": "Targets [hashing vs encryption confusion]: HMAC is a message authentication code, not encryption; it ensures integrity, not confidentiality."
+        },
+        {
+          "text": "The algorithm used for signing can be changed to 'none'.",
+          "misconception": "Targets [algorithm confusion]: Weak secrets don't directly enable changing the algorithm; that's a separate vulnerability."
+        },
+        {
+          "text": "The token's expiration time can be arbitrarily extended.",
+          "misconception": "Targets [token manipulation confusion]: While forging tokens is possible, extending expiration is a specific attack vector not solely tied to weak secrets."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "HMAC algorithms like HS256 rely on a shared secret key for both signing and verification. If this key is weak (short, predictable, or easily guessable), an attacker can use brute-force or dictionary attacks to discover it, thereby enabling them to create or modify JWTs with any desired claims.",
+        "distractor_analysis": "The first distractor confuses integrity protection with confidentiality. The second points to a different vulnerability (algorithm confusion). The third describes a potential outcome of forging but isn't the direct risk of a weak secret itself.",
+        "analogy": "A weak secret key is like using a very simple password for your house key. Once someone figures out the password, they can easily make a copy of your key and enter your house."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "JWT_HMAC",
+        "SECRET_KEY_MANAGEMENT"
+      ]
+    },
+    {
+      "question_text": "When using asymmetric signing algorithms (like RS256) for JWTs, what is the role of the private key versus the public key?",
+      "correct_answer": "The private key is used to sign the JWT, and the public key is used by the recipient to verify the signature.",
+      "distractors": [
+        {
+          "text": "The public key signs the JWT, and the private key verifies the signature.",
+          "misconception": "Targets [key role reversal]: Students confuse which key is used for signing (private) and which for verification (public) in asymmetric cryptography."
+        },
+        {
+          "text": "Both the private and public keys are used together to sign the JWT.",
+          "misconception": "Targets [signing process confusion]: Asymmetric signing uses only the private key; the public key is solely for verification."
+        },
+        {
+          "text": "The private key encrypts the payload, and the public key decrypts it.",
+          "misconception": "Targets [signing vs encryption confusion]: JWT signing uses private keys for integrity/authenticity, not encryption; encryption uses key pairs differently."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Asymmetric algorithms like RS256 utilize a key pair. The private key, kept secret by the issuer, generates the signature, ensuring authenticity. The public key, which can be shared freely, verifies this signature, confirming the token's integrity and origin without compromising the private key.",
+        "distractor_analysis": "The first distractor reverses the roles of the keys. The second incorrectly suggests both keys sign. The third conflates the signing process with encryption.",
+        "analogy": "Using asymmetric keys is like having a unique wax seal stamp (private key) to seal your important letters and a public registry where anyone can check if the seal pattern matches your official stamp (public key) to ensure authenticity."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "comparison",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "ASYMMETRIC_CRYPTO",
+        "JWT_SIGNATURES"
+      ]
+    },
+    {
+      "question_text": "What is the 'kid' (Key ID) parameter in a JWT header, and why is its secure handling important?",
+      "correct_answer": "It's an identifier for the specific key used to sign the JWT, crucial for securely selecting the correct public key for verification when multiple keys are in use.",
+      "distractors": [
+        {
+          "text": "It indicates the encryption algorithm used for the JWT payload.",
+          "misconception": "Targets [parameter function confusion]: The 'alg' parameter specifies the algorithm, not 'kid'."
+        },
+        {
+          "text": "It's a timestamp indicating when the JWT was issued.",
+          "misconception": "Targets [parameter purpose confusion]: The 'iat' (issued at) claim handles timestamps; 'kid' is for key identification."
+        },
+        {
+          "text": "It's a unique identifier for the user whose claims are in the token.",
+          "misconception": "Targets [claim vs header confusion]: User identifiers are typically in the JWT payload (claims), not the header's 'kid' parameter."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The 'kid' parameter in the JWT header allows the server to efficiently select the correct public key for signature verification, especially in environments with key rotation or multiple signing keys. Improper handling, such as blindly trusting a 'kid' value provided by the client, can lead to algorithm confusion attacks.",
+        "distractor_analysis": "The distractors incorrectly assign the 'kid' parameter's function to algorithm specification, timestamping, or user identification, all of which are handled by different JWT components or claims.",
+        "analogy": "The 'kid' is like a label on a set of different keys. When you need to unlock a specific door (verify a token), the label tells you exactly which key to grab from your keyring, preventing you from trying the wrong ones."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "JWT_HEADER",
+        "KEY_MANAGEMENT"
+      ]
+    },
+    {
+      "question_text": "Which vulnerability arises when an attacker tricks a server into using a public key (provided by the attacker, potentially via the 'jku' header parameter) to verify a JWT signed with the attacker's private key?",
+      "correct_answer": "Algorithm confusion attack (specifically, using 'jku' to supply a malicious public key).",
+      "distractors": [
+        {
+          "text": "Cross-Site Scripting (XSS) attack.",
+          "misconception": "Targets [attack vector confusion]: XSS targets script execution in the browser, unrelated to JWT signature verification."
+        },
+        {
+          "text": "SQL Injection attack.",
+          "misconception": "Targets [attack vector confusion]: SQL Injection targets database queries, unrelated to JWT signature verification."
+        },
+        {
+          "text": "Token replay attack.",
+          "misconception": "Targets [attack type confusion]: Replay attacks involve resending valid tokens; this attack focuses on forging signatures."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The 'jku' (JWK Set URL) header parameter allows specifying a URL from which to fetch a JSON Web Key (JWK) Set. If the server blindly trusts this URL and uses the provided public key to verify a token signed by the attacker's private key, the attacker can impersonate legitimate users. This is a form of algorithm confusion.",
+        "distractor_analysis": "The distractors represent entirely different types of web vulnerabilities (XSS, SQLi) or a different JWT-related attack (replay), none of which describe the specific scenario of forging a signature via a compromised key source.",
+        "analogy": "This is like a security guard accepting a fake ID that has a picture of the person trying to enter, but the ID itself was printed by a counterfeiter who tricked the guard into using their own fake printing plate to verify it."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "JWT_JKU",
+        "JWT_ALGORITHM_CONFUSION",
+        "PUBLIC_KEY_INFRASTRUCTURE"
+      ]
+    },
+    {
+      "question_text": "What is the purpose of the 'alg' parameter in the JWT header, and why is it critical to validate it server-side?",
+      "correct_answer": "It specifies the cryptographic algorithm used for signing; validating it prevents attackers from forcing the use of weaker or unintended algorithms.",
+      "distractors": [
+        {
+          "text": "It defines the expiration time of the JWT.",
+          "misconception": "Targets [parameter function confusion]: Expiration is handled by the 'exp' claim in the payload, not the 'alg' parameter in the header."
+        },
+        {
+          "text": "It indicates the intended audience for the JWT.",
+          "misconception": "Targets [parameter function confusion]: Audience is specified by the 'aud' claim in the payload."
+        },
+        {
+          "text": "It specifies the type of token, such as 'JWT' or 'JWS'.",
+          "misconception": "Targets [parameter function confusion]: The 'typ' (type) header parameter indicates the token type; 'alg' is for the algorithm."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The 'alg' parameter declares the algorithm (e.g., RS256, HS256) used to secure the JWT. Servers must validate that the 'alg' value is one they expect and support. Failure to do so allows attackers to potentially force the use of weaker algorithms or even the 'none' algorithm, compromising the token's integrity.",
+        "distractor_analysis": "The distractors incorrectly assign the 'alg' parameter's role to expiration ('exp' claim), audience ('aud' claim), or token type ('typ' header), all of which are distinct JWT components.",
+        "analogy": "The 'alg' parameter is like specifying the type of lock (e.g., deadbolt, padlock) to be used. The server must ensure only approved lock types are used, preventing an attacker from demanding a flimsy lock be used instead of a secure one."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "defense",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "JWT_HEADER",
+        "JWT_ALGORITHMS",
+        "SECURE_CODING_PRINCIPLES"
+      ]
+    },
+    {
+      "question_text": "According to RFC 8725 Best Current Practices, what is a critical step in securely implementing JWTs regarding key management?",
+      "correct_answer": "Implement key rotation policies and securely store private keys, avoiding hardcoding them.",
+      "distractors": [
+        {
+          "text": "Always use the 'none' algorithm for maximum compatibility.",
+          "misconception": "Targets [insecure algorithm choice]: The 'none' algorithm is explicitly discouraged due to lack of security."
+        },
+        {
+          "text": "Share private keys openly with all relying parties for verification.",
+          "misconception": "Targets [key secrecy violation]: Private keys must remain secret; only public keys should be shared for verification."
+        },
+        {
+          "text": "Use the same key for both signing and encryption indefinitely.",
+          "misconception": "Targets [key lifecycle management]: Key rotation is essential for security; indefinite use increases risk."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Secure key management is paramount. RFC 8725 emphasizes rotating keys periodically to limit the impact of a compromised key and storing private keys securely (e.g., in hardware security modules or secure vaults), never hardcoded in source code, because this prevents unauthorized access and forging.",
+        "distractor_analysis": "The distractors suggest using insecure algorithms, violating private key secrecy, or neglecting key rotation, all of which are contrary to secure JWT implementation practices.",
+        "analogy": "Secure key management is like changing the locks on your house regularly and keeping your spare key hidden, not under the doormat. This ensures that even if someone finds an old key, they can't get in forever."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "procedure",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "JWT_KEY_MANAGEMENT",
+        "RFC_8725"
+      ]
+    },
+    {
+      "question_text": "What is the primary function of the 'exp' (expiration time) claim in a JWT payload?",
+      "correct_answer": "To specify the time after which the JWT must not be accepted for processing.",
+      "distractors": [
+        {
+          "text": "To indicate the time the JWT was originally issued.",
+          "misconception": "Targets [claim confusion]: The 'iat' (issued at) claim serves this purpose."
+        },
+        {
+          "text": "To define the time window during which the JWT is valid for specific actions.",
+          "misconception": "Targets [claim scope confusion]: While related, 'exp' is the absolute expiry; other claims like 'nbf' (not before) define validity windows."
+        },
+        {
+          "text": "To set a reminder for the user to renew their session.",
+          "misconception": "Targets [user interaction confusion]: JWT claims are for system validation, not user-facing reminders."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The 'exp' claim is a standard JWT payload claim that represents the expiration time on or after which the JWT must not be accepted. Servers validate this claim to prevent the use of stale tokens, thereby mitigating replay attacks and ensuring that authentication information remains current.",
+        "distractor_analysis": "The distractors confuse 'exp' with 'iat' (issued at), misinterpret its absolute nature by suggesting a validity window, or incorrectly attribute a user-facing function to a system-level security claim.",
+        "analogy": "The 'exp' claim is like the expiration date on a milk carton. After that date, the milk (token) is considered spoiled (invalid) and should not be consumed (accepted)."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "JWT_PAYLOAD",
+        "JWT_CLAIMS"
+      ]
+    },
+    {
+      "question_text": "Consider a scenario where a JWT is used for API authentication. What is the risk if the API server does not validate the 'aud' (audience) claim?",
+      "correct_answer": "The JWT could be accepted by an unintended API or resource server, potentially leading to unauthorized access.",
+      "distractors": [
+        {
+          "text": "The JWT signature verification would fail.",
+          "misconception": "Targets [validation step confusion]: 'aud' validation is separate from signature verification."
+        },
+        {
+          "text": "The JWT payload would be exposed to the user.",
+          "misconception": "Targets [confidentiality confusion]: Payload exposure relates to encryption or lack thereof, not the 'aud' claim."
+        },
+        {
+          "text": "The JWT would expire prematurely.",
+          "misconception": "Targets [claim function confusion]: Expiration is governed by the 'exp' claim, not 'aud'."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The 'aud' claim identifies the intended recipient(s) of the JWT. If a server doesn't validate this claim, it might accept and process a token intended for a different service. This is dangerous because the token might grant permissions or access that the current service is not authorized to provide, thus enabling unauthorized access.",
+        "distractor_analysis": "The distractors incorrectly link the 'aud' claim to signature validation, payload exposure, or premature expiration, which are handled by different JWT mechanisms or claims.",
+        "analogy": "Not validating the 'aud' claim is like a security guard accepting a VIP pass meant for the concert hall at the entrance of the museum next door. The pass might look legitimate, but it's for the wrong venue."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "scenario",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "JWT_CLAIMS",
+        "API_SECURITY"
+      ]
+    },
+    {
+      "question_text": "What is the 'typ' (type) parameter in the JWT header primarily used for?",
+      "correct_answer": "To indicate the media type of the JWT, typically 'JWT' or 'JWS' (for a signed JWT).",
+      "distractors": [
+        {
+          "text": "To specify the encryption algorithm used.",
+          "misconception": "Targets [parameter confusion]: The 'alg' parameter specifies the algorithm."
+        },
+        {
+          "text": "To identify the issuer of the token.",
+          "misconception": "Targets [parameter confusion]: The 'iss' claim in the payload identifies the issuer."
+        },
+        {
+          "text": "To denote the intended audience of the token.",
+          "misconception": "Targets [parameter confusion]: The 'aud' claim in the payload denotes the audience."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The 'typ' header parameter provides a hint about the type of the token. While not strictly required for security, it helps the receiving party understand how to interpret the token, such as distinguishing between a plain JWT and a JSON Web Signature (JWS) or JSON Web Encryption (JWE). This aids in correct processing.",
+        "distractor_analysis": "The distractors incorrectly assign the functions of 'alg', 'iss', and 'aud' to the 'typ' parameter, confusing its role as a media type indicator.",
+        "analogy": "The 'typ' parameter is like a label on an envelope that says 'Letter' or 'Package'. It tells the recipient what kind of item they are handling, helping them process it correctly."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "JWT_HEADER",
+        "JWT_STRUCTURE"
+      ]
+    },
+    {
+      "question_text": "Which of the following is a common vulnerability related to JWT implementation that involves manipulating the JOSE header?",
+      "correct_answer": "Injecting parameters like 'jku' or 'x5u' to point to attacker-controlled key sources.",
+      "distractors": [
+        {
+          "text": "Overwriting the 'iss' claim with a trusted issuer's name.",
+          "misconception": "Targets [claim manipulation vs header manipulation]: While 'iss' can be spoofed, this specific vulnerability focuses on header parameters controlling key fetching."
+        },
+        {
+          "text": "Modifying the 'exp' claim to extend the token's validity.",
+          "misconception": "Targets [claim manipulation vs header manipulation]: Modifying 'exp' is a payload manipulation, not a JOSE header injection vulnerability."
+        },
+        {
+          "text": "Changing the 'alg' parameter to 'none' after signing.",
+          "misconception": "Targets [algorithm confusion vs header injection]: While related to 'alg', the specific vulnerability here is injecting URLs in header parameters like 'jku' to control verification keys."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Attackers can exploit header parameters like 'jku' (JWK Set URL) or 'x5u' (X.509 URL) by injecting URLs pointing to keys they control. If the server blindly fetches and uses these keys for signature verification, the attacker can forge valid tokens, as the server is tricked into trusting a malicious key source.",
+        "distractor_analysis": "The distractors focus on manipulating claims ('iss', 'exp') or the 'alg' parameter directly, rather than the specific attack vector of injecting malicious URLs into JOSE header parameters that dictate key retrieval.",
+        "analogy": "This is like an attacker changing the return address on a package delivery instruction form to their own address, tricking the delivery service into bringing the package (token verification) to them instead of the intended recipient."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "JWT_HEADER_INJECTION",
+        "JWT_KEY_SOURCES",
+        "SECURITY_PRINCIPLES"
+      ]
+    },
+    {
+      "question_text": "According to RFC 9068, what is a key consideration when using JWTs as OAuth 2.0 access tokens?",
+      "correct_answer": "Ensuring interoperability between authorization servers and resource servers by defining a common JWT profile.",
+      "distractors": [
+        {
+          "text": "JWTs should always be encrypted to protect the payload.",
+          "misconception": "Targets [encryption necessity confusion]: Encryption is optional for JWT access tokens; integrity and authenticity via signing are primary."
+        },
+        {
+          "text": "Resource servers must always contact the authorization server to validate JWTs.",
+          "misconception": "Targets [stateless vs stateful confusion]: A key benefit of JWTs as access tokens is enabling stateless validation by resource servers."
+        },
+        {
+          "text": "The JWT signature algorithm must always be asymmetric (e.g., RS256).",
+          "misconception": "Targets [algorithm restriction confusion]: RFC 9068 allows for both symmetric (HS256) and asymmetric algorithms, depending on the deployment scenario."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "RFC 9068 provides a profile for JWTs used as OAuth 2.0 access tokens to ensure that authorization servers and resource servers can interoperate effectively. It standardizes aspects like token format and validation, enabling resource servers to validate tokens directly without needing to contact the authorization server, thus supporting stateless architectures.",
+        "distractor_analysis": "The distractors suggest mandatory encryption (which is optional), negate the stateless benefit by requiring constant contact with the auth server, and incorrectly mandate asymmetric algorithms, all of which deviate from the flexibility and goals outlined in RFC 9068.",
+        "analogy": "RFC 9068 is like a universal adapter standard for electronic devices. It ensures that different manufacturers' devices (authorization servers and resource servers) can communicate and work together seamlessly using JWTs as access tokens."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "defense",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "OAUTH2_TOKENS",
+        "JWT_PROFILE",
+        "RFC_9068"
+      ]
+    },
+    {
+      "question_text": "What is the primary security benefit of using JWTs in a stateless authentication system?",
+      "correct_answer": "It reduces server load and improves scalability because the server does not need to maintain session state for each user.",
+      "distractors": [
+        {
+          "text": "It eliminates the need for encryption, as the token is inherently secure.",
+          "misconception": "Targets [security feature confusion]: JWTs provide integrity and authenticity via signing, but payload confidentiality requires separate encryption."
+        },
+        {
+          "text": "It guarantees that tokens cannot be intercepted during transmission.",
+          "misconception": "Targets [transport security confusion]: JWT security is about the token's integrity and authenticity, not protection against network interception (which requires TLS/HTTPS)."
+        },
+        {
+          "text": "It automatically handles user authorization based on token content.",
+          "misconception": "Targets [authentication vs authorization confusion]: JWTs carry authentication data; authorization logic must be implemented separately by the resource server."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "In a stateless system, the server doesn't store session information. JWTs enable this by containing all necessary user claims within the token itself. Since the server can validate the token's signature and claims without looking up session data, it reduces memory usage and simplifies scaling, as any server instance can handle any request.",
+        "distractor_analysis": "The distractors incorrectly claim JWTs eliminate encryption needs, provide transport security, or automate authorization, misrepresenting the core benefits and security properties of stateless JWT authentication.",
+        "analogy": "Using JWTs in a stateless system is like giving each customer a pre-paid, verified entry ticket to an event. The venue doesn't need a list of who bought tickets (session state); they just check the ticket's validity at the gate (token validation)."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "STATELESS_AUTHENTICATION",
+        "JWT_BENEFITS"
+      ]
+    },
+    {
+      "question_text": "When implementing JWT validation server-side, which check is crucial to prevent attackers from using tokens intended for other services?",
+      "correct_answer": "Validating the 'aud' (audience) claim to ensure the token was issued for this specific service.",
+      "distractors": [
+        {
+          "text": "Verifying the 'iss' (issuer) claim matches the expected identity provider.",
+          "misconception": "Targets [claim validation order]: While 'iss' validation is important, 'aud' specifically prevents cross-service token usage."
+        },
+        {
+          "text": "Checking the 'typ' (type) header parameter.",
+          "misconception": "Targets [header validation relevance]: 'typ' is informational and not typically a primary security validation point against cross-service attacks."
+        },
+        {
+          "text": "Ensuring the JWT signature is valid using the correct public key.",
+          "misconception": "Targets [validation scope]: Signature validation confirms integrity and origin, but doesn't prevent a valid token for Service B being used at Service A."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The 'aud' claim specifies the intended recipient(s) of the JWT. By validating that the 'aud' claim contains the identifier of the current service, the server ensures that it only accepts tokens meant for it, thereby preventing a token issued for one API from being maliciously used against another.",
+        "distractor_analysis": "While validating 'iss' and the signature are critical security steps, they do not specifically address the risk of a token being used by the wrong service. Checking 'typ' is generally less critical for security validation.",
+        "analogy": "Validating the 'aud' claim is like checking the address on a package before accepting delivery. Even if the package is sealed correctly (valid signature) and from a known sender (valid 'iss'), you only accept it if it's addressed to you."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "defense",
+      "bloom_level": "evaluate",
+      "prerequisites": [
+        "JWT_CLAIMS",
+        "API_SECURITY",
+        "ACCESS_CONTROL"
+      ]
+    },
+    {
+      "question_text": "What is the primary risk associated with improperly validating the signature of a JWT?",
+      "correct_answer": "An attacker can forge a JWT with arbitrary claims and have it accepted as legitimate.",
+      "distractors": [
+        {
+          "text": "The token's payload will be visible to unauthorized users.",
+          "misconception": "Targets [confidentiality vs integrity]: Signature validation ensures integrity and authenticity, not payload confidentiality (which requires encryption)."
+        },
+        {
+          "text": "The server will be unable to determine the token's expiration time.",
+          "misconception": "Targets [validation scope]: Expiration is checked separately from signature validation."
+        },
+        {
+          "text": "The token will be rejected even if it is valid.",
+          "misconception": "Targets [validation outcome confusion]: Improper validation (e.g., skipping it) leads to accepting invalid tokens, not rejecting valid ones."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The JWT signature guarantees the integrity and authenticity of the token. If signature validation is improperly implemented (e.g., skipped, uses the wrong key, or trusts weak algorithms), an attacker can create or modify a JWT, sign it with their own key (or no key if 'none' is allowed), and the server will incorrectly trust it as a valid token, leading to potential unauthorized access or actions.",
+        "distractor_analysis": "The distractors confuse signature validation with payload confidentiality, expiration checks, or correct rejection of invalid tokens, misrepresenting the direct consequence of failing to validate the signature properly.",
+        "analogy": "Failing to validate a JWT signature is like accepting a signed check without verifying the signature matches the account holder's. The check might look official, but it could be a forgery, leading to financial loss."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "JWT_SIGNATURE_VALIDATION",
+        "AUTHENTICATION_SECURITY"
+      ]
+    },
+    {
+      "question_text": "Which JWT claim is specifically designed to identify the principal that is the subject of the JWT?",
+      "correct_answer": "'sub' (subject)",
+      "distractors": [
+        {
+          "text": "'iss' (issuer)",
+          "misconception": "Targets [claim confusion]: 'iss' identifies the entity that issued the token, not the subject of the claims."
+        },
+        {
+          "text": "'aud' (audience)",
+          "misconception": "Targets [claim confusion]: 'aud' identifies the intended recipient(s) of the token."
+        },
+        {
+          "text": "'jti' (JWT ID)",
+          "misconception": "Targets [claim confusion]: 'jti' provides a unique identifier for the JWT itself, used to prevent token replay."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The 'sub' claim is a public claim defined in RFC 7519 that uniquely identifies the principal (typically a user) to whom the JWT contents are referring. This is fundamental for personalization and authorization decisions, as it tells the system 'who' the token is about.",
+        "distractor_analysis": "The distractors represent other important JWT claims ('iss', 'aud', 'jti') but each serves a distinct purpose unrelated to identifying the token's subject.",
+        "analogy": "The 'sub' claim is like the 'To:' line on a letter, clearly stating who the message inside is intended for."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "remember",
+      "prerequisites": [
+        "JWT_CLAIMS",
+        "IDENTIFICATION"
+      ]
+    },
+    {
+      "question_text": "What security principle does implementing JWT expiration ('exp' claim) and not-before ('nbf' claim) directly support?",
+      "correct_answer": "Limiting the attack window for token-based vulnerabilities like replay attacks.",
+      "distractors": [
+        {
+          "text": "Ensuring the confidentiality of the JWT payload.",
+          "misconception": "Targets [security feature confusion]: Expiration claims relate to token validity duration, not payload secrecy (which requires encryption)."
+        },
+        {
+          "text": "Guaranteeing the integrity of the JWT signature.",
+          "misconception": "Targets [security feature confusion]: Signature integrity is ensured by cryptographic signing, independent of expiration claims."
+        },
+        {
+          "text": "Preventing brute-force attacks on the signing key.",
+          "misconception": "Targets [attack vector confusion]: Key security relies on key strength and management, not token expiration times."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "By defining strict 'exp' (expiration) and 'nbf' (not before) times, JWTs limit the period during which they are considered valid. This directly combats replay attacks, where an attacker might capture a valid token and resubmit it later. Since the server checks these time-based claims, expired tokens are rejected, thus minimizing the window of opportunity for such attacks.",
+        "distractor_analysis": "The distractors incorrectly associate expiration claims with payload confidentiality, signature integrity, or protection against brute-force key attacks, which are separate security concerns addressed by different mechanisms.",
+        "analogy": "JWT expiration is like a concert ticket with a specific date and time. Once the event time has passed, the ticket (token) is no longer valid, preventing someone from using an old ticket for a future event."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "JWT_CLAIMS",
+        "REPLAY_ATTACKS",
+        "TOKEN_LIFECYCLE"
+      ]
+    }
+  ],
+  "generation_metadata": {
+    "model": "google/gemini-2.5-flash-lite",
+    "num_generated": 18,
+    "temperature": 0.1,
+    "web_citations": [],
+    "research_method": "openrouter_web_plugin",
+    "search_query": "JWT (JSON Web Token) secure implementation 008_Application Security best practices",
+    "latency_ms": 33181.021
+  },
+  "timestamp": "2026-01-18T11:45:25.427275"
+}

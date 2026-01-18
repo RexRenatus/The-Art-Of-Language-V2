@@ -1,0 +1,560 @@
+{
+  "topic_title": "JWT Storage Security",
+  "category": "008_Application Security - Web 008_Application Security",
+  "flashcards": [
+    {
+      "question_text": "According to OWASP and other security best practices, which of the following is the LEAST secure method for storing JSON Web Tokens (JWTs) in a web browser?",
+      "correct_answer": "Storing JWTs in browser local storage",
+      "distractors": [
+        {
+          "text": "Storing JWTs in memory (e.g., JavaScript variables)",
+          "misconception": "Targets [security by obscurity]: Assumes in-memory is inherently safer than other client-side storage, overlooking XSS risks."
+        },
+        {
+          "text": "Storing JWTs in browser session storage",
+          "misconception": "Targets [session scope confusion]: Believes session storage's limited scope (per-tab) provides sufficient protection against XSS."
+        },
+        {
+          "text": "Storing JWTs in HTTP-only cookies",
+          "misconception": "Targets [misunderstanding cookie attributes]: Fails to recognize that while HTTP-only mitigates some XSS, other vulnerabilities can still expose JWTs."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Local storage is vulnerable to Cross-Site Scripting (XSS) attacks because JavaScript can access its contents, therefore JWTs stored there can be easily exfiltrated by attackers. While other methods have risks, local storage is generally considered the least secure for sensitive tokens.",
+        "distractor_analysis": "In-memory storage is vulnerable to XSS. Session storage is also vulnerable to XSS, though its scope is limited. HTTP-only cookies offer better protection against XSS but can still be vulnerable to other attacks like CSRF if not properly managed.",
+        "analogy": "Storing JWTs in local storage is like writing your PIN on a sticky note attached to your ATM card; it's easily accessible to anyone who gets hold of the card."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "JWT_BASICS",
+        "XSS_ATTACKS",
+        "HTTP_COOKIES"
+      ]
+    },
+    {
+      "question_text": "What is the primary security concern when JWTs are stored in client-side JavaScript variables or memory?",
+      "correct_answer": "Cross-Site Scripting (XSS) attacks can directly access and exfiltrate the token.",
+      "distractors": [
+        {
+          "text": "Cross-Site Request Forgery (CSRF) attacks can easily hijack the session.",
+          "misconception": "Targets [attack vector confusion]: Mixes up XSS (which targets client-side script execution) with CSRF (which targets unintended actions)."
+        },
+        {
+          "text": "The token is exposed to network sniffing if not transmitted over HTTPS.",
+          "misconception": "Targets [transmission vs. storage confusion]: Focuses on transit security rather than the vulnerability of client-side storage."
+        },
+        {
+          "text": "The token can be brute-forced due to its small size.",
+          "misconception": "Targets [token property misunderstanding]: Assumes JWTs are small enough to be brute-forced, ignoring their cryptographic signing."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "When JWTs are stored in client-side JavaScript variables, malicious scripts injected via XSS can directly read these variables. Since the token is in memory, it's readily available for an attacker to steal and use for session hijacking, because XSS allows arbitrary JavaScript execution within the user's browser context.",
+        "distractor_analysis": "CSRF attacks exploit trust in the browser to send requests, but don't directly access client-side memory. Network sniffing is a concern during transmission, not storage. Brute-forcing is generally not a practical attack against well-signed JWTs.",
+        "analogy": "Storing a JWT in a JavaScript variable is like leaving a key under the doormat; if someone can get into your house (via XSS), they can easily find and take the key."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "JWT_BASICS",
+        "XSS_ATTACKS"
+      ]
+    },
+    {
+      "question_text": "Why are HTTP-only cookies considered a more secure option for storing JWTs compared to local storage?",
+      "correct_answer": "The HTTP-only flag prevents client-side JavaScript from accessing the cookie, mitigating XSS-based token theft.",
+      "distractors": [
+        {
+          "text": "HTTP-only cookies are automatically encrypted by the browser.",
+          "misconception": "Targets [misunderstanding cookie attributes]: Confuses the HTTP-only flag with encryption, which is not its function."
+        },
+        {
+          "text": "HTTP-only cookies have a smaller size limit than local storage.",
+          "misconception": "Targets [irrelevant property]: Focuses on a technical limitation that doesn't directly relate to the primary security benefit against XSS."
+        },
+        {
+          "text": "HTTP-only cookies are automatically protected against CSRF attacks.",
+          "misconception": "Targets [misunderstanding cookie attributes]: Incorrectly assumes the HTTP-only flag provides CSRF protection, which requires separate mechanisms like CSRF tokens."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The HTTP-only attribute on cookies instructs the browser to only send the cookie with HTTP requests, preventing JavaScript from accessing it. This directly counters XSS attacks that aim to steal tokens from client-side storage, because the malicious script cannot read the cookie's value.",
+        "distractor_analysis": "HTTP-only does not imply encryption; it's an access control flag. Size limits are a browser constraint, not a security feature against XSS. CSRF protection requires different mechanisms.",
+        "analogy": "An HTTP-only cookie is like a locked mailbox that only the postal service (the browser's HTTP client) can access, preventing a nosy neighbor (malicious JavaScript) from reading your mail."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "JWT_BASICS",
+        "HTTP_COOKIES",
+        "XSS_ATTACKS"
+      ]
+    },
+    {
+      "question_text": "What is the purpose of the 'Secure' flag when setting cookies that store JWTs?",
+      "correct_answer": "It ensures the cookie is only transmitted over encrypted HTTPS connections.",
+      "distractors": [
+        {
+          "text": "It prevents the cookie from being accessed by client-side JavaScript.",
+          "misconception": "Targets [attribute confusion]: Confuses the 'Secure' flag with the 'HTTP-only' flag."
+        },
+        {
+          "text": "It automatically renews the cookie's expiration time.",
+          "misconception": "Targets [irrelevant functionality]: Attributes a non-existent feature to the 'Secure' flag."
+        },
+        {
+          "text": "It adds an extra layer of encryption to the cookie's content.",
+          "misconception": "Targets [misunderstanding cookie attributes]: Incorrectly assumes the 'Secure' flag provides content encryption."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The 'Secure' flag on cookies instructs the browser to only send the cookie over secure, encrypted HTTPS connections. This prevents the token from being intercepted in plain text over unencrypted HTTP, because the browser will not include the cookie in requests made to non-HTTPS origins.",
+        "distractor_analysis": "The 'HTTP-only' flag prevents JavaScript access. Cookie renewal is not a function of the 'Secure' flag. Encryption is handled by TLS/SSL, not the 'Secure' flag itself.",
+        "analogy": "The 'Secure' flag on a cookie is like a special delivery instruction for a package, ensuring it's only sent via armored car (HTTPS) and never left on the doorstep (HTTP)."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "JWT_BASICS",
+        "HTTPS_BASICS"
+      ]
+    },
+    {
+      "question_text": "When using JWTs for session management, what is the primary risk associated with storing them in local storage?",
+      "correct_answer": "Vulnerability to Cross-Site Scripting (XSS) attacks, allowing attackers to steal tokens.",
+      "distractors": [
+        {
+          "text": "Increased susceptibility to Cross-Site Request Forgery (CSRF) attacks.",
+          "misconception": "Targets [attack vector confusion]: Associates local storage vulnerability primarily with CSRF, which is more related to cookie handling without proper CSRF tokens."
+        },
+        {
+          "text": "Tokens are automatically invalidated after a short period.",
+          "misconception": "Targets [misunderstanding token lifecycle]: Confuses storage location with token expiration policies."
+        },
+        {
+          "text": "Difficulty in managing token expiration and refresh.",
+          "misconception": "Targets [implementation complexity]: Attributes storage-specific issues to general token management challenges."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Local storage is accessible by any JavaScript running on the same origin. Therefore, if an attacker can inject malicious JavaScript into the application (via XSS), they can read the JWT from local storage and use it to impersonate the user, because the token represents the user's authenticated session.",
+        "distractor_analysis": "CSRF is a different attack vector. Token expiration is a policy, not a storage vulnerability. Token management is a broader concern, but XSS is the direct threat to local storage.",
+        "analogy": "Storing JWTs in local storage is like keeping your house keys in a readily accessible, unlocked planter by the front door; anyone who can reach it can take them."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "JWT_BASICS",
+        "XSS_ATTACKS",
+        "LOCAL_STORAGE"
+      ]
+    },
+    {
+      "question_text": "Which of the following is a recommended best practice for mitigating the risk of JWT token leakage when stored client-side?",
+      "correct_answer": "Use HTTP-only and Secure flags for cookies storing JWTs, and implement CSRF protection.",
+      "distractors": [
+        {
+          "text": "Store JWTs in browser local storage and encrypt them with a client-side key.",
+          "misconception": "Targets [insecure encryption strategy]: Client-side encryption keys are often discoverable, negating the security benefit against sophisticated attackers."
+        },
+        {
+          "text": "Embed JWTs directly into HTML responses and rely on browser caching.",
+          "misconception": "Targets [insecure data handling]: Exposes tokens in plain text within the HTML, making them vulnerable to various forms of scraping and XSS."
+        },
+        {
+          "text": "Use JWTs with very short expiration times and no refresh tokens.",
+          "misconception": "Targets [incomplete mitigation]: While short expirations reduce the window of opportunity, they don't prevent theft; they increase usability friction."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Combining HTTP-only and Secure flags for cookies prevents JavaScript access and ensures transmission over HTTPS, significantly reducing XSS and man-in-the-middle risks. CSRF protection is also crucial because even with secure cookies, an attacker can trick a user into performing actions on their behalf.",
+        "distractor_analysis": "Client-side encryption is often weak. Embedding tokens in HTML is highly insecure. Short expirations alone are insufficient without preventing theft.",
+        "analogy": "To protect your valuables (JWTs), you'd use a secure, locked safe (HTTP-only, Secure cookies) and ensure it's placed in a secure room (HTTPS), while also having a guard (CSRF protection) at the door."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "JWT_BASICS",
+        "HTTP_COOKIES",
+        "XSS_ATTACKS",
+        "CSRF_ATTACKS"
+      ]
+    },
+    {
+      "question_text": "What is the primary security benefit of using the 'SameSite' cookie attribute when storing JWTs?",
+      "correct_answer": "It helps mitigate Cross-Site Request Forgery (CSRF) attacks by controlling when cookies are sent with cross-site requests.",
+      "distractors": [
+        {
+          "text": "It prevents Cross-Site Scripting (XSS) attacks by blocking JavaScript access.",
+          "misconception": "Targets [attribute confusion]: Confuses 'SameSite' with 'HTTP-only', which is the attribute that primarily mitigates XSS."
+        },
+        {
+          "text": "It ensures the JWT is only transmitted over HTTPS connections.",
+          "misconception": "Targets [attribute confusion]: Confuses 'SameSite' with the 'Secure' flag."
+        },
+        {
+          "text": "It automatically encrypts the JWT payload.",
+          "misconception": "Targets [irrelevant functionality]: Attributes encryption capabilities to a cookie attribute that controls cross-site request behavior."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The 'SameSite' attribute (with values like 'Strict', 'Lax', or 'None') controls whether a cookie is sent with cross-site requests. By setting it appropriately (e.g., 'Lax' or 'Strict'), it prevents the browser from sending the JWT cookie with requests initiated by third-party sites, thereby mitigating CSRF attacks, because the browser will not automatically attach the cookie to such requests.",
+        "distractor_analysis": "'HTTP-only' mitigates XSS. 'Secure' ensures HTTPS transmission. 'SameSite' does not encrypt the payload.",
+        "analogy": "The 'SameSite' attribute is like a bouncer at a club (your website) deciding which guests (cookies) are allowed in from outside parties (cross-site requests), helping to prevent unwanted intrusions (CSRF)."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "JWT_BASICS",
+        "HTTP_COOKIES",
+        "CSRF_ATTACKS"
+      ]
+    },
+    {
+      "question_text": "Consider a scenario where a JWT is stored in local storage. An attacker injects a malicious script via XSS. What is the most likely immediate consequence for the JWT?",
+      "correct_answer": "The attacker's script can read the JWT directly from local storage and potentially use it to impersonate the user.",
+      "distractors": [
+        {
+          "text": "The JWT will be automatically deleted by the browser's security mechanisms.",
+          "misconception": "Targets [misunderstanding browser security]: Assumes browsers have built-in protection to delete tokens from local storage upon detecting XSS, which is not standard behavior."
+        },
+        {
+          "text": "The JWT will be corrupted, rendering it unusable.",
+          "misconception": "Targets [unlikely outcome]: Assumes XSS would corrupt the token's data rather than simply read it."
+        },
+        {
+          "text": "The JWT will be automatically transmitted to the attacker's server.",
+          "misconception": "Targets [mechanism confusion]: While the attacker *can* send it, the immediate consequence is *reading* it; transmission is a subsequent action."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Since local storage is accessible via JavaScript, an injected script can execute <code>localStorage.getItem(&#x27;jwt_token&#x27;)</code> (or similar) to retrieve the token. Because the JWT represents an authenticated session, the attacker can then use this stolen token in subsequent requests to impersonate the legitimate user, effectively hijacking their session.",
+        "distractor_analysis": "Browsers do not automatically delete tokens upon XSS detection. Corruption is not the typical outcome of reading data. Transmission is an attacker's action after reading, not the direct consequence of storage vulnerability.",
+        "analogy": "If your house keys (JWT) are left in an unlocked mailbox (local storage), and a burglar (attacker) can access the mailbox (via XSS), they can simply take the keys and use them to enter your house (impersonate the user)."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "attack",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "JWT_BASICS",
+        "XSS_ATTACKS",
+        "LOCAL_STORAGE"
+      ]
+    },
+    {
+      "question_text": "Which of the following is a key consideration for JWT storage security, as highlighted by RFC 9700 regarding OAuth 2.0 security?",
+      "correct_answer": "Protecting tokens from leakage and replay attacks is paramount, especially when using authorization codes or implicit grants.",
+      "distractors": [
+        {
+          "text": "JWTs should always be stored in local storage for maximum accessibility.",
+          "misconception": "Targets [insecure storage recommendation]: Directly contradicts best practices that advise against local storage for sensitive tokens."
+        },
+        {
+          "text": "The primary concern is the JWT's payload size impacting performance.",
+          "misconception": "Targets [performance vs. security confusion]: Prioritizes a secondary concern (performance) over critical security risks like leakage."
+        },
+        {
+          "text": "JWTs are inherently secure due to their cryptographic signing.",
+          "misconception": "Targets [false sense of security]: Overestimates the security provided by signing alone, ignoring vulnerabilities in storage and implementation."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "RFC 9700 emphasizes robust security practices for OAuth 2.0, which often involves JWTs. Protecting tokens from leakage (e.g., via XSS) and replay attacks is a core tenet, because compromised tokens grant unauthorized access. This is particularly relevant for flows like the Authorization Code Grant where tokens are exchanged.",
+        "distractor_analysis": "Local storage is insecure. Payload size is a performance/usability issue, not the primary security risk. Cryptographic signing secures the token's integrity and authenticity, but not its storage.",
+        "analogy": "RFC 9700 reminds us that even with a strong lock on your door (JWT signature), you still need to secure the key itself (token storage) to prevent theft."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "defense",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "JWT_BASICS",
+        "OAUTH2_SECURITY",
+        "TOKEN_REPLAY"
+      ]
+    },
+    {
+      "question_text": "What is the main drawback of storing JWTs in browser session storage compared to HTTP-only cookies?",
+      "correct_answer": "Session storage is still vulnerable to XSS attacks, as JavaScript can access its contents.",
+      "distractors": [
+        {
+          "text": "Session storage has a much smaller size limit than cookies.",
+          "misconception": "Targets [irrelevant limitation]: Focuses on a size constraint rather than the core security vulnerability."
+        },
+        {
+          "text": "Session storage data persists across browser tabs.",
+          "misconception": "Targets [misunderstanding scope]: Incorrectly describes session storage's persistence behavior (it's typically per-tab)."
+        },
+        {
+          "text": "Session storage does not support the 'Secure' flag.",
+          "misconception": "Targets [feature confusion]: Incorrectly claims session storage lacks support for security-related attributes."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Like local storage, session storage is accessible via JavaScript running on the same origin. Therefore, an XSS vulnerability can allow an attacker to read JWTs stored in session storage. While session storage is limited to the current browser tab and is cleared when the tab closes, it does not inherently protect against script-based theft during the session's active lifetime.",
+        "distractor_analysis": "Size limits are generally larger for session storage than cookies. Session storage is tab-specific. Both session and local storage are accessible by JavaScript.",
+        "analogy": "Storing JWTs in session storage is like keeping important documents in a desk drawer in your office; while it's not in the open, anyone who gains unauthorized access to your office (via XSS) can still read them."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "comparison",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "JWT_BASICS",
+        "XSS_ATTACKS",
+        "HTTP_COOKIES",
+        "SESSION_STORAGE"
+      ]
+    },
+    {
+      "question_text": "When implementing JWT authentication, what is the recommended approach for handling token expiration and refresh to balance security and usability?",
+      "correct_answer": "Use short-lived access tokens (e.g., 15-60 minutes) and implement refresh tokens stored securely (e.g., in HTTP-only cookies) to obtain new access tokens.",
+      "distractors": [
+        {
+          "text": "Use very long-lived access tokens (e.g., 24 hours) to minimize user interruptions.",
+          "misconception": "Targets [security vs. usability trade-off error]: Prioritizes usability over security, increasing the risk window if a token is compromised."
+        },
+        {
+          "text": "Store both access tokens and refresh tokens in local storage for easy access.",
+          "misconception": "Targets [insecure storage practice]: Exposes both types of tokens to XSS attacks."
+        },
+        {
+          "text": "Do not use refresh tokens; force users to re-authenticate completely every hour.",
+          "misconception": "Targets [usability friction]: Creates a poor user experience without necessarily offering a proportional security gain over a well-implemented refresh token strategy."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Short-lived access tokens limit the impact of a stolen token, as it becomes invalid quickly. Securely stored refresh tokens (often in HTTP-only cookies) allow users to obtain new access tokens without frequent re-authentication, thus balancing security and usability. This strategy minimizes the attack surface because the highly sensitive refresh token is less accessible than a constantly used access token.",
+        "distractor_analysis": "Long-lived tokens increase risk. Storing both in local storage is insecure. Forcing re-authentication frequently is poor UX and may not be more secure than a proper refresh token mechanism.",
+        "analogy": "Think of access tokens as single-use tickets for a ride (short validity) and refresh tokens as a season pass (long validity, securely stored) that lets you get new ride tickets without buying them each time."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "procedure",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "JWT_BASICS",
+        "TOKEN_EXPIRATION",
+        "REFRESH_TOKENS",
+        "HTTP_COOKIES"
+      ]
+    },
+    {
+      "question_text": "What is the primary security risk associated with storing JWTs in browser local storage, as per common web security best practices?",
+      "correct_answer": "Vulnerability to Cross-Site Scripting (XSS) attacks, enabling token theft.",
+      "distractors": [
+        {
+          "text": "Exposure to Man-in-the-Middle (MitM) attacks during transmission.",
+          "misconception": "Targets [transmission vs. storage confusion]: Focuses on network interception rather than the inherent insecurity of the storage mechanism itself."
+        },
+        {
+          "text": "Tokens are automatically deleted when the browser session ends.",
+          "misconception": "Targets [misunderstanding persistence]: Confuses local storage behavior with session storage or volatile memory."
+        },
+        {
+          "text": "Difficulty in implementing token revocation.",
+          "misconception": "Targets [implementation challenge]: Attributes a general token management issue to the specific storage method."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Local storage is accessible by any JavaScript code running on the same origin. Therefore, if an attacker can inject malicious JavaScript through an XSS vulnerability, they can easily read the JWT stored in local storage and use it to hijack the user's session, because the token grants authenticated access.",
+        "distractor_analysis": "MitM attacks target data in transit, not at rest in local storage. Local storage persists until explicitly cleared. Token revocation is a server-side concern, though storage impacts its feasibility.",
+        "analogy": "Storing JWTs in local storage is like leaving your house keys in a readily accessible, unlocked mailbox; anyone who can reach it can take them."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "JWT_BASICS",
+        "XSS_ATTACKS",
+        "LOCAL_STORAGE"
+      ]
+    },
+    {
+      "question_text": "Which of the following is a critical security measure when using JWTs, particularly concerning their storage and transmission?",
+      "correct_answer": "Always transmit JWTs over HTTPS to prevent eavesdropping and ensure secure transport.",
+      "distractors": [
+        {
+          "text": "Store JWTs exclusively in local storage for easy JavaScript access.",
+          "misconception": "Targets [insecure storage recommendation]: Promotes a known insecure storage method."
+        },
+        {
+          "text": "Embed JWTs directly into the HTML source code of web pages.",
+          "misconception": "Targets [insecure data handling]: Exposes tokens in plain text, making them easily discoverable and vulnerable."
+        },
+        {
+          "text": "Rely solely on JWT signing for security, ignoring storage concerns.",
+          "misconception": "Targets [false sense of security]: Believes the signature alone protects the token, neglecting risks associated with its storage and transmission."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Transmitting JWTs over HTTPS encrypts the communication channel, protecting the token from being intercepted by attackers during transit. While JWT signing ensures integrity and authenticity, it does not protect the token from being stolen if transmitted insecurely or stored improperly.",
+        "distractor_analysis": "Local storage is vulnerable to XSS. Embedding tokens in HTML is insecure. Relying only on signing ignores storage and transmission risks.",
+        "analogy": "Ensuring JWTs are transmitted over HTTPS is like sending a valuable package via an armored truck (HTTPS) instead of leaving it on the curb (HTTP)."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "defense",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "JWT_BASICS",
+        "HTTPS_BASICS"
+      ]
+    },
+    {
+      "question_text": "What is the main security advantage of using HTTP-only cookies for storing JWTs over client-side JavaScript variables?",
+      "correct_answer": "It prevents client-side JavaScript from accessing the JWT, thereby mitigating XSS-based token theft.",
+      "distractors": [
+        {
+          "text": "It automatically encrypts the JWT payload.",
+          "misconception": "Targets [misunderstanding cookie attributes]: Confuses the HTTP-only flag with encryption."
+        },
+        {
+          "text": "It ensures the JWT is only sent over HTTPS connections.",
+          "misconception": "Targets [misunderstanding cookie attributes]: Confuses the HTTP-only flag with the 'Secure' flag."
+        },
+        {
+          "text": "It automatically protects against CSRF attacks.",
+          "misconception": "Targets [misunderstanding cookie attributes]: Assumes HTTP-only provides CSRF protection, which requires separate measures."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The HTTP-only flag instructs the browser not to allow client-side scripts (like JavaScript) to access the cookie. This is a crucial defense against XSS attacks, because even if an attacker injects malicious script, they cannot read the JWT from the cookie to steal it, thus protecting the user's session.",
+        "distractor_analysis": "HTTP-only does not encrypt. The 'Secure' flag handles HTTPS. CSRF protection requires additional mechanisms.",
+        "analogy": "An HTTP-only cookie is like a sealed envelope that only the mail carrier (browser's HTTP client) can open and read, preventing anyone else (JavaScript) from peeking inside."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "JWT_BASICS",
+        "HTTP_COOKIES",
+        "XSS_ATTACKS"
+      ]
+    },
+    {
+      "question_text": "When considering JWT storage, why is it generally recommended to avoid storing sensitive claims directly within the JWT payload if it's stored client-side?",
+      "correct_answer": "Because JWT payloads are typically base64 encoded, not encrypted, making sensitive data easily readable by attackers.",
+      "distractors": [
+        {
+          "text": "Because base64 encoding significantly increases the JWT's size.",
+          "misconception": "Targets [irrelevant consequence]: Focuses on a minor performance aspect rather than the security implication of readability."
+        },
+        {
+          "text": "Because client-side JavaScript cannot decode base64 strings.",
+          "misconception": "Targets [technical inaccuracy]: JavaScript can easily decode base64 strings."
+        },
+        {
+          "text": "Because JWTs are primarily designed for integrity, not confidentiality.",
+          "misconception": "Targets [oversimplification]: While true that signing provides integrity, it doesn't preclude the need for confidentiality if sensitive data is stored client-side."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "JWT payloads are encoded using Base64, which is an encoding scheme, not an encryption method. This means anyone can easily decode the payload to read its contents. Therefore, storing sensitive information like personally identifiable information (PII) directly in a client-side stored JWT payload exposes that data to attackers, because the encoding provides no confidentiality.",
+        "distractor_analysis": "Base64 encoding has minimal impact on size. JavaScript can easily decode Base64. While JWTs focus on integrity via signing, this doesn't excuse storing sensitive data in plain text.",
+        "analogy": "Putting sensitive information in a JWT payload is like writing a secret message in invisible ink that anyone can reveal with a simple heat source (Base64 decoding)."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "JWT_BASICS",
+        "BASE64_ENCODING",
+        "ENCRYPTION_VS_ENCODING"
+      ]
+    },
+    {
+      "question_text": "What is the role of the 'alg' parameter in a JWT header concerning storage security?",
+      "correct_answer": "It specifies the algorithm used for signing, and misconfigurations (like 'none') can lead to security vulnerabilities if not properly handled server-side.",
+      "distractors": [
+        {
+          "text": "It indicates how the JWT payload should be encrypted for secure storage.",
+          "misconception": "Targets [header parameter confusion]: Confuses the signing algorithm ('alg') with encryption, which is a separate concern (JWE)."
+        },
+        {
+          "text": "It dictates the expiration time of the JWT for storage purposes.",
+          "misconception": "Targets [header parameter confusion]: Confuses 'alg' with claims like 'exp' (expiration time)."
+        },
+        {
+          "text": "It defines the storage location (e.g., cookie, local storage) for the JWT.",
+          "misconception": "Targets [header parameter confusion]: Attributes a storage management function to the signing algorithm parameter."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The 'alg' parameter specifies the cryptographic algorithm used to sign the JWT. If the server blindly trusts this header value without proper validation, an attacker could potentially set 'alg' to 'none', bypassing signature verification entirely. This allows the attacker to tamper with the payload without detection, leading to security breaches, because the server fails to verify the token's integrity.",
+        "distractor_analysis": "The 'alg' parameter is for signing, not payload encryption (JWE). Expiration is handled by claims like 'exp'. Storage location is determined by application logic, not the JWT header.",
+        "analogy": "The 'alg' parameter is like specifying the type of lock (e.g., deadbolt, padlock) used on a secure box (JWT signature), not what's inside the box or where the box is kept."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "analysis",
+      "bloom_level": "evaluate",
+      "prerequisites": [
+        "JWT_BASICS",
+        "JWT_HEADER",
+        "ALGORITHM_CONFUSION"
+      ]
+    },
+    {
+      "question_text": "Which of the following is a significant security risk when JWTs are stored in client-side storage and are susceptible to Cross-Site Scripting (XSS)?",
+      "correct_answer": "Session hijacking, where an attacker uses the stolen JWT to impersonate the legitimate user.",
+      "distractors": [
+        {
+          "text": "Denial of Service (DoS) against the client's browser.",
+          "misconception": "Targets [attack outcome confusion]: Associates XSS token theft with DoS, which is a different type of attack."
+        },
+        {
+          "text": "Data corruption of the JWT, making it unusable.",
+          "misconception": "Targets [unlikely outcome]: Assumes XSS would corrupt the token rather than steal its value."
+        },
+        {
+          "text": "Increased latency during token validation on the server.",
+          "misconception": "Targets [performance vs. security confusion]: Focuses on a performance metric rather than the direct security impact of token theft."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "When a JWT is stolen via XSS from client-side storage, the attacker gains the authenticated session identifier. The attacker can then include this JWT in their own requests to the server, which will validate it as legitimate. This allows the attacker to perform actions as the user, effectively hijacking their session, because the server trusts the stolen token.",
+        "distractor_analysis": "XSS leading to token theft primarily enables session hijacking, not DoS or data corruption. Server-side latency is unrelated to the client-side storage vulnerability.",
+        "analogy": "If your house keys (JWT) are stolen from your pocket (client-side storage) via a pickpocket (XSS), the thief can use them to enter your house (session hijacking)."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "JWT_BASICS",
+        "XSS_ATTACKS",
+        "SESSION_HIJACKING"
+      ]
+    }
+  ],
+  "generation_metadata": {
+    "model": "google/gemini-2.5-flash-lite",
+    "num_generated": 17,
+    "temperature": 0.1,
+    "web_citations": [],
+    "research_method": "openrouter_web_plugin",
+    "search_query": "JWT Storage Security 008_Application Security best practices",
+    "latency_ms": 28628.581000000002
+  },
+  "timestamp": "2026-01-18T12:06:55.534415"
+}

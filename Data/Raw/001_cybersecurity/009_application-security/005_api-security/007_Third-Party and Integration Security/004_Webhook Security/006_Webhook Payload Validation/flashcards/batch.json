@@ -1,0 +1,498 @@
+{
+  "topic_title": "Webhook Payload Validation",
+  "category": "008_Application Security - 006_API Security",
+  "flashcards": [
+    {
+      "question_text": "What is the primary security goal of validating webhook signatures?",
+      "correct_answer": "To ensure the webhook originated from the expected sender and has not been tampered with.",
+      "distractors": [
+        {
+          "text": "To encrypt the webhook payload for confidentiality.",
+          "misconception": "Targets [confidentiality confusion]: Confuses signature validation with encryption."
+        },
+        {
+          "text": "To prevent denial-of-service (DoS) attacks by rate-limiting requests.",
+          "misconception": "Targets [scope confusion]: Mixes signature validation with DoS prevention mechanisms."
+        },
+        {
+          "text": "To de-duplicate webhook messages and prevent replay attacks.",
+          "misconception": "Targets [replay attack confusion]: While related, signature validation's primary goal is authenticity and integrity, not replay prevention itself."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Signature validation confirms the sender's identity (authenticity) and payload integrity, because the signature is generated using a shared secret or private key. This prevents spoofing and tampering.",
+        "distractor_analysis": "The first distractor confuses validation with encryption. The second mixes it with rate limiting, a separate DoS defense. The third conflates it with replay protection, which is a distinct but often complementary security measure.",
+        "analogy": "Validating a webhook signature is like checking the wax seal on a letter; it proves the letter came from the sender and hasn't been opened and resealed."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "defense",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "WEBHOOK_BASICS",
+        "CRYPTO_SIGNATURES"
+      ]
+    },
+    {
+      "question_text": "Which method is commonly recommended for authenticating webhook senders and ensuring payload integrity?",
+      "correct_answer": "HMAC signatures using a shared secret.",
+      "distractors": [
+        {
+          "text": "Basic Authentication with username and password.",
+          "misconception": "Targets [insecure authentication]: Basic Auth is generally too weak for webhook secrets and can be intercepted."
+        },
+        {
+          "text": "Sending the secret key in the URL query parameters.",
+          "misconception": "Targets [secret exposure]: Query parameters are often logged and visible, exposing the secret."
+        },
+        {
+          "text": "Using a simple API key passed in a custom header.",
+          "misconception": "Targets [integrity confusion]: While API keys authenticate, they don't inherently provide payload integrity like HMAC does."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "HMAC (Hash-based Message Authentication Code) signatures are recommended because they use a shared secret to generate a message digest, ensuring both sender authenticity and payload integrity. This prevents tampering since any modification would invalidate the signature.",
+        "distractor_analysis": "Basic Auth is insecure for secrets. URL parameters expose secrets. Simple API keys authenticate but don't guarantee payload integrity.",
+        "analogy": "HMAC is like a tamper-evident seal on a package, where the seal's design is based on a secret only the sender and receiver know."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "WEBHOOK_BASICS",
+        "CRYPTO_HMAC"
+      ]
+    },
+    {
+      "question_text": "When validating an HMAC signature for a webhook, what part of the incoming request should typically be signed?",
+      "correct_answer": "The raw request body.",
+      "distractors": [
+        {
+          "text": "The parsed JSON payload after deserialization.",
+          "misconception": "Targets [parsing order confusion]: Modifying the body before signing can lead to signature mismatches."
+        },
+        {
+          "text": "The request headers, excluding the signature header itself.",
+          "misconception": "Targets [signing scope confusion]: Headers can be modified or are not always part of the integrity check."
+        },
+        {
+          "text": "A pre-defined, static payload string.",
+          "misconception": "Targets [static data confusion]: This would not validate the actual dynamic content received."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The raw request body must be signed because it represents the exact data transmitted. Signing after parsing or only headers would allow an attacker to tamper with the body before it's processed, invalidating the integrity check.",
+        "distractor_analysis": "Signing parsed JSON is risky as parsing can alter data. Signing only headers misses body integrity. A static payload doesn't validate the actual incoming data.",
+        "analogy": "Signing the raw body is like sealing the entire envelope, not just a note inside it, to ensure nothing was changed during delivery."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "procedure",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "WEBHOOK_BASICS",
+        "CRYPTO_HMAC",
+        "WEBHOOK_PAYLOAD_VALIDATION"
+      ]
+    },
+    {
+      "question_text": "What is the purpose of including a timestamp in a webhook payload for validation?",
+      "correct_answer": "To prevent replay attacks by ensuring the request is recent.",
+      "distractors": [
+        {
+          "text": "To provide a unique identifier for logging purposes.",
+          "misconception": "Targets [identifier confusion]: While timestamps can be logged, their primary validation purpose is freshness."
+        },
+        {
+          "text": "To encrypt the payload data.",
+          "misconception": "Targets [encryption confusion]: Timestamps are metadata, not encryption mechanisms."
+        },
+        {
+          "text": "To verify the sender's identity.",
+          "misconception": "Targets [authentication confusion]: Identity is verified by signatures, not timestamps."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "A timestamp allows the receiver to check if the webhook is recent, thus preventing replay attacks. If a captured, valid webhook is resent later, its timestamp will be stale and rejected.",
+        "distractor_analysis": "Timestamps are for freshness, not logging IDs. They don't encrypt data. Sender identity is confirmed via signatures.",
+        "analogy": "A timestamp on a webhook is like the expiration date on a coupon; it ensures the offer is still valid and hasn't been used before."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "WEBHOOK_BASICS",
+        "WEBHOOK_PAYLOAD_VALIDATION",
+        "REPLAY_ATTACKS"
+      ]
+    },
+    {
+      "question_text": "Which of the following is a critical best practice for securely storing webhook secrets?",
+      "correct_answer": "Store them in environment variables or a secure secrets management system.",
+      "distractors": [
+        {
+          "text": "Hardcode them directly into the application's source code.",
+          "misconception": "Targets [hardcoding vulnerability]: Source code is often version-controlled and accessible, leading to secret leakage."
+        },
+        {
+          "text": "Include them in publicly accessible configuration files.",
+          "misconception": "Targets [configuration exposure]: Publicly accessible files are easily compromised."
+        },
+        {
+          "text": "Pass them as plain text in API request headers.",
+          "misconception": "Targets [transmission insecurity]: Plain text transmission is vulnerable to eavesdropping."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Storing secrets in environment variables or dedicated secrets management systems isolates them from the codebase and provides better access control, preventing accidental exposure through code commits or logs.",
+        "distractor_analysis": "Hardcoding, public config files, and plain text transmission all represent significant security risks for sensitive secrets.",
+        "analogy": "Storing webhook secrets securely is like keeping your house keys in a locked safe, not under the doormat or taped to the front door."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "WEBHOOK_BASICS",
+        "SECRET_MANAGEMENT"
+      ]
+    },
+    {
+      "question_text": "What does the <code>X-Hub-Signature-256</code> header typically contain when validating GitHub webhooks?",
+      "correct_answer": "An HMAC SHA-256 hash of the request body, prefixed with 'sha256='.",
+      "distractors": [
+        {
+          "text": "A Base64 encoded version of the raw request body.",
+          "misconception": "Targets [encoding confusion]: This is data encoding, not a cryptographic signature for integrity."
+        },
+        {
+          "text": "A public key used for asymmetric encryption.",
+          "misconception": "Targets [key type confusion]: This header contains a signature, not a public key for encryption."
+        },
+        {
+          "text": "A simple timestamp indicating when the webhook was sent.",
+          "misconception": "Targets [purpose confusion]: Timestamps are separate; this header is for signature verification."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "GitHub uses HMAC SHA-256 to generate a signature based on the raw payload and a shared secret. This signature is sent in the <code>X-Hub-Signature-256</code> header, prefixed with 'sha256=', allowing the receiver to verify authenticity and integrity.",
+        "distractor_analysis": "The first option describes encoding, not signing. The second confuses it with public keys. The third mistakes it for a timestamp.",
+        "analogy": "The <code>X-Hub-Signature-256</code> is like a unique, tamper-proof wax seal on a GitHub package, confirming its origin and that it hasn't been opened."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "WEBHOOK_BASICS",
+        "WEBHOOK_PAYLOAD_VALIDATION",
+        "CRYPTO_HMAC",
+        "GITHUB_WEBHOOKS"
+      ]
+    },
+    {
+      "question_text": "Why is it important to verify the webhook signature *before* processing the payload?",
+      "correct_answer": "To avoid wasting resources on processing potentially malicious or invalid requests.",
+      "distractors": [
+        {
+          "text": "To ensure the payload is formatted correctly as JSON.",
+          "misconception": "Targets [validation order confusion]: Schema validation is a separate step that occurs after signature verification."
+        },
+        {
+          "text": "To determine the sender's IP address for logging.",
+          "misconception": "Targets [logging confusion]: IP addresses can be spoofed and are not the primary focus of signature validation."
+        },
+        {
+          "text": "To automatically encrypt sensitive data within the payload.",
+          "misconception": "Targets [encryption confusion]: Signature validation does not perform encryption."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Validating the signature first acts as a gatekeeper. If the signature is invalid, the request is rejected immediately, preventing the application from expending CPU cycles, memory, or database resources on untrusted data.",
+        "distractor_analysis": "Schema validation is a subsequent step. IP address logging is secondary and less reliable than signature verification. Signature validation does not encrypt data.",
+        "analogy": "Checking the signature before opening a package prevents you from dealing with a fake or empty box, saving you time and effort."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "WEBHOOK_BASICS",
+        "WEBHOOK_PAYLOAD_VALIDATION",
+        "RESOURCE_MANAGEMENT"
+      ]
+    },
+    {
+      "question_text": "What is a potential risk if a webhook secret is compromised?",
+      "correct_answer": "An attacker can impersonate the legitimate sender and send malicious payloads.",
+      "distractors": [
+        {
+          "text": "The webhook sender's server will be overloaded.",
+          "misconception": "Targets [attack vector confusion]: A compromised secret allows the attacker to attack the receiver, not overload the sender."
+        },
+        {
+          "text": "The webhook payload data will be automatically deleted.",
+          "misconception": "Targets [unintended consequence]: Payload deletion is not a direct result of secret compromise."
+        },
+        {
+          "text": "The webhook receiver's network traffic will be encrypted.",
+          "misconception": "Targets [encryption confusion]: Secret compromise relates to authentication/authorization, not encryption."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "A compromised webhook secret allows an attacker to forge valid signatures. This enables them to send malicious payloads that appear legitimate, potentially triggering unauthorized actions or exfiltrating data.",
+        "distractor_analysis": "The sender's server is not directly affected. Payload deletion is not a standard outcome. Secret compromise does not lead to encryption.",
+        "analogy": "If a thief steals your house key, they can enter your house and pretend to be you, not cause your neighbor's house to lock itself."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "WEBHOOK_BASICS",
+        "WEBHOOK_PAYLOAD_VALIDATION",
+        "SECRET_MANAGEMENT"
+      ]
+    },
+    {
+      "question_text": "When using asymmetric signatures (e.g., RSA, ECDSA) for webhook validation, what is required on the receiver's side?",
+      "correct_answer": "The sender's public key.",
+      "distractors": [
+        {
+          "text": "The sender's private key.",
+          "misconception": "Targets [key management confusion]: The private key is kept secret by the sender; the receiver uses the public key."
+        },
+        {
+          "text": "A shared secret key, similar to HMAC.",
+          "misconception": "Targets [algorithm confusion]: Asymmetric signatures use key pairs, not a single shared secret."
+        },
+        {
+          "text": "The sender's password for authentication.",
+          "misconception": "Targets [authentication method confusion]: Public key cryptography replaces traditional password-based authentication for this purpose."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Asymmetric signature verification requires the public key corresponding to the private key used by the sender to create the signature. This allows anyone to verify the signature without needing the sender's secret private key.",
+        "distractor_analysis": "The private key must remain secret with the sender. Asymmetric crypto uses key pairs, not shared secrets. Passwords are a different authentication mechanism.",
+        "analogy": "Using asymmetric signatures is like verifying a signature on a check using a public registry of authorized signatures, rather than needing the bank's secret internal codes."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "defense",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "WEBHOOK_BASICS",
+        "CRYPTO_ASYMMETRIC",
+        "WEBHOOK_PAYLOAD_VALIDATION"
+      ]
+    },
+    {
+      "question_text": "What is the primary function of an 'idempotency key' in webhook processing?",
+      "correct_answer": "To ensure that processing the same webhook payload multiple times has the same effect as processing it once.",
+      "distractors": [
+        {
+          "text": "To uniquely identify the sender of the webhook.",
+          "misconception": "Targets [identifier confusion]: Sender identification is handled by signatures, not idempotency keys."
+        },
+        {
+          "text": "To encrypt the webhook payload for secure transmission.",
+          "misconception": "Targets [encryption confusion]: Idempotency keys are for preventing duplicate operations, not for encryption."
+        },
+        {
+          "text": "To validate the integrity of the webhook signature.",
+          "misconception": "Targets [signature confusion]: Signature validation confirms authenticity and integrity; idempotency handles duplicate processing."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "An idempotency key, often sent in a header, allows the receiver to detect and ignore duplicate webhook deliveries. This is crucial because network issues can sometimes cause senders to retry requests, and processing them twice could lead to errors or unintended side effects.",
+        "distractor_analysis": "Idempotency keys are for preventing duplicate operations, not sender identification. They do not encrypt data or validate signatures.",
+        "analogy": "An idempotency key is like a 'do not duplicate' stamp on a form; it ensures that even if you submit the form twice, the system only acts on it once."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "WEBHOOK_BASICS",
+        "WEBHOOK_PAYLOAD_VALIDATION",
+        "IDEMPOTENCY"
+      ]
+    },
+    {
+      "question_text": "Consider a scenario where a webhook receiver validates the signature correctly but still experiences issues. What is a likely cause?",
+      "correct_answer": "The webhook payload was modified *after* signature generation but *before* processing by the application logic.",
+      "distractors": [
+        {
+          "text": "The sender used the wrong secret key to sign the payload.",
+          "misconception": "Targets [signature validation failure]: If the wrong secret was used, the signature validation itself would have failed."
+        },
+        {
+          "text": "The webhook receiver's clock is significantly out of sync, causing timestamp validation to fail.",
+          "misconception": "Targets [timestamp validation failure]: While possible, this would typically cause the signature validation to fail if timestamps are part of the signed data or checked strictly."
+        },
+        {
+          "text": "The webhook sender failed to include any authentication headers.",
+          "misconception": "Targets [authentication header absence]: If no headers were present, signature validation would have failed immediately."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "If signature validation passes, it means the signature matches the signed data (usually the raw body) and the secret. Issues arising *after* this point suggest a problem in how the application logic handles the *content* of the now-trusted payload, or that the payload was altered between signing and application processing.",
+        "distractor_analysis": "Incorrect secret or missing headers would cause signature validation to fail outright. Clock sync issues would also likely fail validation if timestamps are checked.",
+        "analogy": "The signature check passed, meaning the package arrived sealed. However, the contents inside are still broken, suggesting the item itself was faulty, not the delivery process."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "scenario",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "WEBHOOK_BASICS",
+        "WEBHOOK_PAYLOAD_VALIDATION",
+        "CRYPTO_HMAC"
+      ]
+    },
+    {
+      "question_text": "What is the main difference between validating webhook signatures and validating webhook schemas?",
+      "correct_answer": "Signature validation confirms the sender and data integrity, while schema validation checks if the data conforms to expected structure and types.",
+      "distractors": [
+        {
+          "text": "Signature validation uses encryption, while schema validation uses hashing.",
+          "misconception": "Targets [algorithm confusion]: Signature validation uses hashing (HMAC) or asymmetric crypto; schema validation uses data structure rules."
+        },
+        {
+          "text": "Signature validation is optional, while schema validation is mandatory.",
+          "misconception": "Targets [security priority confusion]: Signature validation is a critical security step, often more so than schema validation."
+        },
+        {
+          "text": "Signature validation checks for replay attacks, while schema validation checks for injection flaws.",
+          "misconception": "Targets [purpose confusion]: Replay prevention is often timestamp-based; injection flaws are handled by input sanitization/validation, not schema validation directly."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Signature validation ensures the webhook is from a trusted source and hasn't been altered in transit (integrity). Schema validation ensures the payload's structure, data types, and required fields are correct, preventing application errors or vulnerabilities.",
+        "distractor_analysis": "Neither uses encryption/hashing in the way described. Signature validation is a crucial security measure, not optional. Replay attacks and injection flaws are distinct security concerns addressed by different mechanisms.",
+        "analogy": "Signature validation is like checking the return address and seal on an envelope to ensure it's from a known sender and hasn't been tampered with. Schema validation is like checking if the letter inside is written legibly and contains all the required information in the correct format."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "comparison",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "WEBHOOK_BASICS",
+        "WEBHOOK_PAYLOAD_VALIDATION",
+        "DATA_VALIDATION",
+        "CRYPTO_SIGNATURES"
+      ]
+    },
+    {
+      "question_text": "Which standard provides best current practices for JSON Web Tokens (JWTs), often used in API security and sometimes relevant to webhook authentication contexts?",
+      "correct_answer": "RFC 8725",
+      "distractors": [
+        {
+          "text": "RFC 2119",
+          "misconception": "Targets [standard confusion]: RFC 2119 defines keywords for requirements (MUST, SHOULD, MAY), not JWT best practices."
+        },
+        {
+          "text": "RFC 7519",
+          "misconception": "Targets [version confusion]: RFC 7519 originally defined JWTs, but RFC 8725 updates it with best practices."
+        },
+        {
+          "text": "OWASP Top 10",
+          "misconception": "Targets [scope confusion]: OWASP Top 10 lists common web application security risks, not specific JWT best practices."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "RFC 8725, titled 'JSON Web Token Best Current Practices', provides updated guidance on securely implementing and deploying JWTs, addressing threats like weak signature validation and key management, which are relevant when JWTs are used for webhook authentication.",
+        "distractor_analysis": "RFC 2119 is about requirement language. RFC 7519 is the original JWT spec, superseded for best practices. OWASP Top 10 is a broader risk list.",
+        "analogy": "RFC 8725 is like a revised edition of a cookbook for making secure JWTs, updating the original recipe (RFC 7519) with new safety tips and techniques."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "definition",
+      "bloom_level": "remember",
+      "prerequisites": [
+        "WEBHOOK_BASICS",
+        "API_SECURITY",
+        "JWT",
+        "RFC_STANDARDS"
+      ]
+    },
+    {
+      "question_text": "In the context of webhook security, what is the risk of eavesdropping?",
+      "correct_answer": "Sensitive data within the webhook payload can be read while in transit.",
+      "distractors": [
+        {
+          "text": "An attacker can modify the webhook payload without detection.",
+          "misconception": "Targets [tampering confusion]: Eavesdropping is about reading data; tampering is about modifying it."
+        },
+        {
+          "text": "A valid webhook request can be captured and resent later.",
+          "misconception": "Targets [replay attack confusion]: Replay attacks involve resending captured data, not just observing it."
+        },
+        {
+          "text": "The webhook sender's system can be overwhelmed with traffic.",
+          "misconception": "Targets [DoS confusion]: Eavesdropping does not inherently cause denial-of-service."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Eavesdropping refers to the interception and reading of data transmitted over a network. If webhooks transmit sensitive information (like PII or financial data) over unencrypted channels (HTTP), an attacker can potentially capture and read this data.",
+        "distractor_analysis": "Tampering is data modification. Replay is resending captured data. DoS is overwhelming the system. Eavesdropping is specifically about passive observation and reading.",
+        "analogy": "Eavesdropping on a webhook is like someone secretly listening in on a phone conversation to hear what's being said, rather than trying to interrupt or change the message."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "attack",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "WEBHOOK_BASICS",
+        "NETWORK_SECURITY",
+        "DATA_PRIVACY"
+      ]
+    },
+    {
+      "question_text": "Which Kubernetes concept involves intercepting API requests to modify or validate them, often using external services like webhooks?",
+      "correct_answer": "Admission Controllers",
+      "distractors": [
+        {
+          "text": "Service Accounts",
+          "misconception": "Targets [resource confusion]: Service Accounts manage identity and permissions for pods, not request interception."
+        },
+        {
+          "text": "Network Policies",
+          "misconception": "Targets [networking confusion]: Network Policies control traffic flow between pods, not API request validation."
+        },
+        {
+          "text": "Ingress Controllers",
+          "misconception": "Targets [traffic management confusion]: Ingress Controllers manage external access to services, not internal API request validation."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Admission Controllers in Kubernetes intercept requests to the Kubernetes API server before objects are persisted. Mutating admission webhooks can modify requests, and validating admission webhooks can reject them based on custom logic, often implemented via external webhook services.",
+        "distractor_analysis": "Service Accounts handle identity. Network Policies manage network traffic. Ingress Controllers manage external traffic routing. Admission Controllers are specifically designed for request interception and validation/mutation.",
+        "analogy": "Admission Controllers are like security guards at the entrance of a building, checking IDs and packages (API requests) before allowing them inside (to be persisted)."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "KUBERNETES_BASICS",
+        "WEBHOOK_BASICS",
+        "ADMISSION_CONTROLLERS"
+      ]
+    }
+  ],
+  "generation_metadata": {
+    "model": "google/gemini-2.5-flash-lite",
+    "num_generated": 15,
+    "temperature": 0.1,
+    "web_citations": [],
+    "research_method": "openrouter_web_plugin",
+    "search_query": "Webhook Payload Validation 008_Application Security best practices",
+    "latency_ms": 23111.639
+  },
+  "timestamp": "2026-01-18T12:37:55.208754",
+  "_av_safe_encoded": true,
+  "_encoding_note": "Educational content encoded with HTML entities to prevent antivirus false positives. Content renders normally in Anki."
+}

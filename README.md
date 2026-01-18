@@ -12,8 +12,8 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Topics-139,403-blue?style=for-the-badge" alt="Topics">
-  <img src="https://img.shields.io/badge/Flashcards-235,049+-green?style=for-the-badge" alt="Flashcards">
-  <img src="https://img.shields.io/badge/Deduplicated-166,050-brightgreen?style=for-the-badge" alt="Deduplicated">
+  <img src="https://img.shields.io/badge/Flashcards-480,075+-green?style=for-the-badge" alt="Flashcards">
+  <img src="https://img.shields.io/badge/Deduplicated-335,114-brightgreen?style=for-the-badge" alt="Deduplicated">
   <img src="https://img.shields.io/badge/Domains-47-orange?style=for-the-badge" alt="Domains">
   <img src="https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge" alt="License">
 </p>
@@ -24,8 +24,8 @@
 
 - **139,403 curriculum topics** across cybersecurity, networking, and software engineering
 - **8-voter AI consensus system** for pedagogical quality assurance
-- **235,049+ validated flashcards** with Phase 15 quality protocol
-- **GPU-accelerated deduplication** - 35.7% duplicate removal on H100 (258K → 166K)
+- **480,075+ validated flashcards** with Phase 15 quality protocol
+- **GPU-accelerated deduplication** - 30.2% duplicate removal on H100 (480K → 335K)
 - **Web-grounded research** via Exa semantic search and Context7
 - **Production pipeline** processing 29 topics/minute
 
@@ -40,27 +40,37 @@ Ready-to-use Anki packages for the Cybersecurity curriculum. Import directly int
   <img src="Threat-Hunting-Back.png" alt="Flashcard Back" width="400">
 </p>
 
-### Deduplicated (Recommended)
-Semantically deduplicated using GPU-accelerated embeddings. 35.7% fewer cards with no redundancy.
+### Deduplicated
+Semantically deduplicated using GPU-accelerated embeddings. 30.2% fewer cards with no redundancy.
 
 | Domain | Cards | Size | Download |
 |--------|-------|------|----------|
-| Security & Risk Management | 60,459 | 25 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/001_cybersecurity/deduplicated/001_security-and-risk-management.apkg) |
-| Asset Security | 26,535 | 11 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/001_cybersecurity/deduplicated/002_asset-security.apkg) |
-| Security Architecture | 46,628 | 19 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/001_cybersecurity/deduplicated/007_security-architecture-and-engineering.apkg) |
-| Threat Intelligence | 32,439 | 14 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/001_cybersecurity/deduplicated/017_threat-intelligence-and-hunting.apkg) |
-| **Total** | **166,061** | **69 MB** | |
+| Security & Risk Management | 60,462 | 25 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/apkg/deduplicated/001_cybersecurity/001_security-and-risk-management.apkg) |
+| Asset Security | 26,536 | 11 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/apkg/deduplicated/001_cybersecurity/002_asset-security.apkg) |
+| Cryptography | 35,286 | 15 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/apkg/deduplicated/001_cybersecurity/005_cryptography.apkg) |
+| Security Architecture | 46,630 | 19 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/apkg/deduplicated/001_cybersecurity/007_security-architecture-and-engineering.apkg) |
+| Software Dev Security | 32,159 | 13 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/apkg/deduplicated/001_cybersecurity/008_software-development-security.apkg) |
+| Application Security | 32,054 | 13 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/apkg/deduplicated/001_cybersecurity/009_application-security.apkg) |
+| Incident Response | 36,845 | 15 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/apkg/deduplicated/001_cybersecurity/015_incident-response-and-forensics.apkg) |
+| Penetration Testing | 32,704 | 14 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/apkg/deduplicated/001_cybersecurity/016_penetration-testing-and-ethical-hacking.apkg) |
+| Threat Intelligence | 32,438 | 14 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/apkg/deduplicated/001_cybersecurity/017_threat-intelligence-and-hunting.apkg) |
+| **Total** | **335,114** | **139 MB** | |
 
-### Non-Deduplicated (Full Dataset)
+### Non-Deduplicated (Full Dataset - Recommended)
 Complete flashcard set without deduplication.
 
 | Domain | Cards | Size | Download |
 |--------|-------|------|----------|
-| Security & Risk Management | 97,005 | 38 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/001_cybersecurity/non-deduplicated/001_security-and-risk-management.apkg) |
-| Asset Security | 39,885 | 15 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/001_cybersecurity/non-deduplicated/002_asset-security.apkg) |
-| Security Architecture | 66,749 | 26 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/001_cybersecurity/non-deduplicated/007_security-architecture-and-engineering.apkg) |
-| Threat Intelligence | 54,465 | 22 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/001_cybersecurity/non-deduplicated/017_threat-intelligence-and-hunting.apkg) |
-| **Total** | **258,104** | **101 MB** | |
+| Security & Risk Management | 97,005 | 38 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/apkg/non-deduplicated/001_cybersecurity/001_security-and-risk-management.apkg) |
+| Asset Security | 38,919 | 15 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/apkg/non-deduplicated/001_cybersecurity/002_asset-security.apkg) |
+| Cryptography | 50,301 | 20 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/apkg/non-deduplicated/001_cybersecurity/005_cryptography.apkg) |
+| Security Architecture | 66,749 | 26 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/apkg/non-deduplicated/001_cybersecurity/007_security-architecture-and-engineering.apkg) |
+| Software Dev Security | 45,427 | 18 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/apkg/non-deduplicated/001_cybersecurity/008_software-development-security.apkg) |
+| Application Security | 42,032 | 17 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/apkg/non-deduplicated/001_cybersecurity/009_application-security.apkg) |
+| Incident Response | 46,918 | 19 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/apkg/non-deduplicated/001_cybersecurity/015_incident-response-and-forensics.apkg) |
+| Penetration Testing | 38,259 | 15 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/apkg/non-deduplicated/001_cybersecurity/016_penetration-testing-and-ethical-hacking.apkg) |
+| Threat Intelligence | 54,465 | 22 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/apkg/non-deduplicated/001_cybersecurity/017_threat-intelligence-and-hunting.apkg) |
+| **Total** | **480,075** | **190 MB** | |
 
 <details>
 <summary><strong>Generation Details</strong></summary>
@@ -357,7 +367,7 @@ Semantic deduplication removes duplicate flashcards using GPU-accelerated embedd
 
 ### Deduplication Pipeline
 ```
-258,104 Flashcards
+480,075 Flashcards
     ↓
 ┌─────────────────────────────────────┐
 │  Sentence Embeddings (all-mpnet)    │
@@ -380,17 +390,22 @@ Semantic deduplication removes duplicate flashcards using GPU-accelerated embedd
 │  • Source authority weighting       │
 └─────────────────────────────────────┘
     ↓
-166,050 Unique Flashcards (35.7% reduction)
+335,114 Unique Flashcards (30.2% reduction)
 ```
 
 ### Deduplication Results (Cybersecurity)
 | Domain | Input | Output | Reduction |
 |--------|-------|--------|-----------|
-| Security & Risk Management | 97,005 | 60,447 | 37.7% |
-| Asset Security | 39,885 | 26,538 | 33.5% |
-| Security Architecture | 66,749 | 46,623 | 30.2% |
-| Threat Intelligence | 54,465 | 32,442 | 40.4% |
-| **Total** | **258,104** | **166,050** | **35.7%** |
+| Security & Risk Management | 97,005 | 60,462 | 37.7% |
+| Asset Security | 38,919 | 26,536 | 31.8% |
+| Cryptography | 50,301 | 35,286 | 29.9% |
+| Security Architecture | 66,749 | 46,630 | 30.1% |
+| Software Dev Security | 45,427 | 32,159 | 29.2% |
+| Application Security | 42,032 | 32,054 | 23.7% |
+| Incident Response | 46,918 | 36,845 | 21.5% |
+| Penetration Testing | 38,259 | 32,704 | 14.5% |
+| Threat Intelligence | 54,465 | 32,438 | 40.4% |
+| **Total** | **480,075** | **335,114** | **30.2%** |
 
 ### Output Formats
 - **APKG** - Native Anki package (per domain)
@@ -435,9 +450,9 @@ python -m flashcard_maker \
 | 🏛️ **Domains** | 47 |
 | 📚 **Subdomains** | 355 |
 | 📝 **Topics** | 139,403 |
-| 🎴 **Flashcards (Raw)** | 258,104 |
-| ✨ **Flashcards (Deduplicated)** | 166,050 |
-| 🔄 **Deduplication Rate** | 35.7% |
+| 🎴 **Flashcards (Raw)** | 480,075 |
+| ✨ **Flashcards (Deduplicated)** | 335,114 |
+| 🔄 **Deduplication Rate** | 30.2% |
 | 💾 **Data Size** | 23.42 MB |
 | ⏱️ **Throughput** | 29 topics/min |
 | 🚀 **GPU Processing** | ~7 min (H100) |
@@ -558,7 +573,7 @@ The-Art-Of-Language-V2/
 │   │   ├── 002_network-engineering/  # 16 domains
 │   │   └── 003_software-engineering/ # 12 domains
 │   ├── JSONL/                    # Consolidated flashcard data
-│   │   └── 001_cybersecurity.jsonl   # 740 MB, 258K flashcards
+│   │   └── 001_cybersecurity.jsonl   # 1376.9 MB, 480K flashcards
 │   └── Backup/                   # Timestamped backups
 │
 ├── prompt_optimizer/             # AI optimization pipeline
@@ -609,21 +624,26 @@ As of January 2026:
 
 | Metric | Value |
 |--------|-------|
-| Domains Completed | 4 of 47 (8.5%) |
-| Topics Processed | 14,916 |
-| Flashcards Generated | 258,104 |
-| Flashcards After Dedup | 166,050 |
-| Deduplication Rate | 35.7% |
+| Domains Completed | 9 of 47 (19.1%) |
+| Topics Processed | 27,466 |
+| Flashcards Generated | 480,075 |
+| Flashcards After Dedup | 335,114 |
+| Deduplication Rate | 30.2% |
 | GPU Processing Time | ~7 minutes (H100) |
 | Throughput | ~29 topics/minute |
 
 ### Deduplication by Domain
 | Domain | Before | After | Reduction |
 |--------|--------|-------|-----------|
-| Security & Risk Management | 97,005 | 60,447 | 37.7% |
-| Asset Security | 39,885 | 26,538 | 33.5% |
-| Security Architecture | 66,749 | 46,623 | 30.2% |
-| Threat Intelligence | 54,465 | 32,442 | 40.4% |
+| Security & Risk Management | 97,005 | 60,462 | 37.7% |
+| Asset Security | 38,919 | 26,536 | 31.8% |
+| Cryptography | 50,301 | 35,286 | 29.9% |
+| Security Architecture | 66,749 | 46,630 | 30.1% |
+| Software Dev Security | 45,427 | 32,159 | 29.2% |
+| Application Security | 42,032 | 32,054 | 23.7% |
+| Incident Response | 46,918 | 36,845 | 21.5% |
+| Penetration Testing | 38,259 | 32,704 | 14.5% |
+| Threat Intelligence | 54,465 | 32,438 | 40.4% |
 
 ---
 

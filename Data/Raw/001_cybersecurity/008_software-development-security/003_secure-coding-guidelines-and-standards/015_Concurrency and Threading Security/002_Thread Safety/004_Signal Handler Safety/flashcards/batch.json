@@ -1,0 +1,512 @@
+{
+  "topic_title": "Signal Handler Safety",
+  "category": "Software Development Security - Secure Coding Guidelines and Standards",
+  "flashcards": [
+    {
+      "question_text": "What is the primary characteristic of an async-signal-safe function in C programming?",
+      "correct_answer": "It can be safely called from within a signal handler without causing undefined behavior.",
+      "distractors": [
+        {
+          "text": "It is guaranteed to be reentrant by the C standard.",
+          "misconception": "Targets [standard guarantee confusion]: Assumes all reentrant functions are inherently async-signal-safe by default, overlooking specific standard limitations."
+        },
+        {
+          "text": "It is a function that uses atomic operations for all its internal data.",
+          "misconception": "Targets [mechanism confusion]: Believes atomic operations are the sole criterion for safety, ignoring other potential issues like I/O."
+        },
+        {
+          "text": "It is a function that is never interrupted by a signal.",
+          "misconception": "Targets [interruptibility misconception]: Misunderstands that signal handlers themselves interrupt execution, and safety is about managing that interruption."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "An async-signal-safe function can be called from a signal handler because its execution is safe from interruption by other signals or re-entrant calls, preventing data corruption. This is crucial because signal handlers interrupt normal program flow.",
+        "distractor_analysis": "The first distractor oversimplifies reentrancy as the sole criterion. The second focuses only on atomic operations, ignoring other unsafe operations like stdio. The third incorrectly assumes functions are never interrupted.",
+        "analogy": "Think of an async-signal-safe function as a 'safe room' where you can perform critical tasks without being disturbed by external alarms (signals), whereas unsafe functions are like performing tasks in an open field during a storm."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "SIGNAL_HANDLING_BASICS"
+      ]
+    },
+    {
+      "question_text": "According to POSIX.1, which of the following standard library functions is generally considered async-signal-safe?",
+      "correct_answer": "abort()",
+      "distractors": [
+        {
+          "text": "printf()",
+          "misconception": "Targets [stdio confusion]: Believes standard I/O functions are safe, ignoring their reliance on shared buffers that can be corrupted."
+        },
+        {
+          "text": "malloc()",
+          "misconception": "Targets [memory allocation safety]: Assumes memory allocation is safe, but it often involves complex internal state management not suitable for signal handlers."
+        },
+        {
+          "text": "fopen()",
+          "misconception": "Targets [file I/O safety]: Fails to recognize that file operations, like printf, involve shared state and are not inherently safe within signal handlers."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The <code>abort()</code> function is explicitly listed by POSIX.1 as async-signal-safe because it terminates the program, avoiding complex state management issues. Functions like <code>printf()</code> and <code>malloc()</code> are not safe due to their reliance on shared, non-reentrant internal data structures.",
+        "distractor_analysis": "<code>printf()</code> and <code>fopen()</code> are unsafe due to stdio buffer management. <code>malloc()</code> is unsafe because heap management is complex and not designed for signal interruption. <code>abort()</code> is safe as it's a termination function.",
+        "analogy": "Calling <code>abort()</code> from a signal handler is like hitting the emergency stop button on a machine; it's a definitive action that prevents further damage. Trying to use <code>printf()</code> or <code>malloc()</code> is like trying to adjust delicate machinery while it's being violently shaken by an earthquake."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "SIGNAL_HANDLING_BASICS",
+        "ASYNC_SIGNAL_SAFE_FUNCTIONS"
+      ]
+    },
+    {
+      "question_text": "Why are standard I/O (stdio) functions like <code>printf()</code> generally considered unsafe to call from a signal handler?",
+      "correct_answer": "They rely on statically allocated data buffers and internal counters that can be in an inconsistent state if interrupted by a signal.",
+      "distractors": [
+        {
+          "text": "They require exclusive access to the console, which is not available in signal handlers.",
+          "misconception": "Targets [resource access confusion]: Believes the issue is about exclusive resource access rather than internal data corruption."
+        },
+        {
+          "text": "Their execution time is unpredictable, potentially exceeding signal handler time limits.",
+          "misconception": "Targets [performance misconception]: Focuses on execution time rather than the critical data integrity issue."
+        },
+        {
+          "text": "They are designed only for main thread execution and are not thread-safe.",
+          "misconception": "Targets [thread safety vs signal safety confusion]: Equates thread safety issues directly with signal handler safety, missing the specific stdio buffer problem."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Stdio functions maintain internal buffers and state variables. If a signal handler calls an stdio function while the main program is in the middle of using these buffers, the data can become corrupted, leading to unpredictable results and program instability.",
+        "distractor_analysis": "The first distractor misidentifies the problem as resource exclusivity. The second focuses on timing, which is secondary to data integrity. The third conflates thread safety with signal safety, though both relate to concurrency issues.",
+        "analogy": "Imagine two people trying to write on the same notepad simultaneously without coordinating. One person might be halfway through writing a word when the other starts, resulting in a jumbled mess. Stdio functions in signal handlers are like this, corrupting their internal 'notepad'."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SIGNAL_HANDLING_BASICS",
+        "ASYNC_SIGNAL_SAFE_FUNCTIONS"
+      ]
+    },
+    {
+      "question_text": "What is the primary risk associated with calling non-async-signal-safe functions within a signal handler?",
+      "correct_answer": "Undefined behavior due to potential data corruption or race conditions.",
+      "distractors": [
+        {
+          "text": "Increased memory consumption by the signal handler.",
+          "misconception": "Targets [resource management confusion]: Focuses on memory usage rather than program stability and correctness."
+        },
+        {
+          "text": "A guaranteed program crash upon handler completion.",
+          "misconception": "Targets [certainty of failure]: Assumes a crash is the only outcome, whereas undefined behavior can manifest in subtler, harder-to-debug ways."
+        },
+        {
+          "text": "Reduced performance of the main program thread.",
+          "misconception": "Targets [performance impact]: Believes the main risk is speed, not correctness."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Calling non-async-signal-safe functions from a signal handler can lead to undefined behavior because the function's internal state might be corrupted by the interruption, or it might access global data that is also being modified by the interrupted code, causing race conditions.",
+        "distractor_analysis": "Memory consumption and performance are secondary concerns. A guaranteed crash is too absolute; undefined behavior is more nuanced. The core risk is data integrity and logical correctness.",
+        "analogy": "It's like trying to perform delicate surgery while the operating room is being shaken by an earthquake. The tools (functions) might be fine on their own, but the unstable environment (signal handler) makes their use dangerous and unpredictable."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SIGNAL_HANDLING_BASICS",
+        "ASYNC_SIGNAL_SAFE_FUNCTIONS"
+      ]
+    },
+    {
+      "question_text": "Which of the following is a recommended strategy for handling potentially unsafe functions when signal delivery cannot be blocked?",
+      "correct_answer": "Ensure the signal handler calls only async-signal-safe functions.",
+      "distractors": [
+        {
+          "text": "Use a global mutex to protect all calls to unsafe functions within the handler.",
+          "misconception": "Targets [mutex safety in handlers]: Assumes standard mutexes are safe to use in signal handlers, which is often not true due to their own internal state and potential deadlocks."
+        },
+        {
+          "text": "Perform all complex operations in the main program after the signal is received.",
+          "misconception": "Targets [handler complexity]: Suggests handlers can be complex, which contradicts the principle of keeping them simple and fast."
+        },
+        {
+          "text": "Re-register the signal handler with a flag indicating it's unsafe.",
+          "misconception": "Targets [handler registration]: Believes handler registration can mitigate the safety of the functions it calls."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Since blocking signal delivery can be complex, the primary strategy is to ensure the signal handler itself only invokes functions that are guaranteed to be async-signal-safe. This prevents data corruption and undefined behavior by design.",
+        "distractor_analysis": "Global mutexes are generally unsafe in signal handlers. Complex operations should be avoided in handlers. Re-registering the handler doesn't make unsafe functions safe.",
+        "analogy": "If you know a certain path is dangerous, and you can't close it off, the safest approach is to avoid using that path altogether and find a known safe route, even if it's slightly longer."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "procedure",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "SIGNAL_HANDLING_BASICS",
+        "ASYNC_SIGNAL_SAFE_FUNCTIONS"
+      ]
+    },
+    {
+      "question_text": "What is the purpose of the <code>volatile sig_atomic_t</code> type in C when used for variables accessed by signal handlers?",
+      "correct_answer": "It ensures that reads and writes to the variable are atomic and that the compiler does not optimize away accesses.",
+      "distractors": [
+        {
+          "text": "It guarantees that the variable is thread-safe.",
+          "misconception": "Targets [type safety confusion]: Confuses signal atomicity with thread safety, which are related but distinct concurrency concepts."
+        },
+        {
+          "text": "It automatically locks the variable to prevent concurrent access.",
+          "misconception": "Targets [locking mechanism misconception]: Assumes `volatile sig_atomic_t` implies automatic locking, rather than just atomic access and visibility."
+        },
+        {
+          "text": "It makes the variable accessible from multiple processes simultaneously.",
+          "misconception": "Targets [inter-process communication confusion]: Misunderstands the scope of `volatile sig_atomic_t` as inter-process rather than intra-process signal safety."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The <code>volatile</code> keyword prevents the compiler from optimizing away reads/writes, ensuring they happen as written. <code>sig_atomic_t</code> guarantees that assignments to the variable are atomic operations, meaning they complete without interruption by signals, thus preventing partial updates.",
+        "distractor_analysis": "Thread safety is a different concern. <code>volatile sig_atomic_t</code> does not provide locking. Its scope is within a single process, not inter-process communication.",
+        "analogy": "Using <code>volatile sig_atomic_t</code> is like using a special, unbreakable 'message capsule' for critical notes. The capsule ensures the message is delivered whole (atomic) and that the recipient always sees the latest version (volatile), preventing confusion if multiple notes are sent rapidly."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "SIGNAL_HANDLING_BASICS",
+        "C_DATA_TYPES"
+      ]
+    },
+    {
+      "question_text": "Consider a scenario where a signal handler needs to communicate a simple status flag to the main program. Which approach is MOST appropriate?",
+      "correct_answer": "Use a <code>volatile sig_atomic_t</code> variable that the handler sets and the main program checks.",
+      "distractors": [
+        {
+          "text": "Use a standard <code>int</code> variable that the handler modifies.",
+          "misconception": "Targets [basic type unsafety]: Fails to recognize that standard `int` operations may not be atomic and can be optimized away."
+        },
+        {
+          "text": "Use a <code>char*</code> pointer to pass a status string from the handler.",
+          "misconception": "Targets [pointer safety in handlers]: Ignores the complexity and potential unsafety of dynamic memory allocation or string manipulation within signal handlers."
+        },
+        {
+          "text": "Use a global <code>std::string</code> object that the handler updates.",
+          "misconception": "Targets [C++ object safety in handlers]: Assumes C++ standard library objects are safe, but many (like `std::string`) have complex internal state and non-atomic operations."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "A <code>volatile sig_atomic_t</code> variable is the standard and safest way to communicate simple status between a signal handler and the main program because its access is guaranteed to be atomic and visible, preventing race conditions and compiler optimizations that could hide the status change.",
+        "distractor_analysis": "A standard <code>int</code> is not guaranteed to be atomic or visible. String manipulation and C++ objects like <code>std::string</code> involve complex operations and internal state that are not async-signal-safe.",
+        "analogy": "Communicating status is like passing a single, clear note. Using <code>volatile sig_atomic_t</code> is like using a special, tamper-proof envelope for that note, ensuring it arrives intact and is immediately readable. Using other methods is like trying to pass a crumpled, potentially incomplete message."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "scenario",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "SIGNAL_HANDLING_BASICS",
+        "VOLATILE_SIG_ATOMIC_T"
+      ]
+    },
+    {
+      "question_text": "What is the primary concern when a signal handler needs to interact with global data structures that are also accessed by the main program?",
+      "correct_answer": "Ensuring that the access to these structures is atomic and that the handler does not leave them in an inconsistent state.",
+      "distractors": [
+        {
+          "text": "Minimizing the size of the global data structures.",
+          "misconception": "Targets [optimization focus]: Believes size is the primary issue, not data integrity during concurrent access."
+        },
+        {
+          "text": "Making the global data structures read-only within the handler.",
+          "misconception": "Targets [access control misconception]: Assumes read-only access is always sufficient, but even reads can be problematic if the structure is being modified."
+        },
+        {
+          "text": "Serializing access to global data using standard mutexes.",
+          "misconception": "Targets [mutex safety in handlers]: Fails to recognize that standard mutexes are typically not async-signal-safe and can lead to deadlocks."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "When a signal handler accesses shared global data, there's a risk of race conditions where the handler's operations interleave with the main program's operations, leading to data corruption. Therefore, access must be atomic and managed carefully to maintain consistency.",
+        "distractor_analysis": "Data size is irrelevant to safety. Read-only access might help but doesn't solve all issues if the data is being modified concurrently. Standard mutexes are generally unsafe in signal handlers.",
+        "analogy": "Imagine two people trying to edit the same document simultaneously. If they don't coordinate, one person's edits might overwrite the other's, or the document could end up in a nonsensical state. Signal handlers and main programs accessing shared data without care are like these two editors."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SIGNAL_HANDLING_BASICS",
+        "CONCURRENCY_CONTROL"
+      ]
+    },
+    {
+      "question_text": "Which of the following is a key difference between signal handler persistence on POSIX systems versus Windows?",
+      "correct_answer": "POSIX systems often automatically reinstall signal handlers after execution, while Windows typically restores the default action.",
+      "distractors": [
+        {
+          "text": "POSIX handlers are always reentrant, while Windows handlers are not.",
+          "misconception": "Targets [reentrancy assumption]: Incorrectly assumes reentrancy is a platform-specific feature of signal handlers themselves."
+        },
+        {
+          "text": "Windows allows masking signals during handler execution, while POSIX does not.",
+          "misconception": "Targets [signal masking capabilities]: Misunderstands that signal masking is a feature available on both platforms, though implementation details may vary."
+        },
+        {
+          "text": "POSIX handlers can call any function, while Windows handlers are restricted to a few safe functions.",
+          "misconception": "Targets [function restriction scope]: Overstates the restrictions on Windows handlers and understates the general safety concerns on POSIX."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The <code>signal()</code> function's behavior regarding handler persistence is implementation-defined. Many UNIX/POSIX systems automatically re-register the handler, while Windows and some other systems reset it to the default action after it runs, requiring explicit re-registration if persistence is needed.",
+        "distractor_analysis": "Reentrancy is a property of the handler's code, not the OS's persistence mechanism. Signal masking is a general concept. Both platforms have restrictions on handler functions, but the persistence behavior is the key difference highlighted.",
+        "analogy": "Think of setting an alarm. On POSIX, it's like setting an alarm that automatically resets itself after it rings. On Windows, it's like setting an alarm that turns off after ringing, and you have to manually set it again if you want it to ring later."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "comparison",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SIGNAL_HANDLING_BASICS",
+        "OS_SIGNAL_BEHAVIOR"
+      ]
+    },
+    {
+      "question_text": "What is the SEI CERT C Coding Standard's recommendation regarding functions called within signal handlers?",
+      "correct_answer": "Only call functions that are explicitly defined as async-signal-safe by the implementation.",
+      "distractors": [
+        {
+          "text": "Call only functions that are part of the C standard library.",
+          "misconception": "Targets [standard library scope]: Assumes all standard library functions are safe, ignoring specific exceptions like stdio."
+        },
+        {
+          "text": "Call only functions that are marked as 'reentrant'.",
+          "misconception": "Targets [reentrancy vs signal safety]: Equates reentrancy directly with async-signal-safety, which is insufficient as other factors like I/O matter."
+        },
+        {
+          "text": "Call only functions that are known to be fast-executing.",
+          "misconception": "Targets [performance over safety]: Prioritizes speed, which is a secondary concern to correctness and avoiding undefined behavior."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The SEI CERT C Coding Standard (SIG30-C) emphasizes that for strictly conforming programs, only a very limited set of C standard library functions (<code>abort()</code>, <code>_Exit()</code>, <code>quick_exit()</code>, <code>signal()</code>) are guaranteed safe. For broader safety, one must rely on the implementation's definition of async-signal-safe functions.",
+        "distractor_analysis": "Not all C standard library functions are safe. Reentrancy is necessary but not sufficient for signal safety. Speed is secondary to avoiding undefined behavior.",
+        "analogy": "When navigating a minefield (signal handler), you don't just follow any path; you stick strictly to the marked safe zones (async-signal-safe functions) identified by experts."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "SIGNAL_HANDLING_BASICS",
+        "ASYNC_SIGNAL_SAFE_FUNCTIONS",
+        "CODING_STANDARDS"
+      ]
+    },
+    {
+      "question_text": "In the context of signal handlers, what does 'undefined behavior' typically imply?",
+      "correct_answer": "The program's execution may be unpredictable, including crashes, incorrect results, or seemingly random errors.",
+      "distractors": [
+        {
+          "text": "The program will always terminate immediately with a specific error code.",
+          "misconception": "Targets [certainty of outcome]: Assumes undefined behavior always results in a predictable, immediate crash."
+        },
+        {
+          "text": "The compiler will issue a warning during the build process.",
+          "misconception": "Targets [detection mechanism]: Believes undefined behavior is always caught at compile time, rather than being a runtime issue."
+        },
+        {
+          "text": "The operating system will automatically correct the error.",
+          "misconception": "Targets [OS fault tolerance]: Assumes the OS has built-in mechanisms to fix any undefined behavior."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Undefined behavior means the C standard places no requirements on the program's actions. This can manifest in various ways, from immediate crashes to subtle data corruption that only appears later, making it difficult to debug. It's the most severe consequence of unsafe programming practices.",
+        "distractor_analysis": "Undefined behavior is inherently unpredictable; it doesn't guarantee a specific outcome like a crash or error code. It's a runtime issue, not typically a compile-time warning. The OS does not automatically correct it.",
+        "analogy": "Undefined behavior is like driving a car with a known, but unspecified, mechanical fault. The car might run perfectly for a while, suddenly stall, veer off the road, or even catch fire – the outcome is unpredictable and potentially catastrophic."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "PROGRAMMING_FUNDAMENTALS",
+        "UNDEFINED_BEHAVIOR"
+      ]
+    },
+    {
+      "question_text": "Which C standard library function is explicitly mentioned as safe to call from a signal handler for program termination?",
+      "correct_answer": "_Exit()",
+      "distractors": [
+        {
+          "text": "exit()",
+          "misconception": "Targets [exit vs _Exit confusion]: Fails to distinguish between `exit()` (which performs cleanup like flushing stdio buffers) and `_Exit()` (which does not)."
+        },
+        {
+          "text": "raise()",
+          "misconception": "Targets [signal generation safety]: Misunderstands that `raise()` itself can have issues when called from certain signal handlers, and is not primarily for termination safety."
+        },
+        {
+          "text": "abort()",
+          "misconception": "Targets [termination function confusion]: While `abort()` is often safe, `_Exit()` is specifically highlighted for its minimal cleanup, making it a more direct answer for safe termination."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The <code>_Exit()</code> function is designed to terminate a process immediately without performing standard cleanup actions like flushing stdio buffers. This minimal operation makes it async-signal-safe, unlike <code>exit()</code>, which performs cleanup that might involve unsafe operations.",
+        "distractor_analysis": "<code>exit()</code> is unsafe because its cleanup routines (e.g., flushing stdio) are not async-signal-safe. <code>raise()</code> is for signaling, not safe termination. While <code>abort()</code> is often safe, <code>_Exit()</code> is the most direct answer for minimal-cleanup termination.",
+        "analogy": "Using <code>_Exit()</code> from a signal handler is like pulling a fire alarm and immediately evacuating the building without stopping to lock doors or turn off lights. It's a quick, decisive action to stop everything safely. <code>exit()</code> is more like a controlled shutdown, which might involve steps unsafe during an emergency."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "SIGNAL_HANDLING_BASICS",
+        "ASYNC_SIGNAL_SAFE_FUNCTIONS"
+      ]
+    },
+    {
+      "question_text": "What is the main reason why functions involving buffered I/O, such as those in the <code>stdio</code> library, are not async-signal-safe?",
+      "correct_answer": "They maintain shared, statically allocated data buffers and counters that can become inconsistent if accessed concurrently by a signal handler.",
+      "distractors": [
+        {
+          "text": "They require exclusive access to the underlying file descriptor, which is not guaranteed in a signal handler.",
+          "misconception": "Targets [resource locking misconception]: Focuses on file descriptor locking rather than the internal buffer state."
+        },
+        {
+          "text": "Their execution involves system calls that are not permitted within signal handlers.",
+          "misconception": "Targets [system call restrictions]: Overgeneralizes system call restrictions; the issue is specific to how stdio uses them and manages state."
+        },
+        {
+          "text": "They are implemented using dynamic memory allocation, which is inherently unsafe.",
+          "misconception": "Targets [dynamic memory safety]: Incorrectly assumes all dynamic memory operations are unsafe, when the core issue is the shared state management of stdio buffers."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Stdio functions rely on internal buffers and state variables (like pointers and counts) to manage I/O operations. When a signal interrupts a stdio function, these internal states can be partially updated or corrupted, leading to unpredictable behavior when the handler or the interrupted code attempts to use them.",
+        "distractor_analysis": "While file descriptors are involved, the primary problem is the shared buffer state. Not all system calls are forbidden, but stdio's specific usage is problematic. Dynamic memory allocation itself isn't the sole issue; it's how stdio manages its buffers.",
+        "analogy": "Imagine a shared whiteboard used by two people. If one person is halfway through drawing a complex diagram when the other person starts erasing and drawing something else, the diagram becomes a mess. The stdio buffers are like that whiteboard."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SIGNAL_HANDLING_BASICS",
+        "ASYNC_SIGNAL_SAFE_FUNCTIONS"
+      ]
+    },
+    {
+      "question_text": "What is the fundamental principle behind making a function async-signal-safe?",
+      "correct_answer": "Ensuring that the function's execution cannot be interrupted in a way that corrupts its internal state or shared data.",
+      "distractors": [
+        {
+          "text": "Minimizing the function's execution time to be as short as possible.",
+          "misconception": "Targets [performance focus]: Believes speed is the primary safety factor, rather than state integrity."
+        },
+        {
+          "text": "Using only integer arithmetic and avoiding floating-point operations.",
+          "misconception": "Targets [data type restriction]: Assumes specific data types are inherently unsafe, rather than the operations and state management around them."
+        },
+        {
+          "text": "Ensuring the function does not perform any system calls.",
+          "misconception": "Targets [system call prohibition]: Overstates the restrictions; some system calls are safe, while others (especially those involving shared state) are not."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Async-signal safety is achieved by ensuring that a function is either reentrant (can be safely called multiple times concurrently) or atomic with respect to signals (its execution cannot be interrupted by a signal handler). The core goal is to prevent data corruption and race conditions.",
+        "distractor_analysis": "Execution time is a factor but not the fundamental principle. Data types are less important than how they are accessed. Some system calls are safe; the issue is the state management around them.",
+        "analogy": "The fundamental principle is like building a secure vault. It's not just about how quickly you can get in and out, or what materials you use, but about ensuring that once inside, your actions are protected from external interference and the contents remain intact."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SIGNAL_HANDLING_BASICS",
+        "ASYNC_SIGNAL_SAFE_FUNCTIONS"
+      ]
+    },
+    {
+      "question_text": "Which of the following is a common pitfall when implementing signal handlers in C?",
+      "correct_answer": "Calling library functions that are not async-signal-safe, such as <code>printf</code> or <code>malloc</code>.",
+      "distractors": [
+        {
+          "text": "Forgetting to declare signal handler functions as <code>void</code> return type.",
+          "misconception": "Targets [return type confusion]: Believes the return type is the primary safety concern, rather than the function's behavior."
+        },
+        {
+          "text": "Using <code>longjmp</code> within the signal handler to return to a non-signal context.",
+          "misconception": "Targets [control flow mechanism]: Assumes `longjmp` is a safe alternative for complex returns, which is generally discouraged due to potential state corruption."
+        },
+        {
+          "text": "Registering the same handler for multiple, unrelated signals.",
+          "misconception": "Targets [handler registration strategy]: Believes handler reuse is inherently unsafe, rather than the functions called within it."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The most common and dangerous pitfall is calling non-async-signal-safe functions within a signal handler. These functions can corrupt internal state or shared data, leading to undefined behavior. <code>printf</code> and <code>malloc</code> are prime examples of such unsafe functions.",
+        "distractor_analysis": "The return type is usually <code>void</code>. <code>longjmp</code> is risky and often discouraged. Registering handlers for multiple signals can be managed safely if the handler itself is safe.",
+        "analogy": "The biggest pitfall is like bringing dangerous tools (unsafe functions) into a sensitive area (signal handler). Even if you handle the tools carefully, their inherent danger can cause problems. Other issues might be inconvenient, but this one can break the program."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "attack",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "SIGNAL_HANDLING_BASICS",
+        "ASYNC_SIGNAL_SAFE_FUNCTIONS"
+      ]
+    },
+    {
+      "question_text": "What is the role of the <code>signal-safety(7)</code> manual page in Linux?",
+      "correct_answer": "It lists functions that are guaranteed to be async-signal-safe by the POSIX standard and provides explanations for safety concerns.",
+      "distractors": [
+        {
+          "text": "It defines the behavior of all signal handlers on Linux systems.",
+          "misconception": "Targets [scope of manual page]: Overestimates the scope; it focuses on function safety, not handler implementation details."
+        },
+        {
+          "text": "It provides a list of all deprecated signal handling functions.",
+          "misconception": "Targets [deprecation focus]: Assumes the page is about outdated functions, rather than current safety practices."
+        },
+        {
+          "text": "It explains how to write custom signal handlers for specific applications.",
+          "misconception": "Targets [implementation guidance]: Suggests it's a guide for writing handlers, rather than a reference for function safety."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The <code>signal-safety(7)</code> man page serves as a crucial reference for developers, detailing which functions are safe to call from signal handlers according to POSIX standards. It explains the underlying reasons for unsafety, particularly concerning stdio and other stateful functions, thereby guiding secure coding practices.",
+        "distractor_analysis": "The page is specific to function safety, not general handler implementation. It focuses on current safety, not deprecation. While it informs handler writing, its primary role is function safety reference.",
+        "analogy": "The <code>signal-safety(7)</code> man page is like a 'safe ingredients' list for cooking during an emergency (signal handler). It tells you what you can safely use without causing a disaster, rather than providing a full recipe book."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "SIGNAL_HANDLING_BASICS",
+        "ASYNC_SIGNAL_SAFE_FUNCTIONS"
+      ]
+    }
+  ],
+  "generation_metadata": {
+    "model": "google/gemini-2.5-flash-lite",
+    "num_generated": 16,
+    "temperature": 0.1,
+    "web_citations": [],
+    "research_method": "openrouter_web_plugin",
+    "search_query": "Signal Handler Safety Software Development Security best practices",
+    "latency_ms": 22321.791999999998
+  },
+  "timestamp": "2026-01-18T11:00:14.742008"
+}

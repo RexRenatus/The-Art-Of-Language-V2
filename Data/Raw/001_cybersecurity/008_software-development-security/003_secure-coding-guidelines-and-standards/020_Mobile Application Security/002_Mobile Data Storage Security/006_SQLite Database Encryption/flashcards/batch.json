@@ -1,0 +1,534 @@
+{
+  "topic_title": "SQLite Database Encryption",
+  "category": "Software Development Security - Secure Coding Guidelines and Standards",
+  "flashcards": [
+    {
+      "question_text": "What is the primary security benefit of using SQLCipher for SQLite databases?",
+      "correct_answer": "Transparent, on-the-fly encryption of database pages, making the entire file appear as random data to unauthorized observers.",
+      "distractors": [
+        {
+          "text": "It provides application-level access control to specific tables within the database.",
+          "misconception": "Targets [access control confusion]: Confuses data-at-rest encryption with granular access control mechanisms."
+        },
+        {
+          "text": "It automatically enforces data integrity using cryptographic hashes for every record.",
+          "misconception": "Targets [integrity vs. confidentiality confusion]: Mixes the primary goal of encryption (confidentiality) with data integrity features."
+        },
+        {
+          "text": "It encrypts only the data stored in BLOB fields, leaving other data types unencrypted.",
+          "misconception": "Targets [partial encryption misconception]: Assumes encryption is limited to specific data types rather than the entire database file."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "SQLCipher encrypts database pages transparently because it intercepts read/write operations, ensuring data confidentiality at rest. This protects against unauthorized access to the database file itself.",
+        "distractor_analysis": "The first distractor misrepresents SQLCipher's function as access control. The second confuses confidentiality with integrity. The third incorrectly limits encryption scope.",
+        "analogy": "SQLCipher acts like a secure vault for your entire database file, making its contents unreadable to anyone without the key, similar to how a locked safe protects its contents."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "SQLITE_BASICS",
+        "ENCRYPTION_FUNDAMENTALS"
+      ]
+    },
+    {
+      "question_text": "According to SQLCipher's design, what algorithm is used for encrypting database pages by default?",
+      "correct_answer": "256-bit AES in CBC mode.",
+      "distractors": [
+        {
+          "text": "128-bit AES in GCM mode.",
+          "misconception": "Targets [algorithm variant confusion]: Mixes different AES modes and key lengths supported by various encryption libraries."
+        },
+        {
+          "text": "RSA with a 2048-bit key.",
+          "misconception": "Targets [symmetric vs. asymmetric confusion]: Incorrectly applies asymmetric encryption algorithms to bulk data encryption."
+        },
+        {
+          "text": "SHA-512 hashing.",
+          "misconception": "Targets [hashing vs. encryption confusion]: Mistakenly identifies a hashing algorithm as an encryption method."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "SQLCipher uses 256-bit AES in CBC mode by default because it provides a strong balance of security and performance for encrypting database pages. This symmetric algorithm is efficient for bulk data encryption.",
+        "distractor_analysis": "Distractor 1 uses a different AES mode and key size. Distractor 2 incorrectly suggests asymmetric encryption for page-level data. Distractor 3 confuses hashing with encryption.",
+        "analogy": "Think of AES-256 CBC as the default, robust lock mechanism SQLCipher uses to secure each page of your database, ensuring only authorized access."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "SQLITE_BASICS",
+        "AES_BASICS",
+        "SYMMETRIC_ENCRYPTION"
+      ]
+    },
+    {
+      "question_text": "How does SQLCipher ensure that each database page has a unique initialization vector (IV)?",
+      "correct_answer": "A cryptographically secure random number generator creates a new IV for each page write, which is stored at the end of the page.",
+      "distractors": [
+        {
+          "text": "The IV is derived from the database passphrase and remains constant for all pages.",
+          "misconception": "Targets [IV derivation misconception]: Incorrectly assumes the IV is derived from the passphrase and is static."
+        },
+        {
+          "text": "A sequential counter is used to generate IVs, ensuring uniqueness across all pages.",
+          "misconception": "Targets [randomness vs. sequential misconception]: Fails to recognize the need for random IVs for security, not just uniqueness."
+        },
+        {
+          "text": "The IV is generated once during database creation and reused for all subsequent writes.",
+          "misconception": "Targets [IV reuse misconception]: Ignores the security risk of reusing IVs, which can compromise confidentiality."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "SQLCipher generates a unique, random IV for each page write because reusing IVs with the same key can weaken encryption security, potentially allowing attackers to deduce information about the plaintext. The IV is stored with the encrypted page data.",
+        "distractor_analysis": "The first distractor incorrectly links IV generation to the passphrase. The second suggests a non-random, sequential approach. The third proposes dangerous IV reuse.",
+        "analogy": "Each page in a SQLCipher database gets its own unique 'random starting point' (IV) for encryption, like a different random shuffle for each deck of cards, preventing predictable patterns."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "procedure",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "SQLITE_BASICS",
+        "AES_BASICS",
+        "INITIALIZATION_VECTOR"
+      ]
+    },
+    {
+      "question_text": "What security mechanism does SQLCipher employ to detect tampering or corruption of encrypted database pages?",
+      "correct_answer": "A Message Authentication Code (MAC), specifically HMAC-SHA512, is calculated on the ciphertext and IV and checked upon reading.",
+      "distractors": [
+        {
+          "text": "A digital signature is applied to each page using the database passphrase.",
+          "misconception": "Targets [signature vs. MAC confusion]: Confuses digital signatures (authentication/non-repudiation) with MACs (integrity/authentication)."
+        },
+        {
+          "text": "A checksum is calculated on the raw page data before encryption.",
+          "misconception": "Targets [pre-encryption check misconception]: Assumes integrity checks are performed on plaintext, which is less secure and bypassable."
+        },
+        {
+          "text": "The encryption algorithm itself detects and flags any modifications to the page.",
+          "misconception": "Targets [algorithm capability misconception]: Overestimates the built-in tamper detection capabilities of standard encryption algorithms like AES without additional mechanisms."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "SQLCipher uses HMAC-SHA512 because it provides strong integrity and authentication for the encrypted data. By checking the MAC upon read, it ensures that the page's ciphertext and IV have not been altered since it was written.",
+        "distractor_analysis": "The first distractor incorrectly uses digital signatures. The second proposes an insecure pre-encryption check. The third wrongly attributes tamper detection solely to the encryption algorithm.",
+        "analogy": "SQLCipher adds a unique 'security seal' (HMAC) to each encrypted page. If the seal is broken or altered when you open the page, you know it's been tampered with."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "defense",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SQLITE_BASICS",
+        "HMAC",
+        "DATA_INTEGRITY"
+      ]
+    },
+    {
+      "question_text": "When a passphrase is used with SQLCipher, how is the encryption key derived?",
+      "correct_answer": "Using PBKDF2-HMAC-SHA512 with a unique random salt stored in the database, and a configurable number of iterations.",
+      "distractors": [
+        {
+          "text": "The passphrase is used directly as the encryption key without any derivation.",
+          "misconception": "Targets [direct key usage misconception]: Fails to recognize the need for key derivation functions to strengthen weak passphrases."
+        },
+        {
+          "text": "The passphrase is hashed using SHA-256 and then used as the key.",
+          "misconception": "Targets [hashing vs. KDF confusion]: Uses a simple hash instead of a key derivation function designed for password-based key generation."
+        },
+        {
+          "text": "The key is derived from the passphrase and a fixed, system-wide salt.",
+          "misconception": "Targets [static salt misconception]: Ignores the security benefit of a unique salt per database to prevent rainbow table attacks."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "SQLCipher uses PBKDF2-HMAC-SHA512 because it's a robust Key Derivation Function designed to make brute-force attacks on passphrases computationally expensive due to the salt and high iteration count. This strengthens the security derived from user-provided passphrases.",
+        "distractor_analysis": "The first distractor omits key derivation. The second uses a simple hash instead of a KDF. The third proposes a static salt, which is less secure than a unique salt per database.",
+        "analogy": "SQLCipher doesn't use your password directly; it uses a complex, multi-step process (PBKDF2 with salt and iterations) to create a strong, unique key from your password, like forging a custom tool from raw materials."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "procedure",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "SQLITE_BASICS",
+        "PBKDF2",
+        "SALTS",
+        "KEY_DERIVATION"
+      ]
+    },
+    {
+      "question_text": "What is the purpose of the unique random salt stored in the first 16 bytes of a SQLCipher database file?",
+      "correct_answer": "To ensure that two databases created with the same passphrase will have different encryption keys.",
+      "distractors": [
+        {
+          "text": "To store the initialization vector (IV) for the first database page.",
+          "misconception": "Targets [salt vs. IV confusion]: Confuses the purpose of a salt (key derivation) with the purpose of an IV (encryption process)."
+        },
+        {
+          "text": "To provide a unique identifier for the database file itself.",
+          "misconception": "Targets [identifier vs. security parameter confusion]: Misunderstands the salt's role in cryptographic key generation."
+        },
+        {
+          "text": "To enable faster key derivation by reducing the number of PBKDF2 iterations.",
+          "misconception": "Targets [salt function misconception]: Incorrectly believes salts speed up key derivation rather than enhance security."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The unique random salt is crucial because it's used in the PBKDF2 key derivation process. Since the salt is different for each database, even identical passphrases will result in different encryption keys, preventing precomputation attacks like rainbow tables.",
+        "distractor_analysis": "The first distractor confuses salt with IV. The second misidentifies its purpose as a file identifier. The third incorrectly suggests it speeds up key derivation.",
+        "analogy": "The salt is like a unique 'secret ingredient' added to your password before SQLCipher makes the encryption key. Even if two people use the same recipe (password), the different secret ingredients ensure their final dishes (keys) are unique."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "definition",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SQLITE_BASICS",
+        "SALTS",
+        "KEY_DERIVATION",
+        "RAINBOW_TABLE_ATTACKS"
+      ]
+    },
+    {
+      "question_text": "In SQLCipher, why is the key used for calculating the Message Authentication Code (MAC) different from the encryption key?",
+      "correct_answer": "Using separate keys for encryption and MAC generation enhances security by preventing certain types of cryptographic attacks.",
+      "distractors": [
+        {
+          "text": "It simplifies the key management process by using a derived key.",
+          "misconception": "Targets [simplification vs. security misconception]: Assumes the separation is for ease of use rather than a security enhancement."
+        },
+        {
+          "text": "The MAC key is derived from the encryption key and a fixed, system-wide salt.",
+          "misconception": "Targets [static salt misconception]: Proposes a less secure method for deriving the MAC key compared to using a unique salt."
+        },
+        {
+          "text": "The encryption key is too large to be used directly for HMAC calculations.",
+          "misconception": "Targets [key size misconception]: Incorrectly assumes key size is the reason for separation, rather than cryptographic best practices."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Separating the encryption key from the MAC key (HMAC key) is a security best practice because it prevents attacks that could exploit weaknesses if both operations used the same secret. The HMAC key is derived from the encryption key and a variation of the database salt, ensuring it's distinct.",
+        "distractor_analysis": "The first distractor incorrectly focuses on simplification. The second suggests a static salt for MAC key derivation. The third wrongly cites key size as the reason for separation.",
+        "analogy": "It's like having two different keys for your house: one for the main door lock (encryption) and another for a separate security alarm system (MAC). Using two distinct keys makes it harder for a burglar to bypass both."
+      },
+      "code_snippets": [],
+      "difficulty": "master",
+      "question_type": "analysis",
+      "bloom_level": "evaluate",
+      "prerequisites": [
+        "SQLITE_BASICS",
+        "HMAC",
+        "ENCRYPTION_MODES",
+        "CRYPTOGRAPHIC_BEST_PRACTICES"
+      ]
+    },
+    {
+      "question_text": "What is the security implication if the same Initialization Vector (IV) is reused for encrypting different data blocks with the same key in CBC mode?",
+      "correct_answer": "It can reveal patterns in the plaintext or potentially allow an attacker to recover parts of the plaintext.",
+      "distractors": [
+        {
+          "text": "It causes the encryption process to fail, resulting in a corrupted database.",
+          "misconception": "Targets [failure vs. vulnerability misconception]: Assumes reuse leads to outright failure rather than a security vulnerability."
+        },
+        {
+          "text": "It automatically switches the encryption to a less secure mode like OFB.",
+          "misconception": "Targets [mode switching misconception]: Incorrectly believes the algorithm automatically changes modes based on IV reuse."
+        },
+        {
+          "text": "It has no significant security impact as long as the key remains secret.",
+          "misconception": "Targets [security impact misconception]: Underestimates the critical role of unique IVs in CBC mode security."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Reusing an IV with the same key in CBC mode is a critical security flaw because the XOR of two ciphertexts reveals the XOR of their corresponding plaintexts. This can leak significant information about the original data, compromising confidentiality.",
+        "distractor_analysis": "The first distractor suggests a system failure, not a security weakness. The second incorrectly proposes automatic mode switching. The third downplays the severe security implications.",
+        "analogy": "Using the same 'starting point' (IV) for encrypting different messages with the same key is like using the same pre-shuffled sequence for multiple card games; it makes it easier for an observer to guess the original cards."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "AES_BASICS",
+        "CBC_MODE",
+        "INITIALIZATION_VECTOR",
+        "CRYPTOGRAPHIC_ATTACKS"
+      ]
+    },
+    {
+      "question_text": "Which of the following encryption algorithms is NOT recommended by the SQLite Encryption Extension (SEE) for new development?",
+      "correct_answer": "RC4 with security enhancements.",
+      "distractors": [
+        {
+          "text": "AES-256 in OFB mode.",
+          "misconception": "Targets [algorithm recommendation confusion]: Selects a recommended algorithm as if it were not recommended."
+        },
+        {
+          "text": "AES-128 in CCM mode.",
+          "misconception": "Targets [algorithm recommendation confusion]: Selects a recommended algorithm as if it were not recommended."
+        },
+        {
+          "text": "AES-256 in GCM mode.",
+          "misconception": "Targets [algorithm recommendation confusion]: Selects a recommended algorithm as if it were not recommended."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "RC4 is considered a legacy algorithm with known vulnerabilities and is not recommended for new development because modern algorithms like AES provide significantly better security guarantees. SEE explicitly marks RC4 as legacy.",
+        "distractor_analysis": "All distractors list algorithms that SEE recommends for new development, making them incorrect choices for the question asking what is NOT recommended.",
+        "analogy": "Choosing RC4 for new projects is like using an old, unreliable tool that has known flaws, when newer, safer, and more effective tools (like AES) are readily available."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "comparison",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "SYMMETRIC_ENCRYPTION",
+        "AES_BASICS",
+        "RC4_VULNERABILITIES"
+      ]
+    },
+    {
+      "question_text": "What is the primary difference in accessibility between a standard SQLite database and one encrypted with SEE?",
+      "correct_answer": "A standard SQLite public version cannot read an encrypted SEE database, while an SEE-enabled version can read both standard and encrypted databases.",
+      "distractors": [
+        {
+          "text": "Neither version can read the other's database files.",
+          "misconception": "Targets [mutual incompatibility misconception]: Assumes incompatibility works both ways, ignoring SEE's backward compatibility."
+        },
+        {
+          "text": "Both versions can read each other's database files seamlessly.",
+          "misconception": "Targets [compatibility misconception]: Fails to grasp the fundamental security principle of encryption making data inaccessible without the key."
+        },
+        {
+          "text": "Only the standard SQLite version can read SEE encrypted databases.",
+          "misconception": "Targets [version capability misconception]: Reverses the capability, suggesting the standard version can decrypt SEE files."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "SEE is designed for backward compatibility; an SEE-enabled SQLite can handle both standard and encrypted databases because it includes the necessary decryption logic. However, a standard SQLite version lacks this decryption capability, hence it cannot read SEE encrypted files.",
+        "distractor_analysis": "The first distractor incorrectly states mutual incompatibility. The second wrongly claims full compatibility. The third reverses the correct relationship.",
+        "analogy": "An SEE-enabled SQLite is like a universal remote that can control both old (standard) and new (encrypted) devices, while a standard SQLite is like an old remote that only works with older devices."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "comparison",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SQLITE_BASICS",
+        "ENCRYPTION_FUNDAMENTALS",
+        "COMPATIBILITY"
+      ]
+    },
+    {
+      "question_text": "When using SQLCipher, what is the security advantage of providing raw binary key data instead of a passphrase?",
+      "correct_answer": "It allows for integration with external key management systems (like vaults) or PKI-based key exchange, avoiding passphrase management complexities.",
+      "distractors": [
+        {
+          "text": "Raw keys are inherently more secure than passphrases, regardless of management.",
+          "misconception": "Targets [inherent security misconception]: Assumes raw keys are always superior without considering management context."
+        },
+        {
+          "text": "It simplifies the key derivation process, making encryption faster.",
+          "misconception": "Targets [performance vs. security misconception]: Believes raw keys simplify and speed up the process, ignoring the security benefits of KDFs for passphrases."
+        },
+        {
+          "text": "Raw keys eliminate the need for salts and iteration counts in key derivation.",
+          "misconception": "Targets [KDF bypass misconception]: Incorrectly assumes raw keys bypass the need for salts and iterations, which are part of KDFs."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Using raw binary keys allows applications to leverage existing secure key management infrastructure (e.g., hardware security modules, key vaults) or advanced key exchange protocols (like PKI). This bypasses the need for users to manage passphrases directly, which can be a security risk if not handled properly.",
+        "distractor_analysis": "The first distractor makes a blanket statement about inherent security. The second incorrectly links raw keys to performance gains. The third wrongly suggests raw keys bypass KDF components.",
+        "analogy": "Providing a raw key is like handing over a pre-cut, perfectly shaped key to a secure facility, whereas using a passphrase is like giving instructions to a locksmith to cut the key based on your description."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "analysis",
+      "bloom_level": "evaluate",
+      "prerequisites": [
+        "SQLITE_BASICS",
+        "KEY_MANAGEMENT",
+        "PKI",
+        "VAULTING"
+      ]
+    },
+    {
+      "question_text": "What is the NIST recommendation for the cryptoperiod of a Symmetric Data Encryption Key?",
+      "correct_answer": "Less than or equal to 2 years.",
+      "distractors": [
+        {
+          "text": "1-3 years.",
+          "misconception": "Targets [cryptoperiod confusion]: Confuses the recommended period with that of a Private Signature Key."
+        },
+        {
+          "text": "Several years (depends on key size).",
+          "misconception": "Targets [cryptoperiod confusion]: Confuses the recommended period with that of a Public Signature Key."
+        },
+        {
+          "text": "About 1 year.",
+          "misconception": "Targets [cryptoperiod confusion]: Confuses the recommended period with that of a Symmetric Master Key."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "NIST recommends a cryptoperiod of &le; 2 years for Symmetric Data Encryption Keys because longer periods increase the risk of the key being compromised through cryptanalysis or other means. Shorter periods limit the window of exposure if a key is compromised.",
+        "distractor_analysis": "Each distractor provides a cryptoperiod associated with a different key type, not the Symmetric Data Encryption Key as specified by NIST.",
+        "analogy": "The cryptoperiod for a data encryption key is like the expiration date on sensitive documents; you don't keep them indefinitely, you replace them periodically to minimize risk if they fall into the wrong hands."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "SYMMETRIC_ENCRYPTION",
+        "NIST_GUIDELINES",
+        "CRYPTOPERIOD"
+      ]
+    },
+    {
+      "question_text": "Consider a scenario where an attacker gains access to an encrypted SQLCipher database file but does not have the passphrase. What is the most likely outcome?",
+      "correct_answer": "The attacker can only see random-looking data, as the encryption renders the database content unintelligible without the correct key.",
+      "distractors": [
+        {
+          "text": "The attacker can easily brute-force the passphrase using the database salt.",
+          "misconception": "Targets [brute-force ease misconception]: Underestimates the computational cost of brute-forcing PBKDF2-derived keys, even with a salt."
+        },
+        {
+          "text": "The attacker can recover the encryption key by analyzing the database structure.",
+          "misconception": "Targets [structural analysis misconception]: Assumes database file structure alone provides enough information to derive the key."
+        },
+        {
+          "text": "The attacker can access metadata and schema information, but not the actual data.",
+          "misconception": "Targets [partial decryption misconception]: Believes that some parts of the encrypted database (like schema) might be accessible without the key."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "SQLCipher encrypts the entire database file, including metadata and schema, making it appear as random data. Since the key is derived via PBKDF2-HMAC-SHA512 with a unique salt, brute-forcing the passphrase is computationally infeasible without significant resources and time.",
+        "distractor_analysis": "The first distractor oversimplifies brute-force attacks. The second wrongly suggests structural analysis yields the key. The third incorrectly assumes partial access to schema information.",
+        "analogy": "Without the passphrase, the attacker has the locked vault (database file) but no key. All they see is a jumble of metal and wires (random data), unable to discern what's inside or how it's organized."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "scenario",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "SQLITE_BASICS",
+        "SQLCIPHER_DESIGN",
+        "PBKDF2",
+        "SALTS"
+      ]
+    },
+    {
+      "question_text": "What is the role of the <code>PRAGMA kdf_iter</code> command in SQLCipher?",
+      "correct_answer": "To adjust the number of iterations used in the PBKDF2 key derivation function at runtime.",
+      "distractors": [
+        {
+          "text": "To set the encryption algorithm mode (e.g., CBC, GCM).",
+          "misconception": "Targets [parameter function confusion]: Confuses key derivation iteration count with encryption mode selection."
+        },
+        {
+          "text": "To specify the size of the initialization vector (IV).",
+          "misconception": "Targets [parameter function confusion]: Confuses key derivation iteration count with IV size."
+        },
+        {
+          "text": "To define the database page size for encryption.",
+          "misconception": "Targets [parameter function confusion]: Confuses key derivation iteration count with page size configuration."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The <code>PRAGMA kdf_iter</code> command allows developers to dynamically change the number of iterations for PBKDF2. Increasing iterations strengthens security against brute-force attacks but increases key derivation time, offering a trade-off between security and performance.",
+        "distractor_analysis": "Each distractor assigns the <code>kdf_iter</code> PRAGMA to a different SQLCipher configuration parameter (encryption mode, IV size, page size), none of which are correct.",
+        "analogy": "<code>PRAGMA kdf_iter</code> is like adjusting the 'difficulty level' for creating the encryption key from your password. Higher difficulty means more work (iterations) but makes it much harder for attackers to guess."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "procedure",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "SQLITE_BASICS",
+        "SQLCIPHER_API",
+        "PBKDF2",
+        "KEY_DERIVATION"
+      ]
+    },
+    {
+      "question_text": "Which of the following best describes the security implications of shipping SQLCipher source code with a commercial product?",
+      "correct_answer": "Distributing the source code is generally prohibited by the SEE license, which requires shipping only compiled binaries to customers.",
+      "distractors": [
+        {
+          "text": "It enhances security by allowing customers to audit the encryption implementation.",
+          "misconception": "Targets [transparency vs. licensing misconception]: Confuses the benefits of open-source auditing with specific licensing restrictions."
+        },
+        {
+          "text": "It is permitted as long as the source code is clearly marked as proprietary.",
+          "misconception": "Targets [licensing terms misconception]: Misunderstands that proprietary marking does not override license restrictions on distribution."
+        },
+        {
+          "text": "It poses no security risk, as the encryption is handled transparently by the library.",
+          "misconception": "Targets [distribution risk misconception]: Ignores licensing terms and potential for reverse engineering or modification if source is distributed."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The SEE license explicitly restricts the distribution of source code to customers, allowing only compiled binaries. This is to protect the intellectual property and prevent unauthorized modifications or reverse engineering of the licensed encryption components.",
+        "distractor_analysis": "The first distractor incorrectly promotes source code distribution for auditing. The second misunderstands the effect of proprietary marking on license terms. The third dismisses licensing concerns entirely.",
+        "analogy": "The SEE license is like a software rental agreement: you can use the software (compiled binary) to build your product, but you can't give the original blueprints (source code) to your customers."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SQLITE_BASICS",
+        "SEE_LICENSE",
+        "SOFTWARE_LICENSING"
+      ]
+    },
+    {
+      "question_text": "What is the primary security goal achieved by encrypting an SQLite database using SQLCipher?",
+      "correct_answer": "Confidentiality of data at rest, preventing unauthorized access to sensitive information stored on disk.",
+      "distractors": [
+        {
+          "text": "Integrity of data in transit, ensuring data is not modified during network transfer.",
+          "misconception": "Targets [data-at-rest vs. data-in-transit confusion]: Confuses encryption of stored data with protection during transmission."
+        },
+        {
+          "text": "Availability of the database, ensuring continuous access for legitimate users.",
+          "misconception": "Targets [confidentiality vs. availability confusion]: Misunderstands that encryption primarily addresses secrecy, not uptime."
+        },
+        {
+          "text": "Authentication of database users, verifying the identity of those accessing the data.",
+          "misconception": "Targets [confidentiality vs. authentication confusion]: Confuses data encryption with user identity verification mechanisms."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Encrypting an SQLite database with SQLCipher directly addresses data-at-rest confidentiality. By rendering the stored data unintelligible without the correct key, it protects sensitive information from unauthorized disclosure if the storage medium is compromised.",
+        "distractor_analysis": "The first distractor confuses data-at-rest with data-in-transit security. The second wrongly associates encryption with availability. The third confuses encryption with user authentication.",
+        "analogy": "Encrypting your database is like putting your sensitive documents in a locked filing cabinet (confidentiality), not like ensuring the office building's power stays on (availability) or checking IDs at the door (authentication)."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "SQLITE_BASICS",
+        "ENCRYPTION_FUNDAMENTALS",
+        "CIA_TRIAD"
+      ]
+    }
+  ],
+  "generation_metadata": {
+    "model": "google/gemini-2.5-flash-lite",
+    "num_generated": 16,
+    "temperature": 0.1,
+    "web_citations": [],
+    "research_method": "openrouter_web_plugin",
+    "search_query": "SQLite Database Encryption Software Development Security best practices",
+    "latency_ms": 27087.07
+  },
+  "timestamp": "2026-01-18T11:02:12.334786"
+}

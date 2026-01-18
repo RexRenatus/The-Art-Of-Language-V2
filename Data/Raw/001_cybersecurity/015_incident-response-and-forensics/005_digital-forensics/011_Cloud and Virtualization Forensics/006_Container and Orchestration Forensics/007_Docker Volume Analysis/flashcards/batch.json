@@ -1,0 +1,494 @@
+{
+  "topic_title": "Docker Volume Analysis",
+  "category": "002_Incident Response And Forensics - Digital Forensics",
+  "flashcards": [
+    {
+      "question_text": "In Docker forensics, what is the primary significance of analyzing container volumes?",
+      "correct_answer": "To recover persistent data that may contain evidence of compromise or user activity.",
+      "distractors": [
+        {
+          "text": "To verify the integrity of the Docker image layers.",
+          "misconception": "Targets [scope confusion]: Confuses persistent data storage with immutable image layers."
+        },
+        {
+          "text": "To assess the network configuration of the container.",
+          "misconception": "Targets [domain confusion]: Mixes storage analysis with network forensics."
+        },
+        {
+          "text": "To determine the container's runtime resource utilization.",
+          "misconception": "Targets [function confusion]: Equates data persistence with performance monitoring."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Docker volumes are designed for persistent data storage, separate from the container's lifecycle. Analyzing them is crucial because this is where applications store critical data, logs, or user-generated content that can serve as evidence.",
+        "distractor_analysis": "The distractors incorrectly focus on image integrity, network configuration, or resource utilization, rather than the primary role of volumes in preserving application data.",
+        "analogy": "Think of Docker volumes like external hard drives for your containers; they hold the important files that need to survive even if the container itself is stopped or removed."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "DOCKER_BASICS",
+        "DFIR_PERSISTENCE"
+      ]
+    },
+    {
+      "question_text": "Which file system type is commonly used for Docker volumes and presents unique forensic challenges due to its layered nature?",
+      "correct_answer": "OverlayFS",
+      "distractors": [
+        {
+          "text": "Btrfs",
+          "misconception": "Targets [common alternative confusion]: Btrfs is a storage driver but OverlayFS is more prevalent for container layers and volumes."
+        },
+        {
+          "text": "ZFS",
+          "misconception": "Targets [less common alternative confusion]: While a capable filesystem, ZFS is not the default or most common for Docker volumes in forensic contexts."
+        },
+        {
+          "text": "ext4",
+          "misconception": "Targets [host vs container confusion]: ext4 is a common host filesystem but doesn't describe the layered container volume structure."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "OverlayFS is frequently used as a Docker storage driver, creating a layered filesystem for containers and volumes. Its union mount mechanism, combining read-only image layers with a writable container layer, makes direct analysis of the 'live' state complex.",
+        "distractor_analysis": "Distractors represent other filesystems or storage technologies that might be encountered but are not the primary or most common type for Docker's layered volume approach.",
+        "analogy": "OverlayFS is like stacking transparent sheets (image layers) with a single erasable sheet on top (writable layer) for changes, making it tricky to see the original layers beneath."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "DOCKER_STORAGE_DRIVERS",
+        "FILESYSTEM_CONCEPTS"
+      ]
+    },
+    {
+      "question_text": "When performing forensic analysis on a compromised Docker host, what is a critical first step regarding container volumes?",
+      "correct_answer": "Preserve the state of the volumes before any changes are made, ideally by creating forensic images.",
+      "distractors": [
+        {
+          "text": "Immediately delete all container volumes to prevent further data leakage.",
+          "misconception": "Targets [premature destruction]: Advocates for destroying potential evidence, contrary to preservation principles."
+        },
+        {
+          "text": "Restart the containers to ensure they are in a clean state.",
+          "misconception": "Targets [state alteration]: Restarting can change timestamps and volatile data, compromising evidence."
+        },
+        {
+          "text": "Analyze the Docker daemon logs for volume-related errors.",
+          "misconception": "Targets [incomplete analysis]: Logs are important but don't replace direct volume data preservation."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Preserving container volumes is paramount because they contain persistent data that can be altered or lost if not captured. Forensic imaging ensures that a bit-for-bit copy is made, allowing for safe, non-destructive analysis later, as recommended by NIST SP 800-86.",
+        "distractor_analysis": "The distractors suggest actions that would destroy evidence, alter the state, or focus on secondary artifacts instead of the primary data source.",
+        "analogy": "Before investigating a crime scene, you wouldn't destroy the evidence; you'd carefully document and collect it. Similarly, container volumes must be imaged before analysis."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "procedure",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "DFIR_PRESERVATION",
+        "CONTAINER_FORENSICS_BASICS"
+      ]
+    },
+    {
+      "question_text": "What is 'container drift' in the context of Docker forensics, and why is it significant?",
+      "correct_answer": "Unintended or unauthorized changes to a container's filesystem, undermining immutability and potentially indicating a compromise.",
+      "distractors": [
+        {
+          "text": "The process of migrating a container from one host to another.",
+          "misconception": "Targets [definition misapplication]: Confuses drift with standard container orchestration or migration."
+        },
+        {
+          "text": "A temporary network outage affecting container connectivity.",
+          "misconception": "Targets [domain confusion]: Associates filesystem changes with network issues."
+        },
+        {
+          "text": "The automatic updating of a Docker image to its latest version.",
+          "misconception": "Targets [process confusion]: Equates drift with intentional, managed image updates."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Container drift signifies that a container's filesystem has changed from its original, immutable state. This is significant because such changes, if unauthorized, often indicate a security incident, as attackers modify files to maintain persistence or execute malicious code.",
+        "distractor_analysis": "The distractors misinterpret 'drift' as migration, network issues, or intentional updates, failing to grasp the core concept of unintended filesystem modification.",
+        "analogy": "Imagine a factory-sealed product being tampered with after it left the factory; 'container drift' is the digital equivalent, where the sealed container's contents have been altered."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "CONTAINER_IMMUTABILITY",
+        "DFIR_INDICATORS_OF_COMPROMISE"
+      ]
+    },
+    {
+      "question_text": "When analyzing Docker volumes using tools like Google's Container Explorer, what specific forensic artifact related to volume changes is often sought?",
+      "correct_answer": "Evidence of modifications within the writable layer of the OverlayFS.",
+      "distractors": [
+        {
+          "text": "The original Dockerfile used to build the image.",
+          "misconception": "Targets [artifact confusion]: Dockerfiles define images, not runtime volume changes."
+        },
+        {
+          "text": "Network traffic logs generated by the container.",
+          "misconception": "Targets [data location confusion]: Network logs are separate from volume filesystem data."
+        },
+        {
+          "text": "The container's process execution history.",
+          "misconception": "Targets [artifact type confusion]: Process history is distinct from filesystem modifications in volumes."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Container Explorer and similar tools help analyze the state of containers, including their volumes. The key forensic artifact is often the writable layer of the OverlayFS, as modifications here directly reflect changes made during the container's runtime, potentially indicating malicious activity.",
+        "distractor_analysis": "The distractors point to artifacts related to image building, network activity, or process execution, which are distinct from the persistent data stored and modified within volumes.",
+        "analogy": "If the container is a house, the volume is the living space where furniture can be rearranged or items added/removed. Analyzing the writable layer is like checking for new items or signs of forced entry in that living space."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "DOCKER_CONTAINER_EXPLORER",
+        "OVERLAYFS_FORENSICS"
+      ]
+    },
+    {
+      "question_text": "How does the concept of 'immutability' relate to Docker container forensics and volume analysis?",
+      "correct_answer": "Immutability is a design principle where containers are treated as disposable and their base images are read-only; deviations (drift) in volumes are therefore significant indicators of compromise.",
+      "distractors": [
+        {
+          "text": "Immutability means container volumes cannot be modified after creation.",
+          "misconception": "Targets [misinterpretation of immutability]: Confuses image immutability with volume writability."
+        },
+        {
+          "text": "Immutability ensures that all container data is automatically backed up.",
+          "misconception": "Targets [unrelated feature confusion]: Immutability doesn't inherently imply backup functionality."
+        },
+        {
+          "text": "Immutability guarantees that containers are immune to all types of attacks.",
+          "misconception": "Targets [overstated security]: Immutability reduces attack surface but doesn't provide complete immunity."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The principle of immutability in containerization means that containers should not be changed after deployment; instead, they are replaced. Therefore, any modifications found within a container's writable layer or its associated volumes (container drift) are highly suspicious because they violate this core tenet, signaling potential compromise.",
+        "distractor_analysis": "The distractors incorrectly define immutability as absolute prevention of volume changes, automatic backups, or complete immunity, missing the nuance of drift detection.",
+        "analogy": "An immutable container is like a printed document – you can't change the original print. If you need to make changes, you create a new version. Finding changes in the 'original' (the running container's writable layer/volume) is suspicious."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "CONTAINER_IMMUTABILITY",
+        "DFIR_DRIFT_DETECTION"
+      ]
+    },
+    {
+      "question_text": "What is the purpose of a 'bind mount' in Docker, and how does it differ forensically from a standard Docker volume?",
+      "correct_answer": "A bind mount links a file or directory on the host machine directly into a container; forensically, it means the data resides on the host filesystem, not within Docker's managed storage.",
+      "distractors": [
+        {
+          "text": "Bind mounts are temporary and deleted when the container stops, unlike volumes.",
+          "misconception": "Targets [lifecycle confusion]: Both volumes and bind mounts can persist beyond container runtime depending on configuration."
+        },
+        {
+          "text": "Bind mounts are encrypted by default, providing better security than volumes.",
+          "misconception": "Targets [security feature confusion]: Neither bind mounts nor standard volumes are inherently encrypted by Docker."
+        },
+        {
+          "text": "Bind mounts are used exclusively for logging, while volumes store application data.",
+          "misconception": "Targets [usage restriction confusion]: Both can store various types of data; usage is flexible."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Bind mounts directly map host paths to container paths, making the data accessible and manageable on the host's filesystem. Forensically, this means evidence is located on the host, not within Docker's internal volume management, requiring host-level forensic techniques.",
+        "distractor_analysis": "The distractors incorrectly describe bind mount lifecycles, security features, and exclusive usage, failing to distinguish their host-centric nature.",
+        "analogy": "A Docker volume is like a storage unit rented by Docker; a bind mount is like directly accessing a folder on your own computer's desktop from within a program."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "comparison",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "DOCKER_VOLUMES",
+        "DOCKER_BIND_MOUNTS",
+        "HOST_FORENSICS"
+      ]
+    },
+    {
+      "question_text": "Consider a scenario where a web application running in a Docker container is suspected of being compromised. The application stores user uploads in a Docker volume. What specific data within that volume would be most critical for forensic analysis?",
+      "correct_answer": "The uploaded files themselves, and any associated metadata or logs within the volume that track file access or modification.",
+      "distractors": [
+        {
+          "text": "The container's network connection history.",
+          "misconception": "Targets [data location confusion]: Network history is typically found in logs or network device records, not application data volumes."
+        },
+        {
+          "text": "The Docker image's base layers.",
+          "misconception": "Targets [artifact confusion]: Base layers are read-only and pre-runtime; they don't reflect runtime data changes."
+        },
+        {
+          "text": "The container's exit code and restart count.",
+          "misconception": "Targets [irrelevant metrics]: These are runtime status indicators, not evidence of data compromise within the volume."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "User uploads stored in a volume are direct targets for attackers seeking to upload malicious files or exfiltrate data. Therefore, the uploaded files and any related access/modification logs within the volume are critical for understanding the compromise, as they represent the data that was manipulated.",
+        "distractor_analysis": "The distractors focus on unrelated artifacts like network history, image layers, or runtime status, which do not directly address the data stored and potentially compromised within the application's volume.",
+        "analogy": "If a thief broke into a store and stole items from a specific display shelf (the volume), the most important evidence would be the items taken from that shelf and any security footage showing who accessed it."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "scenario",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "CONTAINER_VOLUME_ANALYSIS",
+        "WEB_APP_COMPROMISE"
+      ]
+    },
+    {
+      "question_text": "What is the primary challenge when performing live forensics on a Docker volume that is actively being written to by a running container?",
+      "correct_answer": "Ensuring data consistency and integrity, as changes occurring during the forensic acquisition could lead to incomplete or corrupted evidence.",
+      "distractors": [
+        {
+          "text": "The volume's data is always encrypted, preventing access.",
+          "misconception": "Targets [unfounded assumption]: Docker volumes are not encrypted by default."
+        },
+        {
+          "text": "Docker automatically purges volume data upon container stop.",
+          "misconception": "Targets [incorrect lifecycle understanding]: Volumes are persistent and not automatically purged on stop."
+        },
+        {
+          "text": "The volume's filesystem is inaccessible without stopping the container.",
+          "misconception": "Targets [access method confusion]: While challenging, live analysis is possible with appropriate tools and techniques."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Live forensics on active volumes faces the challenge of data volatility and consistency. Since the container is actively modifying data, a forensic snapshot must account for these changes to ensure the captured evidence accurately reflects a point in time, as per NIST cloud forensic principles.",
+        "distractor_analysis": "The distractors rely on incorrect assumptions about encryption, volume lifecycles, and access limitations, rather than the core issue of data consistency during live acquisition.",
+        "analogy": "Trying to take a clear photograph of a moving object – the challenge is capturing a stable, accurate image while the subject is constantly changing."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "LIVE_FORENSICS",
+        "DATA_VOLATILITY",
+        "NIST_CLOUD_FORENSICS"
+      ]
+    },
+    {
+      "question_text": "Which of the following commands is typically used to inspect Docker volumes on a host system?",
+      "correct_answer": "docker volume ls",
+      "distractors": [
+        {
+          "text": "docker ps -a",
+          "misconception": "Targets [command confusion]: Lists containers, not volumes."
+        },
+        {
+          "text": "docker network inspect",
+          "misconception": "Targets [command confusion]: Inspects network configurations, not volumes."
+        },
+        {
+          "text": "docker logs",
+          "misconception": "Targets [command confusion]: Retrieves container logs, not volume information."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The <code>docker volume ls</code> command is fundamental for listing all Docker volumes managed by the Docker daemon on the host. This allows investigators to identify potential volumes associated with suspicious containers or applications, serving as a starting point for further analysis.",
+        "distractor_analysis": "Each distractor represents a valid Docker command but serves a different purpose (listing containers, inspecting networks, viewing logs), none of which directly list or inspect volumes.",
+        "analogy": "If Docker volumes were files in a filing cabinet, <code>docker volume ls</code> is like asking for a list of all the file folders available."
+      },
+      "code_snippets": [
+        {
+          "language": "text",
+          "code": "docker volume ls",
+          "context": "explanation"
+        }
+      ],
+      "difficulty": "foundational",
+      "question_type": "procedure",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "DOCKER_CLI",
+        "DOCKER_VOLUME_MANAGEMENT"
+      ],
+      "_code_snippets_html": "<div class=\"code-snippet code-explanation\">\n<span class=\"code-label\">Code Example</span>\n<pre><code class=\"language-text\">docker volume ls</code></pre>\n</div>"
+    },
+    {
+      "question_text": "What forensic artifact might be found within a Docker volume used by a web server that could indicate unauthorized file uploads or modifications?",
+      "correct_answer": "Web server access logs or modified/newly created files in the document root directory.",
+      "distractors": [
+        {
+          "text": "The container's kernel panic logs.",
+          "misconception": "Targets [artifact location confusion]: Kernel panics are system-level events, not typically stored within application data volumes."
+        },
+        {
+          "text": "The Docker daemon's configuration files.",
+          "misconception": "Targets [artifact location confusion]: Daemon configs are on the host, not within application data volumes."
+        },
+        {
+          "text": "The container's DNS resolution cache.",
+          "misconception": "Targets [artifact type confusion]: DNS cache is volatile memory data, not persistent file changes in a volume."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Web server volumes often contain the web root directory and access logs. Unauthorized modifications or malicious file uploads would appear as new or altered files within the web root, and suspicious access patterns would be recorded in the access logs, both residing within the volume.",
+        "distractor_analysis": "The distractors point to system-level logs, daemon configurations, or volatile memory artifacts that are not typically found or relevant within an application's data volume.",
+        "analogy": "If the volume is the web server's file room, finding unexpected documents (malicious files) or altered entry logs (access logs) would be key evidence of tampering."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "WEB_SERVER_FORENSICS",
+        "CONTAINER_VOLUME_ANALYSIS"
+      ]
+    },
+    {
+      "question_text": "When analyzing a Docker volume, what is the significance of file timestamps (e.g., MAC times - Modified, Accessed, Created)?",
+      "correct_answer": "They provide a chronological sequence of events, helping to establish when files were created, modified, or accessed, which is crucial for reconstructing activity.",
+      "distractors": [
+        {
+          "text": "Timestamps are unreliable in Docker volumes and should be ignored.",
+          "misconception": "Targets [unfounded dismissal]: Timestamps are critical forensic artifacts, even in containerized environments."
+        },
+        {
+          "text": "Timestamps only indicate when the container was started or stopped.",
+          "misconception": "Targets [limited scope]: Timestamps reflect file system operations, not just container lifecycle events."
+        },
+        {
+          "text": "Timestamps are automatically reset to zero when a volume is mounted.",
+          "misconception": "Targets [incorrect behavior]: Mounting a volume does not typically reset file timestamps."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "File timestamps (Modified, Accessed, Created - MAC times) are fundamental forensic artifacts because they provide a timeline of events. Analyzing these timestamps within a Docker volume allows investigators to understand the sequence of file operations, identify suspicious modifications, and reconstruct user or attacker actions.",
+        "distractor_analysis": "The distractors incorrectly dismiss the reliability of timestamps, limit their meaning to container lifecycle, or misrepresent how mounting affects them.",
+        "analogy": "Timestamps are like the dates on documents in a file cabinet; they help you order events and understand the history of each file."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "FILE_SYSTEM_FORENSICS",
+        "TIME_ANALYSIS",
+        "CONTAINER_VOLUME_ANALYSIS"
+      ]
+    },
+    {
+      "question_text": "What is a potential forensic challenge when dealing with Docker volumes that utilize named volumes versus host-mounted bind mounts?",
+      "correct_answer": "Named volumes are managed by Docker, potentially abstracting their physical location and requiring Docker-specific tools for access, unlike host-mounted bind mounts.",
+      "distractors": [
+        {
+          "text": "Named volumes are always encrypted, while bind mounts are not.",
+          "misconception": "Targets [unfounded security assumption]: Encryption is not a default feature for either."
+        },
+        {
+          "text": "Named volumes are inherently less persistent than bind mounts.",
+          "misconception": "Targets [persistence confusion]: Both are designed for persistence; named volumes are managed by Docker's lifecycle."
+        },
+        {
+          "text": "Bind mounts are easier to analyze because they are always located in /var/lib/docker.",
+          "misconception": "Targets [location confusion]: Bind mounts map host directories, which can be anywhere; named volumes are managed by Docker, often in /var/lib/docker/volumes."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Named volumes are managed by the Docker daemon, with their physical storage location abstracted. This requires understanding Docker's internal management to locate and access them forensically. Bind mounts, conversely, directly link to host directories, making their location explicit and accessible via standard host filesystem tools.",
+        "distractor_analysis": "The distractors make incorrect claims about encryption, persistence, and location, failing to grasp the core difference in management and accessibility.",
+        "analogy": "Named volumes are like items in a secure storage facility managed by a company (Docker); you need the facility's system to find and access them. Bind mounts are like items directly on your desk (host filesystem); you know exactly where they are."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "comparison",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "DOCKER_VOLUMES",
+        "DOCKER_BIND_MOUNTS",
+        "CONTAINER_MANAGEMENT"
+      ]
+    },
+    {
+      "question_text": "According to NIST SP 800-201, what is a key consideration for forensic analysis in cloud environments, particularly relevant to container forensics?",
+      "correct_answer": "Understanding the shared responsibility model and the specific data residency and access controls relevant to cloud-based storage like container volumes.",
+      "distractors": [
+        {
+          "text": "Assuming all data is stored locally on the container host.",
+          "misconception": "Targets [cloud model ignorance]: Ignores the distributed and abstracted nature of cloud storage."
+        },
+        {
+          "text": "Focusing solely on traditional endpoint forensics techniques.",
+          "misconception": "Targets [methodological limitation]: Fails to adapt techniques for cloud and containerized environments."
+        },
+        {
+          "text": "Believing that cloud providers automatically handle all forensic data preservation.",
+          "misconception": "Targets [responsibility confusion]: Overlooks the shared responsibility for data and evidence preservation."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "NIST SP 800-201 emphasizes that cloud forensics requires understanding the cloud's architecture, including shared responsibility. For container volumes, this means recognizing that data might reside on abstracted storage managed by the cloud provider, necessitating specific approaches to data access and preservation.",
+        "distractor_analysis": "The distractors represent common pitfalls: ignoring cloud specifics, relying solely on outdated methods, and misunderstanding responsibility for evidence.",
+        "analogy": "Investigating a crime in a rented apartment (cloud environment) requires understanding the lease agreement (shared responsibility) and knowing which parts are your responsibility versus the landlord's (cloud provider)."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "analysis",
+      "bloom_level": "evaluate",
+      "prerequisites": [
+        "NIST_CLOUD_FORENSICS",
+        "SHARED_RESPONSIBILITY_MODEL",
+        "CONTAINER_FORENSICS_BASICS"
+      ]
+    },
+    {
+      "question_text": "When analyzing a Docker volume for evidence of malware persistence, what specific file system artifacts might indicate a compromise?",
+      "correct_answer": "Unexpected executable files, suspicious scripts in startup directories, or modified configuration files related to applications within the volume.",
+      "distractors": [
+        {
+          "text": "Standard application log files that show normal operation.",
+          "misconception": "Targets [normalcy bias]: Assumes only abnormal logs are relevant, ignoring subtle file changes."
+        },
+        {
+          "text": "The container's base image manifest file.",
+          "misconception": "Targets [artifact confusion]: Manifests describe image layers, not runtime persistence mechanisms within volumes."
+        },
+        {
+          "text": "Temporary files created during normal application runtime.",
+          "misconception": "Targets [noise vs signal confusion]: Distinguishes normal temp files from persistent malicious artifacts."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Malware persistence often involves placing executable files or scripts in locations where they will be run automatically (e.g., startup directories) or modifying application configurations to load malicious code. These changes would manifest as new or altered files within the container's volume.",
+        "distractor_analysis": "The distractors focus on normal operational artifacts, image metadata, or temporary files, which are less likely to indicate persistent malware compared to modified executables or configurations.",
+        "analogy": "Looking for a hidden weapon (malware) in a room (volume) – you'd search for unexpected items like guns or bombs, not just everyday objects like books or lamps."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "MALWARE_PERSISTENCE",
+        "CONTAINER_VOLUME_ANALYSIS",
+        "FILE_SYSTEM_ARTIFACTS"
+      ]
+    }
+  ],
+  "generation_metadata": {
+    "model": "google/gemini-2.5-flash-lite",
+    "num_generated": 15,
+    "temperature": 0.1,
+    "web_citations": [],
+    "research_method": "openrouter_web_plugin",
+    "search_query": "Docker Volume Analysis 002_Incident Response And Forensics best practices",
+    "latency_ms": 28118.468
+  },
+  "timestamp": "2026-01-18T13:48:22.533430"
+}

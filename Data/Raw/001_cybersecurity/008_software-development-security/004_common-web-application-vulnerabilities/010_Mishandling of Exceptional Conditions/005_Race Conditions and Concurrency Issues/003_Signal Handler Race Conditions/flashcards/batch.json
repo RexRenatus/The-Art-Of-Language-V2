@@ -1,0 +1,603 @@
+{
+  "topic_title": "Signal Handler Race Conditions",
+  "category": "Software Development Security - Common Web Application Vulnerabilities",
+  "flashcards": [
+    {
+      "question_text": "What is the primary risk associated with calling non-asynchronous-safe functions within a signal handler?",
+      "correct_answer": "Undefined behavior due to potential race conditions and data corruption.",
+      "distractors": [
+        {
+          "text": "Increased system resource consumption.",
+          "misconception": "Targets [performance misconception]: Confuses signal handler safety with general performance overhead."
+        },
+        {
+          "text": "A denial-of-service vulnerability.",
+          "misconception": "Targets [vulnerability type confusion]: Overstates the direct impact without explaining the underlying mechanism."
+        },
+        {
+          "text": "Reduced program stability and predictability.",
+          "misconception": "Targets [vague consequence]: While true, it's less specific than undefined behavior and data corruption."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Calling non-async-safe functions from a signal handler can lead to undefined behavior because the handler might interrupt the execution of the same or a similar function in the main program, causing data inconsistencies.",
+        "distractor_analysis": "The first distractor focuses on resource usage, which is not the primary concern. The second suggests a DoS, which is a potential outcome but not the direct technical risk. The third is too general and doesn't pinpoint the core issue of undefined behavior.",
+        "analogy": "Imagine a chef preparing a complex dish (main program) and a waiter suddenly interrupts to ask for a specific ingredient (signal handler). If the waiter tries to use a tool the chef was mid-use with, it could ruin the dish."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "SIGNAL_HANDLERS",
+        "CONCURRENCY_BASICS"
+      ]
+    },
+    {
+      "question_text": "According to POSIX standards, which of the following C standard library functions is generally considered safe to call from within a signal handler?",
+      "correct_answer": "abort()",
+      "distractors": [
+        {
+          "text": "printf()",
+          "misconception": "Targets [stdio confusion]: printf() is a classic example of a non-async-safe function due to its internal buffering."
+        },
+        {
+          "text": "malloc()",
+          "misconception": "Targets [memory management confusion]: Memory allocation functions are typically not reentrant and thus not async-safe."
+        },
+        {
+          "text": "fopen()",
+          "misconception": "Targets [file I/O confusion]: File I/O operations often involve shared state and buffering, making them unsafe."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "POSIX standards specify a limited set of functions that are safe to call from signal handlers. <code>abort()</code> is one of these, designed to terminate the program cleanly. Functions like <code>printf()</code>, <code>malloc()</code>, and <code>fopen()</code> are not async-safe because they maintain internal state that can be corrupted if interrupted.",
+        "distractor_analysis": "<code>printf</code> and <code>fopen</code> are common examples of non-async-safe functions due to their use of internal buffers and shared state. <code>malloc</code> is also unsafe as it manipulates heap data structures which are not inherently reentrant.",
+        "analogy": "Think of a signal handler as a very brief, urgent interruption. <code>abort()</code> is like immediately stopping everything and leaving the room. <code>printf()</code> or <code>malloc()</code> would be like trying to continue a complex task mid-interruption, potentially messing up the ongoing work."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "SIGNAL_HANDLERS",
+        "POSIX_STANDARDS"
+      ]
+    },
+    {
+      "question_text": "What is the purpose of the <code>volatile sig_atomic_t</code> type in C when used within signal handlers?",
+      "correct_answer": "To ensure that variables of this type can be accessed atomically, even when interrupted by a signal.",
+      "distractors": [
+        {
+          "text": "To provide thread-safe access to shared data.",
+          "misconception": "Targets [concurrency confusion]: `volatile sig_atomic_t` is for signal safety, not general multi-threading."
+        },
+        {
+          "text": "To enable asynchronous execution of handler functions.",
+          "misconception": "Targets [execution model confusion]: It ensures atomic access, not asynchronous execution of the handler itself."
+        },
+        {
+          "text": "To guarantee that signal handlers are reentrant.",
+          "misconception": "Targets [reentrancy confusion]: Reentrancy is a property of functions, not data types; `volatile sig_atomic_t` helps manage shared data safely."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "<code>volatile sig_atomic_t</code> variables are designed to be accessed atomically, meaning operations on them are indivisible and cannot be interrupted by signals. This prevents race conditions when a signal handler modifies a variable also accessed by the main program.",
+        "distractor_analysis": "The first distractor conflates signal safety with thread safety. The second misunderstands the role of the type, which is about atomic access, not handler execution. The third incorrectly attributes reentrancy to the data type rather than the function.",
+        "analogy": "Imagine a single-lane bridge (<code>volatile sig_atomic_t</code> variable). Only one car (signal or main program) can cross at a time. Other types of variables are like multi-lane highways where cars can collide if not managed carefully."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "SIGNAL_HANDLERS",
+        "C_DATA_TYPES",
+        "ATOMICITY"
+      ]
+    },
+    {
+      "question_text": "Consider a scenario where a signal handler attempts to call <code>signal()</code> to re-register itself on a non-persistent platform. What is the race condition that can occur?",
+      "correct_answer": "The signal handler might be interrupted after the platform resets the handler to SIG_DFL but before <code>signal()</code> is called, causing a subsequent signal to trigger default behavior.",
+      "distractors": [
+        {
+          "text": "The <code>signal()</code> call might fail due to a deadlock.",
+          "misconception": "Targets [deadlock confusion]: Deadlocks are typically related to resource locking between threads/processes, not signal handler re-registration."
+        },
+        {
+          "text": "The program might enter an infinite loop of signal handler calls.",
+          "misconception": "Targets [infinite loop confusion]: While repeated signals can occur, the race condition specifically relates to the handler being *reset* before re-registration."
+        },
+        {
+          "text": "The signal handler might be called concurrently by multiple threads.",
+          "misconception": "Targets [threading confusion]: This describes a multi-threading race condition, not the specific platform-dependent signal handler persistence issue."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "On non-persistent platforms, the system resets the signal handler to its default state (<code>SIG_DFL</code>) before invoking the handler. If the handler then calls <code>signal()</code> to re-register itself, a race condition exists between the reset and the re-registration. A second signal arriving during this window will trigger the default behavior, not the intended handler.",
+        "distractor_analysis": "The first distractor incorrectly introduces deadlock. The second describes a potential outcome of repeated signals but misses the specific race condition. The third confuses signal handling with multi-threading concurrency issues.",
+        "analogy": "Imagine a security guard (signal handler) who is supposed to stay at their post. On a 'non-persistent' system, after the guard is alerted (signal received), they are briefly told to go back to the main gate (handler reset) before they can re-establish their post. If another alert comes *while* they are walking back to the gate, they might not be at their post to respond correctly."
+      },
+      "code_snippets": [
+        {
+          "language": "text",
+          "code": "#include <signal.h>\n\nvoid handler(int signum) {\n    // Non-persistent platform: signal() resets handler to SIG_DFL before calling handler\n    if (signal(signum, handler) == SIG_ERR) {\n        // Handle error\n    }\n    // Handle signal logic...\n}\n\nvoid setup() {\n    signal(SIGUSR1, handler);\n}",
+          "context": "explanation"
+        }
+      ],
+      "difficulty": "expert",
+      "question_type": "scenario",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SIGNAL_HANDLERS",
+        "NONPERSISTENT_PLATFORMS",
+        "RACE_CONDITIONS"
+      ],
+      "_code_snippets_html": "<div class=\"code-snippet code-explanation\">\n<span class=\"code-label\">Code Example</span>\n<pre><code class=\"language-text\">#include &lt;signal.h&gt;\n\nvoid handler(int signum) {\n    // Non-persistent platform: signal() resets handler to SIG_DFL before calling handler\n    if (signal(signum, handler) == SIG_ERR) {\n        // Handle error\n    }\n    // Handle signal logic...\n}\n\nvoid setup() {\n    signal(SIGUSR1, handler);\n}</code></pre>\n</div>"
+    },
+    {
+      "question_text": "Which of the following best describes the concept of 'async-signal-safe' functions in the context of signal handlers?",
+      "correct_answer": "Functions that can be safely called from within a signal handler without causing race conditions or undefined behavior.",
+      "distractors": [
+        {
+          "text": "Functions that execute independently of the main program flow.",
+          "misconception": "Targets [independence confusion]: This describes asynchronous operations generally, not specifically safety within handlers."
+        },
+        {
+          "text": "Functions that are guaranteed to complete before any signal is processed.",
+          "misconception": "Targets [execution order confusion]: Async-signal-safe functions *can* be interrupted; the safety comes from how they handle interruption."
+        },
+        {
+          "text": "Functions that do not require any system resources.",
+          "misconception": "Targets [resource misconception]: Async-signal-safe functions can use system resources, but in a way that is safe during signal interruption."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Async-signal-safe functions are designed to be reentrant or atomic, meaning they can be called from a signal handler without corrupting data structures or causing undefined behavior. This is crucial because a signal can interrupt the main program at any point.",
+        "distractor_analysis": "The first distractor describes general asynchronous behavior. The second incorrectly implies handlers are always processed after function completion. The third makes an unsupported claim about resource usage.",
+        "analogy": "An async-signal-safe function is like a public restroom stall with a solid lock. Even if someone else is using it (main program) and a new person arrives (signal handler), the stall's internal mechanism (the function's logic) is designed so that the second person doesn't interfere with the first person's privacy or safety."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "SIGNAL_HANDLERS",
+        "RACE_CONDITIONS"
+      ]
+    },
+    {
+      "question_text": "Why is accessing shared objects (other than <code>volatile sig_atomic_t</code> or lock-free atomics) from within a signal handler considered problematic?",
+      "correct_answer": "It can lead to undefined behavior because the main program might be modifying the object concurrently, leading to inconsistent states.",
+      "distractors": [
+        {
+          "text": "It violates memory access permissions.",
+          "misconception": "Targets [permission confusion]: The issue is concurrency and data integrity, not necessarily access control violations."
+        },
+        {
+          "text": "It causes the signal handler to execute more slowly.",
+          "misconception": "Targets [performance misconception]: While it can cause issues, the primary problem isn't speed but correctness."
+        },
+        {
+          "text": "It requires the use of specific compiler flags.",
+          "misconception": "Targets [compiler configuration confusion]: The problem is inherent in the C/POSIX model, not a compiler setting."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Signal handlers interrupt the normal program flow. Accessing shared objects that are not designed for atomic or volatile access creates a race condition. The main program might be in the middle of updating the object when the signal handler reads or writes it, leading to data corruption and undefined behavior.",
+        "distractor_analysis": "The first distractor incorrectly frames the issue as a permissions problem. The second focuses on performance, which is secondary to correctness. The third suggests a configuration fix rather than addressing the fundamental programming issue.",
+        "analogy": "Imagine two people trying to update the same whiteboard simultaneously. One is writing a number, the other is erasing it. Without coordination, the final number on the board will be unpredictable and likely wrong."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SIGNAL_HANDLERS",
+        "SHARED_DATA",
+        "RACE_CONDITIONS"
+      ]
+    },
+    {
+      "question_text": "What is the recommended approach for handling signals in a way that avoids race conditions, according to best practices like SEI CERT C?",
+      "correct_answer": "Keep signal handlers as short as possible, calling only async-signal-safe functions, and use flags (<code>volatile sig_atomic_t</code>) to communicate with the main program.",
+      "distractors": [
+        {
+          "text": "Perform all complex signal processing within the handler itself.",
+          "misconception": "Targets [complexity misconception]: Complex tasks should be deferred to the main program to minimize handler execution time and risk."
+        },
+        {
+          "text": "Block all signals during the execution of the main program.",
+          "misconception": "Targets [blocking misconception]: While signals can be blocked, this is a strategy for the main program, not a general handler best practice, and can delay critical events."
+        },
+        {
+          "text": "Use global mutexes to protect all shared data accessed by the handler.",
+          "misconception": "Targets [mutex confusion]: Mutexes are generally not async-signal-safe and can lead to deadlocks if acquired by the main thread and then attempted by the signal handler."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "SEI CERT C guidelines emphasize minimizing the work done within signal handlers. The best practice is to use handlers primarily to set a flag (<code>volatile sig_atomic_t</code>) and return quickly. The main program then checks this flag and performs the necessary actions, ensuring that potentially non-async-safe operations occur in a controlled environment.",
+        "distractor_analysis": "The first distractor suggests the opposite of best practice. The second proposes a potentially problematic strategy of blocking signals. The third suggests using mutexes, which are typically unsafe within signal handlers.",
+        "analogy": "Think of a fire alarm (signal). The alarm itself (signal handler) should just sound loudly and clearly (set a flag). It shouldn't try to put out the fire itself (complex processing). The building's fire response team (main program) should then react based on the alarm."
+      },
+      "code_snippets": [
+        {
+          "language": "text",
+          "code": "#include <signal.h>\n#include <stdatomic.h>\n\nvolatile sig_atomic_t signal_flag = 0;\n\nvoid handler(int signum) {\n    signal_flag = 1; // Set flag\n}\n\nint main() {\n    signal(SIGINT, handler);\n    while (1) {\n        // Main program logic\n        if (signal_flag) {\n            // Process signal safely\n            signal_flag = 0; // Reset flag\n        }\n    }\n    return 0;\n}",
+          "context": "explanation"
+        }
+      ],
+      "difficulty": "advanced",
+      "question_type": "defense",
+      "bloom_level": "create",
+      "prerequisites": [
+        "SIGNAL_HANDLERS",
+        "SEI_CERT_C",
+        "ASYNC_SIGNAL_SAFE"
+      ],
+      "_code_snippets_html": "<div class=\"code-snippet code-explanation\">\n<span class=\"code-label\">Code Example</span>\n<pre><code class=\"language-text\">#include &lt;signal.h&gt;\n#include &lt;stdatomic.h&gt;\n\nvolatile sig_atomic_t signal_flag = 0;\n\nvoid handler(int signum) {\n    signal_flag = 1; // Set flag\n}\n\nint main() {\n    signal(SIGINT, handler);\n    while (1) {\n        // Main program logic\n        if (signal_flag) {\n            // Process signal safely\n            signal_flag = 0; // Reset flag\n        }\n    }\n    return 0;\n}</code></pre>\n</div>"
+    },
+    {
+      "question_text": "What does the term 'reentrant' mean in the context of functions that are safe to call from signal handlers?",
+      "correct_answer": "A function is reentrant if it can be interrupted in the middle of its execution, safely called again, and then continue correctly.",
+      "distractors": [
+        {
+          "text": "A function that can only be called once.",
+          "misconception": "Targets [single-use misconception]: Reentrancy implies the ability to be called multiple times, even concurrently."
+        },
+        {
+          "text": "A function that does not use any global variables.",
+          "misconception": "Targets [global variable misconception]: While avoiding shared mutable global state helps, reentrancy is more about how the function manages its *own* state and execution context."
+        },
+        {
+          "text": "A function that executes very quickly.",
+          "misconception": "Targets [performance misconception]: Speed is not the defining characteristic of reentrancy; correctness under interruption is."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Reentrancy means a function can safely handle multiple invocations concurrently or interleaved, without corrupting its internal state or the state of other invocations. This is achieved by using local variables (on the stack) and avoiding shared mutable data.",
+        "distractor_analysis": "The first distractor describes the opposite of reentrancy. The second focuses on a common implementation detail but isn't the definition itself. The third confuses reentrancy with performance.",
+        "analogy": "A reentrant function is like a public telephone booth. Multiple people can use it one after another without interfering with each other's calls, because each call has its own private line and phone."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "SIGNAL_HANDLERS",
+        "REENTRANCY",
+        "CONCURRENCY"
+      ]
+    },
+    {
+      "question_text": "Which of the following is a potential consequence of a signal handler accessing a non-atomic, non-volatile global variable that is also used by the main program?",
+      "correct_answer": "The main program might read a partially updated or stale value of the variable.",
+      "distractors": [
+        {
+          "text": "The signal handler will be automatically terminated by the OS.",
+          "misconception": "Targets [OS intervention misconception]: The OS doesn't typically terminate handlers for this specific reason; the issue is undefined behavior."
+        },
+        {
+          "text": "The main program will receive a segmentation fault.",
+          "misconception": "Targets [error type confusion]: While data corruption can *lead* to segfaults, it's not the direct or guaranteed outcome of accessing a shared variable."
+        },
+        {
+          "text": "The signal handler will be unable to re-register itself.",
+          "misconception": "Targets [registration confusion]: This issue relates to accessing shared data, not the handler's ability to re-register."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "When a signal handler accesses a shared global variable concurrently with the main program, a race condition occurs. The handler might read the variable while the main program is halfway through updating it, resulting in the handler seeing an inconsistent or stale value, leading to incorrect logic.",
+        "distractor_analysis": "The first distractor invents an OS behavior. The second incorrectly assumes a specific error type. The third links the problem to handler registration, which is a separate issue.",
+        "analogy": "Imagine you're reading a book while someone else is rewriting pages. You might read a sentence that's only half-written, or a page that's been replaced with gibberish, making the story nonsensical."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "scenario",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SIGNAL_HANDLERS",
+        "SHARED_DATA",
+        "RACE_CONDITIONS"
+      ]
+    },
+    {
+      "question_text": "What is the primary difference between <code>signal()</code> and <code>sigaction()</code> in POSIX systems regarding signal handler management?",
+      "correct_answer": "<code>sigaction()</code> provides more control and reliability, including options to block other signals during handler execution and to ensure handler persistence.",
+      "distractors": [
+        {
+          "text": "<code>signal()</code> is always safe to use in signal handlers, while <code>sigaction()</code> is not.",
+          "misconception": "Targets [safety confusion]: `signal()` behavior can be implementation-defined and problematic (non-persistent); `sigaction()` is generally preferred for robust handling."
+        },
+        {
+          "text": "<code>sigaction()</code> is used for multi-threading, while <code>signal()</code> is for single-threaded applications.",
+          "misconception": "Targets [threading confusion]: Both functions deal with signals, which are a process-level (or thread-level) mechanism, but `sigaction`'s advantage is control, not thread-specificity."
+        },
+        {
+          "text": "<code>signal()</code> handles all signal types, whereas <code>sigaction()</code> only handles specific ones.",
+          "misconception": "Targets [scope confusion]: Both functions can generally handle various signals, but `sigaction` offers finer control over *how* they are handled."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "<code>sigaction()</code> is the preferred, more robust method for installing signal handlers in POSIX systems. It allows specifying flags like <code>SA_RESTART</code> (to automatically restart interrupted system calls) and <code>SA_NODEFER</code> (to allow signals to be delivered even while the handler is running), offering greater control than the simpler, often implementation-defined <code>signal()</code> function.",
+        "distractor_analysis": "The first distractor incorrectly claims <code>signal()</code> is safer. The second misattributes <code>sigaction</code>'s benefits to multi-threading. The third misunderstands the scope of signal handling capabilities.",
+        "analogy": "Using <code>signal()</code> is like setting a basic alarm clock. Using <code>sigaction()</code> is like setting a smart alarm clock with options for snooze, different alarm sounds, and even a light that turns on, giving you much more control over how you're woken up."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "comparison",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SIGNAL_HANDLERS",
+        "POSIX_STANDARDS",
+        "RACE_CONDITIONS"
+      ]
+    },
+    {
+      "question_text": "What is the fundamental security risk introduced by calling <code>signal()</code> within a signal handler on a non-persistent platform?",
+      "correct_answer": "A race condition can occur where a second signal arrives before the handler re-establishes itself, leading to the default signal behavior instead of the intended handler.",
+      "distractors": [
+        {
+          "text": "It allows an attacker to overwrite the handler's code.",
+          "misconception": "Targets [code injection confusion]: The risk is about handler *invocation*, not code modification."
+        },
+        {
+          "text": "It causes the program to leak sensitive information.",
+          "misconception": "Targets [information leak confusion]: While data corruption could indirectly lead to leaks, the direct risk is handler malfunction."
+        },
+        {
+          "text": "It consumes excessive CPU resources, leading to a DoS.",
+          "misconception": "Targets [performance misconception]: The primary issue is incorrect behavior, not necessarily resource exhaustion."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "On non-persistent systems, the OS resets the signal handler to <code>SIG_DFL</code> before calling it. If the handler then calls <code>signal()</code> to re-register itself, there's a small window where the handler is reset but not yet re-registered. A signal arriving during this window will trigger the default action, potentially bypassing critical logic or causing unexpected program termination.",
+        "distractor_analysis": "The first distractor suggests a code injection vulnerability, which is not the direct risk. The second incorrectly focuses on information leakage. The third emphasizes performance, missing the core correctness issue.",
+        "analogy": "Imagine a relay race where the baton (signal handler registration) is passed. If the runner receiving the baton (the handler) drops it briefly before picking it up again, and the next runner arrives during that moment, the race is disrupted."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SIGNAL_HANDLERS",
+        "NONPERSISTENT_PLATFORMS",
+        "RACE_CONDITIONS"
+      ]
+    },
+    {
+      "question_text": "Which of the following is NOT considered an asynchronous-safe function according to the C standard and POSIX?",
+      "correct_answer": "scanf()",
+      "distractors": [
+        {
+          "text": "abort()",
+          "misconception": "Targets [safe function confusion]: `abort()` is explicitly listed as async-signal-safe."
+        },
+        {
+          "text": "raise()",
+          "misconception": "Targets [safe function confusion]: `raise()` is also generally considered safe for invoking signals."
+        },
+        {
+          "text": "atomic_fetch_add()",
+          "misconception": "Targets [atomic function confusion]: Functions operating on lock-free atomic types are typically async-signal-safe."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The C standard and POSIX define a limited set of functions that are safe to call from signal handlers. <code>scanf()</code> is not among them because it relies on internal buffers and state management that are not designed to be interrupted safely. <code>abort()</code>, <code>raise()</code>, and atomic operations are generally considered safe.",
+        "distractor_analysis": "<code>abort()</code> and <code>raise()</code> are standard functions for signal handling/program termination. Atomic operations on lock-free types are designed for safe concurrent access, extending to signal safety. <code>scanf()</code> involves complex I/O buffering making it unsafe.",
+        "analogy": "Think of async-signal-safe functions as tools designed for a delicate operation where you can't afford mistakes. <code>abort()</code> is like a 'stop' button, <code>raise()</code> is like sending a specific alert, and atomic operations are like precise, single-action tools. <code>scanf()</code> is like a complex assembly tool that requires multiple steps and can easily break if interrupted mid-process."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "SIGNAL_HANDLERS",
+        "ASYNC_SIGNAL_SAFE",
+        "C_STANDARD_FUNCTIONS"
+      ]
+    },
+    {
+      "question_text": "How can a developer mitigate the risks of signal handler race conditions when needing to perform complex operations in response to a signal?",
+      "correct_answer": "The signal handler should set a <code>volatile sig_atomic_t</code> flag, and the main program loop should periodically check this flag to perform the complex operations.",
+      "distractors": [
+        {
+          "text": "The signal handler should directly call the complex functions.",
+          "misconception": "Targets [direct execution misconception]: This bypasses the safety precautions and reintroduces the race condition risk."
+        },
+        {
+          "text": "The complex operations should be implemented as a separate thread.",
+          "misconception": "Targets [threading misconception]: Creating threads within a signal handler is generally unsafe and complex."
+        },
+        {
+          "text": "The signal handler should block all other signals indefinitely.",
+          "misconception": "Targets [blocking misconception]: Indefinite blocking can prevent critical signals from being handled and doesn't solve the core issue of unsafe function calls."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The safest pattern is to keep the signal handler minimal: just set a flag (<code>volatile sig_atomic_t</code>) and return. The main program's event loop or main logic then checks this flag. If set, the main program performs the necessary complex actions, ensuring these actions occur in the main program's context, where non-async-safe functions can be used safely.",
+        "distractor_analysis": "The first distractor ignores safety best practices. The second suggests an unsafe threading approach within a handler. The third proposes an overly broad signal blocking strategy.",
+        "analogy": "It's like having a doorbell (signal handler) that just rings when someone arrives. Instead of opening the door and talking to them immediately (complex operation), you note that someone is at the door (set flag) and then go to the door when you're free (main loop checks flag)."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "defense",
+      "bloom_level": "create",
+      "prerequisites": [
+        "SIGNAL_HANDLERS",
+        "RACE_CONDITIONS",
+        "ASYNC_SIGNAL_SAFE"
+      ]
+    },
+    {
+      "question_text": "What is the role of the <code>SA_NODEFER</code> flag when using <code>sigaction()</code>?",
+      "correct_answer": "It prevents the system from automatically blocking the signal that triggered the handler while the handler is executing.",
+      "distractors": [
+        {
+          "text": "It ensures that the signal handler is automatically restarted after execution.",
+          "misconception": "Targets [restart confusion]: This describes the `SA_RESTART` flag, not `SA_NODEFER`."
+        },
+        {
+          "text": "It causes the signal handler to be called asynchronously.",
+          "misconception": "Targets [asynchronous execution confusion]: Signals are inherently asynchronous; this flag controls blocking *during* handler execution."
+        },
+        {
+          "text": "It allows the signal handler to call non-async-safe functions.",
+          "misconception": "Targets [safety confusion]: `SA_NODEFER` does not grant safety for non-async-safe functions; it controls signal delivery during handler execution."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "By default, when a signal handler is invoked, the system often blocks that specific signal (and sometimes others) to prevent re-entrancy issues within the handler itself. The <code>SA_NODEFER</code> flag, when used with <code>sigaction()</code>, overrides this default behavior, allowing the signal to be delivered even while its handler is executing. This requires careful consideration to avoid new race conditions.",
+        "distractor_analysis": "The first distractor describes <code>SA_RESTART</code>. The second misunderstands the nature of asynchronous signals. The third incorrectly implies <code>SA_NODEFER</code> provides safety guarantees for function calls.",
+        "analogy": "Imagine a security checkpoint (signal handler). By default, if you trigger the alarm (signal), the checkpoint might temporarily close off access to that specific alarm button (block signal). <code>SA_NODEFER</code> is like saying, 'Keep the checkpoint open, even if the alarm button is still being pressed,' which requires more careful management."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "SIGNAL_HANDLERS",
+        "SIGACTION",
+        "RACE_CONDITIONS"
+      ]
+    },
+    {
+      "question_text": "In the context of signal handlers, what does 'implementation-defined' behavior typically imply for the <code>signal()</code> function?",
+      "correct_answer": "The behavior of <code>signal()</code> (e.g., whether it's persistent or non-persistent) can vary between different operating systems or C library versions.",
+      "distractors": [
+        {
+          "text": "The behavior is standardized and identical across all platforms.",
+          "misconception": "Targets [standardization confusion]: 'Implementation-defined' explicitly means it's *not* standardized across all implementations."
+        },
+        {
+          "text": "The behavior is guaranteed to be safe for signal handlers.",
+          "misconception": "Targets [safety guarantee confusion]: Implementation-defined behavior often implies potential pitfalls, especially regarding persistence."
+        },
+        {
+          "text": "The behavior is determined by the compiler, not the OS.",
+          "misconception": "Targets [platform confusion]: While compilers are involved, 'implementation-defined' usually refers to the C library and OS environment."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "When a C standard feature is 'implementation-defined', it means the standard allows different choices for how it's implemented. For <code>signal()</code>, this often relates to whether the handler is automatically reset after being called (persistent) or reset to default before being called (non-persistent). Developers must consult their specific platform's documentation.",
+        "distractor_analysis": "The first distractor contradicts the meaning of 'implementation-defined'. The second incorrectly assumes safety. The third narrows the scope too much, as it's typically a combination of OS and library.",
+        "analogy": "Imagine a recipe that says 'add a pinch of salt.' What constitutes a 'pinch' can vary depending on who is cooking (the implementation). It's not precisely defined in the recipe itself."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "SIGNAL_HANDLERS",
+        "SIGNAL_FUNCTION",
+        "IMPLEMENTATION_DEFINED"
+      ]
+    },
+    {
+      "question_text": "Consider a scenario where a signal handler needs to log a message. Which approach is MOST aligned with async-signal-safe practices?",
+      "correct_answer": "The handler sets a flag, and the main loop writes the log message using a thread-safe logging library.",
+      "distractors": [
+        {
+          "text": "The handler directly calls <code>fprintf(stderr, &quot;Signal received!&quot;)</code>.",
+          "misconception": "Targets [stdio confusion]: Standard I/O functions like `fprintf` are generally not async-signal-safe due to internal buffering."
+        },
+        {
+          "text": "The handler uses <code>syslog()</code> to write the message.",
+          "misconception": "Targets [syslog safety confusion]: While `syslog()` *can* be async-signal-safe on some systems, it's not universally guaranteed and depends on its implementation (e.g., if it uses non-reentrant stdio calls internally)."
+        },
+        {
+          "text": "The handler allocates memory using <code>malloc()</code> and then logs.",
+          "misconception": "Targets [memory allocation confusion]: `malloc()` is not async-signal-safe."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Directly using standard I/O (<code>fprintf</code>), memory allocation (<code>malloc</code>), or even <code>syslog()</code> (which might use stdio internally) within a signal handler is risky. The safest pattern is for the handler to set a flag (<code>volatile sig_atomic_t</code>) and return. The main program then checks the flag and performs the logging operation, potentially using a thread-safe logging mechanism designed for concurrent environments.",
+        "distractor_analysis": "The first distractor uses <code>fprintf</code>, a known unsafe function. The second relies on <code>syslog</code>, whose safety is implementation-dependent and often problematic. The third uses <code>malloc</code>, which is explicitly unsafe.",
+        "analogy": "If a fire alarm goes off (signal), the alarm system (handler) should just sound the alarm (set flag). It shouldn't try to call the fire department directly using a potentially faulty phone line (unsafe function), but rather alert the building manager (main loop) who can then make the official call."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "scenario",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "SIGNAL_HANDLERS",
+        "ASYNC_SIGNAL_SAFE",
+        "LOGGING"
+      ]
+    },
+    {
+      "question_text": "What is the primary benefit of using <code>sigaction()</code> over <code>signal()</code> for installing signal handlers in modern C/C++ development?",
+      "correct_answer": "Increased portability and control, as <code>sigaction()</code> behavior is more consistently defined across POSIX systems, and it offers flags for finer-grained control over signal handling.",
+      "distractors": [
+        {
+          "text": "It is simpler to implement and requires less code.",
+          "misconception": "Targets [simplicity misconception]: `signal()` is generally simpler, but less reliable; `sigaction()` is more complex but robust."
+        },
+        {
+          "text": "It automatically makes all called functions within the handler safe.",
+          "misconception": "Targets [automatic safety misconception]: `sigaction()` provides control mechanisms (like `SA_NODEFER`), but doesn't magically make non-async-safe functions safe."
+        },
+        {
+          "text": "It is the only way to handle signals in multi-threaded applications.",
+          "misconception": "Targets [exclusivity misconception]: Signals can be handled in multi-threaded apps using either, but `sigaction` is preferred for robustness."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "<code>sigaction()</code> provides a standardized and more powerful interface for signal handling compared to the often implementation-defined <code>signal()</code>. Its features, such as the ability to control signal blocking during handler execution (<code>SA_NODEFER</code>) and restart interrupted system calls (<code>SA_RESTART</code>), lead to more predictable and robust signal handling across different POSIX environments.",
+        "distractor_analysis": "The first distractor incorrectly claims <code>sigaction</code> is simpler. The second falsely suggests automatic safety for all called functions. The third makes an incorrect claim about exclusivity for multi-threaded applications.",
+        "analogy": "Comparing <code>signal()</code> and <code>sigaction()</code> is like comparing a basic light switch to a smart home control panel. The basic switch works, but the smart panel offers more options, reliability, and predictable behavior across different 'smart home' systems (POSIX systems)."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "comparison",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SIGNAL_HANDLERS",
+        "SIGACTION",
+        "PORTABILITY"
+      ]
+    },
+    {
+      "question_text": "What is the core principle behind the SEI CERT C guideline SIG31-C regarding signal handlers?",
+      "correct_answer": "Avoid accessing or modifying shared objects within signal handlers, except for variables of type <code>volatile sig_atomic_t</code> or lock-free atomic objects.",
+      "distractors": [
+        {
+          "text": "Always use mutexes to protect shared data accessed by signal handlers.",
+          "misconception": "Targets [mutex safety misconception]: Mutexes are generally not async-signal-safe and can cause deadlocks."
+        },
+        {
+          "text": "Ensure all shared objects are declared as <code>static</code>.",
+          "misconception": "Targets [static variable misconception]: The `static` keyword does not inherently make an object safe for concurrent access from a signal handler."
+        },
+        {
+          "text": "Perform all signal handling logic in a separate thread.",
+          "misconception": "Targets [threading misconception]: Creating threads within signal handlers is typically unsafe and not recommended."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "SIG31-C emphasizes that accessing non-atomic shared data from a signal handler leads to undefined behavior due to potential race conditions. The only safe exceptions are <code>volatile sig_atomic_t</code> variables and lock-free atomic objects, which are designed to be accessed atomically even during signal interruptions.",
+        "distractor_analysis": "The first distractor suggests using mutexes, which are unsafe in handlers. The second incorrectly implies <code>static</code> provides safety. The third proposes an unsafe threading strategy.",
+        "analogy": "Think of shared data as a fragile sculpture. A signal handler should only touch it if it's designed to be handled very carefully (like <code>volatile sig_atomic_t</code>) or if it's made of unbreakable material (lock-free atomics). Trying to modify it otherwise is like trying to sculpt with a sledgehammer – it will likely break."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "defense",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "SIGNAL_HANDLERS",
+        "SEI_CERT_C",
+        "SHARED_DATA"
+      ]
+    }
+  ],
+  "generation_metadata": {
+    "model": "google/gemini-2.5-flash-lite",
+    "num_generated": 18,
+    "temperature": 0.1,
+    "web_citations": [],
+    "research_method": "openrouter_web_plugin",
+    "search_query": "Signal Handler Race Conditions Software Development Security best practices",
+    "latency_ms": 34519.427
+  },
+  "timestamp": "2026-01-18T11:08:45.796497"
+}

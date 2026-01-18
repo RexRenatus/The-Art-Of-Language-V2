@@ -1,0 +1,540 @@
+{
+  "topic_title": "Intent Redirection Vulnerabilities",
+  "category": "008_Application Security - Mobile 008_Application Security",
+  "flashcards": [
+    {
+      "question_text": "What is the primary risk associated with an Intent redirection vulnerability in Android applications?",
+      "correct_answer": "An attacker can control the contents of an intent to launch a new component, potentially accessing private app components or executing unintended actions.",
+      "distractors": [
+        {
+          "text": "The application may crash due to unhandled exceptions.",
+          "misconception": "Targets [scope confusion]: Focuses on application stability rather than security implications."
+        },
+        {
+          "text": "Sensitive user data may be leaked through insecure network communication.",
+          "misconception": "Targets [domain confusion]: Confuses intent redirection with network-based data exfiltration vulnerabilities."
+        },
+        {
+          "text": "The device's operating system may become unstable.",
+          "misconception": "Targets [impact overstatement]: Exaggerates the impact beyond the application layer to the entire OS."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Intent redirection occurs when an attacker influences an intent used to launch a new component, because this allows them to potentially access private components or trigger unintended functionality within the app's context.",
+        "distractor_analysis": "The distractors focus on general app instability, network issues, or OS-level problems, rather than the specific security risk of controlled component launching via intents.",
+        "analogy": "It's like an attacker being able to change the destination address on a package being sent within a company, potentially rerouting it to a restricted area instead of its intended internal department."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "ANDROID_INTS_BASICS"
+      ]
+    },
+    {
+      "question_text": "According to Android Developers documentation, what is a common way an attacker can supply a serialized intent for redirection?",
+      "correct_answer": "As a serialized intent within an <code>extras</code> field of another intent.",
+      "distractors": [
+        {
+          "text": "By directly modifying the application's manifest file.",
+          "misconception": "Targets [attack vector confusion]: Assumes direct manifest manipulation is the primary method, ignoring runtime intent manipulation."
+        },
+        {
+          "text": "Through a publicly accessible API endpoint that accepts intent configurations.",
+          "misconception": "Targets [exposure confusion]: Overlooks that the vulnerability often lies in how *internal* intents are handled, not necessarily public APIs."
+        },
+        {
+          "text": "By exploiting a buffer overflow in the application's memory.",
+          "misconception": "Targets [vulnerability type confusion]: Mixes intent redirection with memory corruption vulnerabilities."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "An attacker can supply a serialized intent within an <code>extras</code> field because this allows them to embed a malicious intent that the vulnerable app will later parse and use to launch a component.",
+        "distractor_analysis": "The distractors suggest incorrect attack vectors like manifest modification, public API exploitation, or buffer overflows, which are not the typical methods for intent redirection.",
+        "analogy": "Imagine sending a letter with a smaller, sealed envelope inside. The attacker controls what's in the inner envelope, and the recipient opens and acts upon it without fully scrutinizing its contents."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "ANDROID_INTS_BASICS",
+        "ANDROID_INTENT_EXTRAS"
+      ]
+    },
+    {
+      "question_text": "Which OWASP Mobile Security Project category does Intent Redirection fall under?",
+      "correct_answer": "MASVS-PLATFORM: Platform Interaction",
+      "distractors": [
+        {
+          "text": "MASVS-CODE: Code Quality",
+          "misconception": "Targets [category confusion]: Associates the vulnerability with general code quality rather than platform-specific interaction."
+        },
+        {
+          "text": "MASVS-AUTH: Authentication",
+          "misconception": "Targets [category confusion]: Incorrectly links intent redirection to authentication mechanisms."
+        },
+        {
+          "text": "MASVS-CRYPTO: Cryptography",
+          "misconception": "Targets [category confusion]: Misplaces the vulnerability within cryptographic controls instead of platform interaction."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Intent redirection is categorized under MASVS-PLATFORM: Platform Interaction because it exploits how the application interacts with the underlying mobile operating system's component launching mechanisms.",
+        "distractor_analysis": "The distractors incorrectly assign the vulnerability to broader categories like code quality, authentication, or cryptography, missing the specific platform interaction aspect.",
+        "analogy": "It's like misfiling a complaint about a faulty door lock (platform interaction) under 'general building maintenance' (code quality) instead of 'security systems'."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "OWASP_MASVS_OVERVIEW"
+      ]
+    },
+    {
+      "question_text": "Consider the following Java code snippet: <code>ComponentName name = forward.resolveActivity(getPackageManager()); if (name.getPackageName().equals(&quot;safe_package&quot;) &amp;&amp; name.getClassName().equals(&quot;safe_class&quot;)) { startActivity(forward); }</code>. Where does the vulnerability typically lie in this pattern?",
+      "correct_answer": "The validation logic only checks the package and class name, not the intent's payload or flags.",
+      "distractors": [
+        {
+          "text": "The <code>resolveActivity</code> method itself is insecure.",
+          "misconception": "Targets [misunderstanding of API function]: Assumes the system API is flawed, rather than how it's used."
+        },
+        {
+          "text": "The <code>startActivity</code> method is improperly called.",
+          "misconception": "Targets [misunderstanding of API function]: Blames the execution method instead of the preceding validation."
+        },
+        {
+          "text": "The <code>getPackageManager()</code> call returns an untrusted package manager.",
+          "misconception": "Targets [system component confusion]: Incorrectly assumes the system's package manager is compromised or untrusted in this context."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The vulnerability lies in the validation logic because it only checks the target component's name, not the intent's actual data or flags, allowing an attacker to craft a seemingly valid intent with malicious extras.",
+        "distractor_analysis": "The distractors incorrectly point to the security of the <code>resolveActivity</code> or <code>startActivity</code> methods, or the integrity of the package manager, rather than the insufficient validation of the intent's content.",
+        "analogy": "It's like a security guard only checking if a visitor's ID matches the company directory, but not checking the contents of their bag for dangerous items."
+      },
+      "code_snippets": [
+        {
+          "language": "java",
+          "code": "Intent intent = getIntent();\nIntent forward = (Intent) intent.getParcelableExtra(\"key\");\nComponentName name = forward.resolveActivity(getPackageManager());\nif (name.getPackageName().equals(\"safe_package\") &&\n    name.getClassName().equals(\"safe_class\")) {\n    startActivity(forward);\n}",
+          "context": "explanation"
+        }
+      ],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "ANDROID_INTS_BASICS",
+        "ANDROID_INTENT_RESOLUTION"
+      ],
+      "_code_snippets_html": "<div class=\"code-snippet code-explanation\">\n<span class=\"code-label\">Code Example</span>\n<pre><code class=\"language-java\">Intent intent = getIntent();\nIntent forward = (Intent) intent.getParcelableExtra(&quot;key&quot;);\nComponentName name = forward.resolveActivity(getPackageManager());\nif (name.getPackageName().equals(&quot;safe_package&quot;) &amp;&amp;\n    name.getClassName().equals(&quot;safe_class&quot;)) {\n    startActivity(forward);\n}</code></pre>\n</div>"
+    },
+    {
+      "question_text": "What is a recommended mitigation strategy for Intent redirection vulnerabilities, as suggested by Android Developers?",
+      "correct_answer": "Use <code>PendingIntent</code> objects, which make the target action intent immutable.",
+      "distractors": [
+        {
+          "text": "Always use explicit intents instead of implicit intents.",
+          "misconception": "Targets [mitigation confusion]: While explicit intents can reduce some risks, they don't inherently solve intent redirection if the target component is still vulnerable."
+        },
+        {
+          "text": "Disable all intent extras to prevent data exfiltration.",
+          "misconception": "Targets [overly restrictive mitigation]: This would break legitimate app functionality and doesn't address redirection via component targeting."
+        },
+        {
+          "text": "Encrypt all intents before sending them to other components.",
+          "misconception": "Targets [inappropriate mitigation]: Encryption protects data confidentiality but doesn't prevent an attacker from choosing the target component or action."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Using <code>PendingIntent</code> objects is a recommended mitigation because they create an immutable intent that cannot be modified by the caller, thus preventing an attacker from redirecting it to a malicious component.",
+        "distractor_analysis": "The distractors suggest using explicit intents (which can still be redirected), disabling all extras (impractical), or encryption (which doesn't solve the redirection problem itself).",
+        "analogy": "Using a <code>PendingIntent</code> is like sending a pre-paid, sealed package with a specific delivery instruction that cannot be altered once it leaves your hands."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "ANDROID_INTS_BASICS",
+        "ANDROID_PENDINGINTENT"
+      ]
+    },
+    {
+      "question_text": "How can an app check where an intent is being redirected to, according to Android Developers documentation?",
+      "correct_answer": "By using methods like <code>resolveActivity</code> to check the package and class name of the target component.",
+      "distractors": [
+        {
+          "text": "By inspecting the intent's URI scheme for malicious patterns.",
+          "misconception": "Targets [misplaced validation focus]: While URI schemes are important for deep linking, `resolveActivity` is used for component targeting validation."
+        },
+        {
+          "text": "By querying the Android system for all registered components.",
+          "misconception": "Targets [inefficient/incorrect method]: This is overly broad and doesn't directly validate the *specific* intent's target."
+        },
+        {
+          "text": "By analyzing the intent's <code>extras</code> for suspicious data.",
+          "misconception": "Targets [incomplete validation]: Analyzing extras is important, but `resolveActivity` is key for validating the *target component* itself."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "An app can check where an intent is being redirected by using <code>resolveActivity</code> because this method returns the <code>ComponentName</code> of the activity that would handle the intent, allowing the app to verify if it's a safe target.",
+        "distractor_analysis": "The distractors suggest validating URI schemes, querying all components, or analyzing extras, which are either incorrect or incomplete methods for verifying the target component of a redirection.",
+        "analogy": "It's like checking the address on a letter *before* putting it in the outgoing mail, to ensure it's going to the correct, authorized recipient's office, not just looking at the return address or the type of paper used."
+      },
+      "code_snippets": [
+        {
+          "language": "java",
+          "code": "ComponentName name = forward.resolveActivity(getPackageManager());\nif (name.getPackageName().equals(\"safe_package\") &&\n    name.getClassName().equals(\"safe_class\")) {\n    // Redirect safely\n}",
+          "context": "explanation"
+        }
+      ],
+      "difficulty": "intermediate",
+      "question_type": "procedure",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "ANDROID_INTS_BASICS",
+        "ANDROID_INTENT_RESOLUTION"
+      ],
+      "_code_snippets_html": "<div class=\"code-snippet code-explanation\">\n<span class=\"code-label\">Code Example</span>\n<pre><code class=\"language-java\">ComponentName name = forward.resolveActivity(getPackageManager());\nif (name.getPackageName().equals(&quot;safe_package&quot;) &amp;&amp;\n    name.getClassName().equals(&quot;safe_class&quot;)) {\n    // Redirect safely\n}</code></pre>\n</div>"
+    },
+    {
+      "question_text": "What is the potential impact of an Intent redirection vulnerability, according to Google Help?",
+      "correct_answer": "Malicious apps can access private app components or files, or launch private components with poisoned arguments.",
+      "distractors": [
+        {
+          "text": "The app may be flagged for using deprecated APIs.",
+          "misconception": "Targets [incorrect consequence]: Confuses security vulnerabilities with API deprecation issues."
+        },
+        {
+          "text": "The app's user interface may display incorrect information.",
+          "misconception": "Targets [superficial impact]: Focuses on UI glitches rather than core security breaches."
+        },
+        {
+          "text": "The app may consume excessive battery or network resources.",
+          "misconception": "Targets [performance vs. security]: Confuses security flaws with performance optimization issues."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Malicious apps can access private components or files because the intent redirection allows an attacker to bypass normal access controls and trigger sensitive functionality with potentially malicious inputs.",
+        "distractor_analysis": "The distractors describe consequences unrelated to the security implications of intent redirection, such as API deprecation, UI errors, or resource consumption.",
+        "analogy": "It's like an attacker tricking a company's internal mail system to deliver sensitive documents from a restricted vault to an unauthorized person."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "ANDROID_INTS_BASICS",
+        "APPLICATION_SECURITY_IMPACTS"
+      ]
+    },
+    {
+      "question_text": "When is it particularly important to sanitize bundled information in intents to prevent redirection vulnerabilities?",
+      "correct_answer": "When the intent is being redirected, especially when dealing with URI permissions or flags like <code>FLAG_GRANT_READ_URI_PERMISSION</code>.",
+      "distractors": [
+        {
+          "text": "Only when the intent is being created for the first time.",
+          "misconception": "Targets [timing confusion]: Assumes sanitization is only needed at creation, not during redirection or handling."
+        },
+        {
+          "text": "When the intent is being sent to an external application.",
+          "misconception": "Targets [scope confusion]: While external intents need care, internal redirection of potentially attacker-controlled intents is also critical."
+        },
+        {
+          "text": "After the intent has already been launched by <code>startActivity</code>.",
+          "misconception": "Targets [mitigation timing]: Sanitization must occur *before* launching the intent to prevent the vulnerability."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Sanitizing bundled information is crucial when an intent is being redirected because attacker-controlled data or flags within the intent could be exploited to grant unintended permissions or steer the intent to malicious components.",
+        "distractor_analysis": "The distractors suggest sanitizing only at creation, only for external intents, or after launching, all of which miss the critical point that sanitization is needed *before* executing a potentially redirected intent.",
+        "analogy": "It's like checking the contents of a package *before* it's handed over for delivery, especially if the package contains keys or access badges, to ensure they aren't being misused."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "procedure",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "ANDROID_INTS_BASICS",
+        "ANDROID_INTENT_FLAGS"
+      ]
+    },
+    {
+      "question_text": "What is the core principle behind using <code>PendingIntent</code> to mitigate Intent Redirection?",
+      "correct_answer": "A <code>PendingIntent</code> acts as a token that grants temporary permission to another app to execute a specific action, and its contents are immutable.",
+      "distractors": [
+        {
+          "text": "It encrypts the intent data, making it unreadable to attackers.",
+          "misconception": "Targets [mechanism confusion]: Focuses on confidentiality (encryption) rather than immutability and delegated execution."
+        },
+        {
+          "text": "It forces the intent to always use explicit component targeting.",
+          "misconception": "Targets [feature confusion]: `PendingIntent` doesn't mandate explicit targeting; its immutability is the key security feature."
+        },
+        {
+          "text": "It logs all intent redirections for later auditing.",
+          "misconception": "Targets [function confusion]: Logging is a security practice, but not the primary function or mitigation mechanism of `PendingIntent`."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "A <code>PendingIntent</code> is immutable because it's created by your app but executed by another, and this immutability ensures that the target component and action cannot be altered by an attacker, thus preventing redirection.",
+        "distractor_analysis": "The distractors misrepresent <code>PendingIntent</code> by attributing encryption, forced explicit targeting, or logging as its core mitigation mechanism, instead of its immutability.",
+        "analogy": "It's like giving someone a pre-filled, signed check that they can cash, but they cannot change the amount or the payee – the details are fixed."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "ANDROID_INTS_BASICS",
+        "ANDROID_PENDINGINTENT"
+      ]
+    },
+    {
+      "question_text": "An exported Activity receives an Intent and passes its extras directly to another Activity (<code>MainActivity2</code>) without validation. What type of vulnerability is this an example of?",
+      "correct_answer": "Intent Redirection",
+      "distractors": [
+        {
+          "text": "Cross-Site Scripting (XSS)",
+          "misconception": "Targets [vulnerability type confusion]: XSS targets web browsers and involves injecting malicious scripts, not internal app component communication."
+        },
+        {
+          "text": "SQL Injection",
+          "misconception": "Targets [vulnerability type confusion]: SQL Injection targets database queries, not inter-component communication within an app."
+        },
+        {
+          "text": "Insecure Direct Object Reference (IDOR)",
+          "misconception": "Targets [vulnerability type confusion]: IDOR involves accessing unauthorized data objects, not controlling component execution flow."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "This is an Intent Redirection vulnerability because the exported Activity is acting as a proxy, blindly forwarding potentially attacker-controlled data (extras) to another component (<code>MainActivity2</code>), allowing the attacker to influence its execution.",
+        "distractor_analysis": "The distractors represent entirely different vulnerability classes (XSS, SQLi, IDOR) that target different layers or mechanisms than inter-component communication via Intents.",
+        "analogy": "It's like a receptionist taking a message from an external caller and relaying it verbatim to a specific executive, without checking if the message itself contains instructions to do something harmful."
+      },
+      "code_snippets": [
+        {
+          "language": "java",
+          "code": "// Exported Activity\npublic class MainActivity extends Activity {\n    @Override\n    protected void onCreate(Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n        Intent intent = getIntent();\n        // Potential vulnerability: blindly passing extras\n        intent.setClassName(this, \"com.example.intent_vuln.MainActivity2\");\n        startActivity(intent);\n    }\n}",
+          "context": "explanation"
+        }
+      ],
+      "difficulty": "intermediate",
+      "question_type": "scenario",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "ANDROID_INTS_BASICS",
+        "APPLICATION_SECURITY_PRINCIPLES"
+      ],
+      "_code_snippets_html": "<div class=\"code-snippet code-explanation\">\n<span class=\"code-label\">Code Example</span>\n<pre><code class=\"language-java\">// Exported Activity\npublic class MainActivity extends Activity {\n    @Override\n    protected void onCreate(Bundle savedInstanceState) {\n        super.onCreate(savedInstanceState);\n        Intent intent = getIntent();\n        // Potential vulnerability: blindly passing extras\n        intent.setClassName(this, &quot;com.example.intent_vuln.MainActivity2&quot;);\n        startActivity(intent);\n    }\n}</code></pre>\n</div>"
+    },
+    {
+      "question_text": "Which of the following is NOT a recommended mitigation for Intent Redirection, according to common Android security practices?",
+      "correct_answer": "Making all components <code>exported=&quot;true&quot;</code> to ensure they can receive intents from anywhere.",
+      "distractors": [
+        {
+          "text": "Properly sanitizing bundled information within intents.",
+          "misconception": "Targets [mitigation confusion]: This is a valid and recommended mitigation technique."
+        },
+        {
+          "text": "Using <code>PendingIntent</code> objects to ensure immutability.",
+          "misconception": "Targets [mitigation confusion]: This is a key mitigation strategy for preventing redirection."
+        },
+        {
+          "text": "Checking the target component's package and class name before launching.",
+          "misconception": "Targets [mitigation confusion]: This is a fundamental validation step to prevent redirection."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Making all components <code>exported=&quot;true&quot;</code> is dangerous because it increases the attack surface, allowing any app to potentially interact with and redirect sensitive components, contrary to security best practices.",
+        "distractor_analysis": "The other options represent valid and recommended security measures for mitigating intent redirection vulnerabilities.",
+        "analogy": "It's like leaving all doors and windows of a secure facility wide open, claiming it makes it easier for authorized personnel to enter, but actually inviting unauthorized access."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "evaluate",
+      "prerequisites": [
+        "ANDROID_INTS_BASICS",
+        "ANDROID_COMPONENT_EXPORTED"
+      ]
+    },
+    {
+      "question_text": "What is the primary difference between Intent Redirection and Intent Spoofing?",
+      "correct_answer": "Intent Redirection involves an attacker controlling the *destination* component launched by an intent, while Intent Spoofing involves an attacker making a malicious app appear as a trusted app when sending an intent.",
+      "distractors": [
+        {
+          "text": "Intent Redirection affects the intent's data payload, while Intent Spoofing affects the intent's sender identity.",
+          "misconception": "Targets [misunderstanding of core concepts]: Redirection is about destination, spoofing is about origin/identity. Payload is secondary to redirection."
+        },
+        {
+          "text": "Intent Redirection is a client-side vulnerability, while Intent Spoofing is a server-side vulnerability.",
+          "misconception": "Targets [platform confusion]: Both are primarily mobile application (client-side) vulnerabilities related to Android's Intent system."
+        },
+        {
+          "text": "Intent Redirection allows data theft, while Intent Spoofing allows unauthorized access.",
+          "misconception": "Targets [impact overlap confusion]: Both can lead to data theft or unauthorized access, but the mechanism differs."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Intent Redirection focuses on manipulating the target component of an intent, whereas Intent Spoofing focuses on impersonating a trusted application when sending an intent, thereby tricking the receiving application about the sender's identity.",
+        "distractor_analysis": "The distractors incorrectly map the vulnerabilities to data payload vs. sender identity, client-side vs. server-side, or specific impacts, rather than the core difference in manipulating the destination vs. the origin.",
+        "analogy": "Intent Redirection is like an attacker changing the address on a package to send it to a restricted area. Intent Spoofing is like an attacker putting a fake return address on the package to make it look like it came from a trusted source."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "comparison",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "ANDROID_INTS_BASICS",
+        "INTENT_SPOOFING_BASICS"
+      ]
+    },
+    {
+      "question_text": "What is the role of <code>IntentSanitizer</code> in mitigating Intent Redirection vulnerabilities?",
+      "correct_answer": "It helps in properly sanitizing bundled information, including checking or clearing flags and verifying redirection targets.",
+      "distractors": [
+        {
+          "text": "It automatically replaces all malicious intents with safe ones.",
+          "misconception": "Targets [overstated capability]: `IntentSanitizer` is a tool to aid sanitization, not a fully automated fix for all malicious intents."
+        },
+        {
+          "text": "It prevents applications from using <code>PendingIntent</code>.",
+          "misconception": "Targets [conflicting functionality]: `IntentSanitizer` works alongside or aids in implementing safe practices like using `PendingIntent`, not preventing them."
+        },
+        {
+          "text": "It enforces that all intents must be explicit.",
+          "misconception": "Targets [misunderstanding of scope]: Sanitization focuses on the *content* and *target validation* of intents, not solely on forcing explicit targeting."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "<code>IntentSanitizer</code> aids in mitigating redirection by providing logic to clean and validate intent extras and flags, because this ensures that potentially malicious data or permissions are not passed along when the intent is redirected.",
+        "distractor_analysis": "The distractors attribute unrealistic capabilities to <code>IntentSanitizer</code>, such as fully automated fixing, preventing <code>PendingIntent</code> usage, or enforcing explicit intents, which are not its primary functions.",
+        "analogy": "It's like a quality control station on an assembly line that inspects parts (intent data/flags) before they are used in the final product (launched component), ensuring no faulty or dangerous components are included."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "ANDROID_INTS_BASICS",
+        "ANDROID_INTENT_FLAGS"
+      ]
+    },
+    {
+      "question_text": "Why is it important to check flags like <code>FLAG_GRANT_READ_URI_PERMISSION</code> when validating redirected intents?",
+      "correct_answer": "These flags grant temporary URI permissions, and an attacker could exploit them via redirection to gain unauthorized access to sensitive data.",
+      "distractors": [
+        {
+          "text": "These flags are deprecated and should not be used.",
+          "misconception": "Targets [outdated information]: These flags are still relevant for managing URI permissions, though their usage requires care."
+        },
+        {
+          "text": "They are only relevant for intents sent between different applications.",
+          "misconception": "Targets [scope confusion]: These flags can affect permissions even within the same application if components are not properly secured."
+        },
+        {
+          "text": "Clearing these flags prevents the intent from being launched.",
+          "misconception": "Targets [incorrect consequence]: Clearing flags might prevent unintended permission grants, but it doesn't necessarily stop the intent launch itself."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Checking flags like <code>FLAG_GRANT_READ_URI_PERMISSION</code> is vital because they control access to specific data URIs; if an attacker can redirect an intent with these flags, they might gain unauthorized read access to sensitive files or content.",
+        "distractor_analysis": "The distractors incorrectly claim the flags are deprecated, only apply to inter-app communication, or that clearing them prevents intent launching, missing the core security concern of unauthorized data access.",
+        "analogy": "It's like checking if a key card (flag) given to someone allows them access to a specific secure room (URI data) before letting them pass through the main gate (redirection)."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "ANDROID_INTS_BASICS",
+        "ANDROID_INTENT_FLAGS",
+        "ANDROID_URI_PERMISSIONS"
+      ]
+    },
+    {
+      "question_text": "What is the primary security benefit of making an app component private (i.e., <code>android:exported=&quot;false&quot;</code>) in the context of Intent Redirection?",
+      "correct_answer": "It prevents external applications or untrusted components from directly sending intents to that component.",
+      "distractors": [
+        {
+          "text": "It automatically encrypts all data passed through intents to that component.",
+          "misconception": "Targets [function confusion]: Export status relates to accessibility, not data encryption."
+        },
+        {
+          "text": "It ensures that the component only accepts explicit intents.",
+          "misconception": "Targets [scope confusion]: Export status controls accessibility; it doesn't dictate whether intents must be explicit or implicit."
+        },
+        {
+          "text": "It disables all intent extras, preventing data manipulation.",
+          "misconception": "Targets [overly restrictive action]: Making a component private doesn't inherently disable its extras; it restricts who can send intents to it."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Making a component private (<code>android:exported=&quot;false&quot;</code>) is a key defense because it restricts access, preventing malicious actors from directly targeting and potentially redirecting that component with crafted intents.",
+        "distractor_analysis": "The distractors incorrectly associate private components with encryption, explicit intent enforcement, or disabling extras, rather than the fundamental security benefit of limiting external access.",
+        "analogy": "It's like locking a private office door; it doesn't encrypt the documents inside or change the type of mail accepted, but it stops unauthorized people from entering and accessing it directly."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "ANDROID_INTS_BASICS",
+        "ANDROID_COMPONENT_EXPORTED"
+      ]
+    },
+    {
+      "question_text": "Consider a scenario where an app uses an <code>Intent.parseUri</code> method on a URI obtained from an untrusted source (like a WebView) and then calls <code>startActivity</code>. What vulnerability is this most susceptible to?",
+      "correct_answer": "Intent Scheme Hijacking",
+      "distractors": [
+        {
+          "text": "Cross-Site Scripting (XSS)",
+          "misconception": "Targets [vulnerability type confusion]: XSS targets web content rendering, not the handling of parsed URIs within the app's native code."
+        },
+        {
+          "text": "Buffer Overflow",
+          "misconception": "Targets [vulnerability type confusion]: This is a memory corruption vulnerability, distinct from how URIs are parsed and intents are constructed."
+        },
+        {
+          "text": "Insecure Data Storage",
+          "misconception": "Targets [vulnerability type confusion]: This relates to how data is saved on the device, not how intents are created from URIs."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Using <code>Intent.parseUri</code> on untrusted input and then launching it with <code>startActivity</code> is susceptible to Intent Scheme Hijacking because the attacker can craft a malicious URI that, when parsed, creates an intent targeting sensitive components.",
+        "distractor_analysis": "The distractors represent unrelated vulnerabilities: XSS targets web rendering, Buffer Overflow targets memory safety, and Insecure Data Storage targets persistence mechanisms.",
+        "analogy": "It's like reading instructions from a random note found on the street (untrusted URI) to assemble a device (create an intent) and then activating it (startActivity), potentially causing it to malfunction dangerously."
+      },
+      "code_snippets": [
+        {
+          "language": "java",
+          "code": "// Potentially vulnerable code\nString untrustedUri = \"...\"; // From WebView\nIntent intent = Intent.parseUri(untrustedUri, Intent.URI_INTENT_SCHEME);\nstartActivity(intent);",
+          "context": "explanation"
+        }
+      ],
+      "difficulty": "advanced",
+      "question_type": "scenario",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "ANDROID_INTS_BASICS",
+        "ANDROID_WEBVIEW_SECURITY",
+        "DEEP_LINK_SECURITY"
+      ],
+      "_code_snippets_html": "<div class=\"code-snippet code-explanation\">\n<span class=\"code-label\">Code Example</span>\n<pre><code class=\"language-java\">// Potentially vulnerable code\nString untrustedUri = &quot;...&quot;; // From WebView\nIntent intent = Intent.parseUri(untrustedUri, Intent.URI_INTENT_SCHEME);\nstartActivity(intent);</code></pre>\n</div>"
+    }
+  ],
+  "generation_metadata": {
+    "model": "google/gemini-2.5-flash-lite",
+    "num_generated": 16,
+    "temperature": 0.1,
+    "web_citations": [],
+    "research_method": "openrouter_web_plugin",
+    "search_query": "Intent Redirection Vulnerabilities 008_Application Security best practices",
+    "latency_ms": 26944.135
+  },
+  "timestamp": "2026-01-18T12:27:49.723809"
+}

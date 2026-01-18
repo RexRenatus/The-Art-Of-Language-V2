@@ -1,0 +1,791 @@
+{
+  "topic_title": "Cross-Origin Resource Sharing (CORS)",
+  "category": "008_Application Security - Web 008_Application Security",
+  "flashcards": [
+    {
+      "question_text": "What is the primary security mechanism that browsers enforce to prevent scripts from making requests to a different origin than the one that served the script?",
+      "correct_answer": "The Same-Origin Policy (SOP)",
+      "distractors": [
+        {
+          "text": "Cross-Origin Resource Sharing (CORS)",
+          "misconception": "Targets [mechanism confusion]: Confuses the policy that *allows* cross-origin requests with the policy that *restricts* them by default."
+        },
+        {
+          "text": "Content Security Policy (CSP)",
+          "misconception": "Targets [scope confusion]: CSP controls resource loading but doesn't directly enforce the SOP for script-initiated requests."
+        },
+        {
+          "text": "Cross-Origin Isolation (COI)",
+          "misconception": "Targets [related concept confusion]: COI is a more advanced security feature that builds upon SOP and CORS, not the primary restriction itself."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The Same-Origin Policy (SOP) is a fundamental browser security feature that restricts how a document or script loaded from one origin can interact with resources from another origin. CORS is a mechanism that *allows* controlled exceptions to the SOP, but the SOP is the default restriction.",
+        "distractor_analysis": "CORS is often discussed alongside SOP, leading to confusion. CSP is a related but distinct security header. COI is a more advanced concept that relies on SOP and CORS.",
+        "analogy": "Think of the Same-Origin Policy as a bouncer at a club who initially denies entry to anyone not from the 'same origin' (the club's neighborhood). CORS is like a special guest list that the bouncer checks to allow specific, authorized visitors."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "ORIGIN_DEFINITION",
+        "HTTP_BASICS"
+      ]
+    },
+    {
+      "question_text": "Which HTTP response header is used by a server to indicate which origins are permitted to access its resources when a cross-origin request is made?",
+      "correct_answer": "Access-Control-Allow-Origin",
+      "distractors": [
+        {
+          "text": "Access-Control-Request-Origin",
+          "misconception": "Targets [header confusion]: This header is part of the *request* from the browser, not the *response* from the server."
+        },
+        {
+          "text": "Content-Security-Policy",
+          "misconception": "Targets [policy confusion]: CSP controls resource loading and execution, but not direct cross-origin data access via XHR/fetch."
+        },
+        {
+          "text": "Access-Control-Allow-Methods",
+          "misconception": "Targets [header scope confusion]: This header specifies allowed HTTP methods (GET, POST, etc.), not the allowed origins."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The <code>Access-Control-Allow-Origin</code> response header is crucial because it explicitly tells the browser which origins (domains, schemes, or ports) are allowed to access the server's resources. Without this header, or with a mismatch, the browser will block the request due to the Same-Origin Policy.",
+        "distractor_analysis": "The distractors represent common confusions: mistaking a request header for a response header, confusing CORS headers with other security headers like CSP, or confusing headers that control origins with those that control methods.",
+        "analogy": "Imagine a secure building. <code>Access-Control-Allow-Origin</code> is like the sign on the door stating which specific visitors (origins) are allowed inside. Other signs might list permitted activities (methods) or security protocols, but this one specifically controls *who* can enter."
+      },
+      "code_snippets": [
+        {
+          "language": "text",
+          "code": "Access-Control-Allow-Origin: https://example.com",
+          "context": "explanation"
+        }
+      ],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "HTTP_HEADERS",
+        "CORS_BASICS"
+      ],
+      "_code_snippets_html": "<div class=\"code-snippet code-explanation\">\n<span class=\"code-label\">Code Example</span>\n<pre><code class=\"language-text\">Access-Control-Allow-Origin: https://example.com</code></pre>\n</div>"
+    },
+    {
+      "question_text": "When a browser makes a cross-origin request that is not considered 'simple' (e.g., uses custom headers or non-GET/POST methods), what type of HTTP request does it typically send first to check server permissions?",
+      "correct_answer": "An OPTIONS request (preflight request)",
+      "distractors": [
+        {
+          "text": "A GET request",
+          "misconception": "Targets [request type confusion]: GET is a simple request method and not used for preflight checks."
+        },
+        {
+          "text": "A POST request",
+          "misconception": "Targets [request type confusion]: POST is a common data-sending method, but not the preflight method."
+        },
+        {
+          "text": "A HEAD request",
+          "misconception": "Targets [request type confusion]: HEAD is similar to GET but only retrieves headers, not used for CORS preflight."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "For non-simple cross-origin requests, browsers send an HTTP OPTIONS request, known as a 'preflight' request, *before* the actual request. This preflight request asks the server if it permits the intended method and headers, allowing the browser to block the request early if unauthorized. This mechanism prevents potentially harmful requests from being sent.",
+        "distractor_analysis": "The distractors are other common HTTP methods. Students might confuse the preflight request with the actual data-requesting methods like GET or POST, or a less common method like HEAD.",
+        "analogy": "Before a diplomat (the actual request) enters a foreign country (the target origin), an advance team (the OPTIONS preflight request) is sent to confirm that the country's security (server permissions) allows the diplomat's specific credentials and purpose (method and headers)."
+      },
+      "code_snippets": [
+        {
+          "language": "text",
+          "code": "OPTIONS /data.json HTTP/1.1\nHost: domain-b.com\nOrigin: https://domain-a.com\nAccess-Control-Request-Method: GET\nAccess-Control-Request-Headers: Authorization",
+          "context": "explanation"
+        }
+      ],
+      "difficulty": "intermediate",
+      "question_type": "procedure",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "HTTP_METHODS",
+        "CORS_PREFLIGHT"
+      ],
+      "_code_snippets_html": "<div class=\"code-snippet code-explanation\">\n<span class=\"code-label\">Code Example</span>\n<pre><code class=\"language-text\">OPTIONS /data.json HTTP/1.1\nHost: domain-b.com\nOrigin: https://domain-a.com\nAccess-Control-Request-Method: GET\nAccess-Control-Request-Headers: Authorization</code></pre>\n</div>"
+    },
+    {
+      "question_text": "What is the security implication of a web server misconfiguring its <code>Access-Control-Allow-Origin</code> header to <code>*</code> when it also allows credentialed requests?",
+      "correct_answer": "It allows any origin, including malicious ones, to make authenticated requests, potentially leading to unauthorized data access or CSRF attacks.",
+      "distractors": [
+        {
+          "text": "It prevents any cross-origin requests, effectively disabling CORS.",
+          "misconception": "Targets [misinterpretation of wildcard]: Confuses the broad allowance of `*` with a complete block."
+        },
+        {
+          "text": "It only allows requests from the same domain, negating the purpose of CORS.",
+          "misconception": "Targets [wildcard scope confusion]: `*` explicitly means *any* origin, not just the same origin."
+        },
+        {
+          "text": "It forces all requests to use the OPTIONS preflight method, slowing down the application.",
+          "misconception": "Targets [mechanism confusion]: The `*` value affects origin allowance, not the necessity of preflight requests for non-simple requests."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Setting <code>Access-Control-Allow-Origin: *</code> is generally safe for non-credentialed requests because the browser will not send credentials (like cookies or HTTP authentication) with such requests. However, if <code>Access-Control-Allow-Credentials</code> is also set to <code>true</code> (or implied), the <code>*</code> wildcard becomes extremely dangerous because it allows *any* origin to make authenticated requests, potentially exposing sensitive user data or enabling CSRF attacks.",
+        "distractor_analysis": "The distractors represent misunderstandings of what <code>*</code> signifies in this context, confusing it with blocking, same-origin restriction, or preflight behavior.",
+        "analogy": "Allowing <code>*</code> for credentialed requests is like leaving the main vault door of a bank wide open with a sign saying 'Authorized personnel only'. While the sign implies a restriction, the open door allows anyone (malicious or not) to attempt entry, and if they can somehow present credentials, they gain access."
+      },
+      "code_snippets": [
+        {
+          "language": "text",
+          "code": "HTTP/1.1 200 OK\nAccess-Control-Allow-Origin: *\nAccess-Control-Allow-Credentials: true",
+          "context": "explanation"
+        }
+      ],
+      "difficulty": "advanced",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "CORS_HEADERS",
+        "CSRF_BASICS",
+        "AUTHENTICATION_PRINCIPLES"
+      ],
+      "_code_snippets_html": "<div class=\"code-snippet code-explanation\">\n<span class=\"code-label\">Code Example</span>\n<pre><code class=\"language-text\">HTTP/1.1 200 OK\nAccess-Control-Allow-Origin: *\nAccess-Control-Allow-Credentials: true</code></pre>\n</div>"
+    },
+    {
+      "question_text": "A web application uses JavaScript's <code>fetch()</code> API to retrieve data from a third-party API. The request fails with a CORS error in the browser console. What is the MOST likely cause?",
+      "correct_answer": "The server hosting the third-party API has not configured its <code>Access-Control-Allow-Origin</code> header to permit requests from the web application's origin.",
+      "distractors": [
+        {
+          "text": "The JavaScript <code>fetch()</code> call is syntactically incorrect.",
+          "misconception": "Targets [error source confusion]: While syntax errors can occur, CORS errors specifically point to cross-origin policy violations, not JS syntax."
+        },
+        {
+          "text": "The web application's server is blocking the <code>fetch()</code> request.",
+          "misconception": "Targets [request flow confusion]: The browser enforces CORS *before* the request even fully reaches the target server if the origin isn't allowed."
+        },
+        {
+          "text": "The <code>Content-Type</code> header in the <code>fetch()</code> request is incorrect.",
+          "misconception": "Targets [specific header confusion]: While incorrect headers can cause issues, the primary CORS failure is usually the `Access-Control-Allow-Origin` header on the response."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "CORS errors in the browser console typically indicate that the browser, enforcing the Same-Origin Policy, blocked a cross-origin request because the server did not provide the necessary <code>Access-Control-Allow-Origin</code> header in its response, or the header's value did not match the requesting origin. The <code>fetch()</code> API itself is just the tool initiating the request.",
+        "distractor_analysis": "The distractors represent other potential points of failure: JavaScript syntax errors, server-side blocking (which is different from browser-enforced CORS), or incorrect request headers, none of which are the *primary* cause of a typical CORS error.",
+        "analogy": "You're trying to order food from a restaurant (API) from your home (web app origin). The delivery driver (browser) gets to the restaurant, but the restaurant's policy (CORS headers) doesn't allow orders from your neighborhood (origin). The driver can't complete the order, even if your order form (fetch call) was perfect and your own kitchen (web app server) is fine."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "scenario",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "CORS_BASICS",
+        "HTTP_REQUEST_RESPONSE",
+        "BROWSER_SECURITY"
+      ]
+    },
+    {
+      "question_text": "Which of the following is a recommended best practice for configuring CORS to minimize security risks?",
+      "correct_answer": "Specify the exact origins allowed, rather than using a wildcard (<code>*</code>), especially for credentialed requests.",
+      "distractors": [
+        {
+          "text": "Always use <code>Access-Control-Allow-Origin: *</code> for all responses to simplify development.",
+          "misconception": "Targets [overly permissive configuration]: Using `*` is insecure when credentials are involved or when sensitive data is exposed."
+        },
+        {
+          "text": "Disable CORS entirely if possible to prevent any cross-origin access.",
+          "misconception": "Targets [overly restrictive configuration]: Disabling CORS breaks legitimate cross-origin functionality needed by many modern web applications."
+        },
+        {
+          "text": "Reflect the incoming <code>Origin</code> header directly in the <code>Access-Control-Allow-Origin</code> response.",
+          "misconception": "Targets [unsafe reflection]: Reflecting the origin header without validation can be vulnerable if the `Origin` header can be spoofed or manipulated."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Best practice dictates the principle of least privilege. For CORS, this means explicitly listing only the specific origins that *need* to access your resources. Using <code>*</code> is only appropriate for public, non-credentialed resources. Reflecting the <code>Origin</code> header directly can be risky if the header itself is compromised or if the server doesn't properly validate it against an allow-list.",
+        "distractor_analysis": "The distractors represent common anti-patterns: overly permissive settings (<code>*</code>), overly restrictive settings (disabling CORS entirely), and insecure practices like direct reflection of the Origin header.",
+        "analogy": "When giving out invitations to a party, you write down the specific names of guests you want to invite (specific origins), rather than just shouting 'Everyone is welcome!' (<code>*</code>) or locking the door completely (disabling CORS). You also don't just copy the name tag of whoever shows up at the door and let them in based on that alone (reflecting Origin)."
+      },
+      "code_snippets": [
+        {
+          "language": "text",
+          "code": "Access-Control-Allow-Origin: https://trusted-client.example.com",
+          "context": "explanation"
+        }
+      ],
+      "difficulty": "advanced",
+      "question_type": "defense",
+      "bloom_level": "evaluate",
+      "prerequisites": [
+        "CORS_CONFIG",
+        "LEAST_PRIVILEGE"
+      ],
+      "_code_snippets_html": "<div class=\"code-snippet code-explanation\">\n<span class=\"code-label\">Code Example</span>\n<pre><code class=\"language-text\">Access-Control-Allow-Origin: https://trusted-client.example.com</code></pre>\n</div>"
+    },
+    {
+      "question_text": "What is the purpose of the <code>Access-Control-Allow-Credentials</code> header in CORS?",
+      "correct_answer": "It indicates whether the server permits the browser to send credentials (like cookies or HTTP authentication) with cross-origin requests.",
+      "distractors": [
+        {
+          "text": "It specifies the allowed HTTP methods for cross-origin requests.",
+          "misconception": "Targets [header function confusion]: This is the role of `Access-Control-Allow-Methods`."
+        },
+        {
+          "text": "It defines which custom headers can be sent in a cross-origin request.",
+          "misconception": "Targets [header function confusion]: This is the role of `Access-Control-Allow-Headers`."
+        },
+        {
+          "text": "It allows any origin to access the resource, similar to <code>*</code>.",
+          "misconception": "Targets [wildcard confusion]: `Access-Control-Allow-Credentials` controls *whether* credentials can be sent, not *which* origins can send requests."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The <code>Access-Control-Allow-Credentials</code> header is a response header that tells the browser whether it should allow the actual cross-origin request to include credentials. If this header is absent or set to <code>false</code>, browsers will block requests that attempt to send credentials. If set to <code>true</code>, it permits credentialed requests, but *only* if the <code>Access-Control-Allow-Origin</code> header is also set to a specific origin (not <code>*</code>).",
+        "distractor_analysis": "The distractors confuse <code>Access-Control-Allow-Credentials</code> with other CORS-related headers (<code>Access-Control-Allow-Methods</code>, <code>Access-Control-Allow-Headers</code>) or with the wildcard origin allowance.",
+        "analogy": "Imagine a VIP lounge requiring a special pass. <code>Access-Control-Allow-Credentials</code> is like the bouncer checking if you have the *right type of pass* (credentials) to enter. The <code>Access-Control-Allow-Origin</code> header is like the list of *who is allowed* to even approach the lounge."
+      },
+      "code_snippets": [
+        {
+          "language": "text",
+          "code": "Access-Control-Allow-Credentials: true",
+          "context": "explanation"
+        }
+      ],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "CORS_HEADERS",
+        "AUTHENTICATION_METHODS"
+      ],
+      "_code_snippets_html": "<div class=\"code-snippet code-explanation\">\n<span class=\"code-label\">Code Example</span>\n<pre><code class=\"language-text\">Access-Control-Allow-Credentials: true</code></pre>\n</div>"
+    },
+    {
+      "question_text": "Consider a scenario where a web page served from <code>https://app.example.com</code> needs to fetch user profile data from an API at <code>https://api.example.com</code>. Both domains are controlled by the same organization. What is the MOST appropriate CORS configuration on <code>https://api.example.com</code>?",
+      "correct_answer": "Set <code>Access-Control-Allow-Origin: https://app.example.com</code>.",
+      "distractors": [
+        {
+          "text": "Set <code>Access-Control-Allow-Origin: *</code>.",
+          "misconception": "Targets [least privilege violation]: While technically allowed by the same organization, using `*` is overly permissive and violates the principle of least privilege."
+        },
+        {
+          "text": "Do not send any <code>Access-Control-Allow-Origin</code> header.",
+          "misconception": "Targets [SOP misunderstanding]: The browser's Same-Origin Policy would block the request by default, even though both domains are related."
+        },
+        {
+          "text": "Set <code>Access-Control-Allow-Origin: https://api.example.com</code>.",
+          "misconception": "Targets [origin confusion]: The `Access-Control-Allow-Origin` header should list the *client's* origin, not the server's own origin."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Even when domains are related or controlled by the same entity, the browser enforces the Same-Origin Policy for JavaScript-initiated requests. Therefore, the API server (<code>https://api.example.com</code>) must explicitly allow the requesting origin (<code>https://app.example.com</code>) using the <code>Access-Control-Allow-Origin</code> header. Using <code>*</code> is less secure than specifying the exact origin, adhering to the principle of least privilege.",
+        "distractor_analysis": "The distractors represent common mistakes: overly broad permissions (<code>*</code>), incorrectly assuming same-organization domains bypass SOP, and misconfiguring the header to reflect the server's own origin.",
+        "analogy": "A company has two departments: Sales (<code>app.example.com</code>) and Inventory (<code>api.example.com</code>). Sales needs to request inventory data. The Inventory department's door (API) needs a sign saying 'Sales Department personnel allowed' (<code>Access-Control-Allow-Origin: https://app.example.com</code>), not 'Anyone allowed' (<code>*</code>) or no sign at all (no header)."
+      },
+      "code_snippets": [
+        {
+          "language": "text",
+          "code": "Access-Control-Allow-Origin: https://app.example.com",
+          "context": "explanation"
+        }
+      ],
+      "difficulty": "intermediate",
+      "question_type": "scenario",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "CORS_BASICS",
+        "ORIGIN_DEFINITION",
+        "LEAST_PRIVILEGE"
+      ],
+      "_code_snippets_html": "<div class=\"code-snippet code-explanation\">\n<span class=\"code-label\">Code Example</span>\n<pre><code class=\"language-text\">Access-Control-Allow-Origin: https://app.example.com</code></pre>\n</div>"
+    },
+    {
+      "question_text": "What is the primary security benefit of using CORS preflight requests (OPTIONS method)?",
+      "correct_answer": "It allows the server to inform the browser about the allowed methods and headers *before* the actual potentially sensitive request is sent, preventing unauthorized actions.",
+      "distractors": [
+        {
+          "text": "It encrypts the request headers to protect sensitive information.",
+          "misconception": "Targets [mechanism confusion]: Preflight requests do not encrypt headers; they are used for permission checks."
+        },
+        {
+          "text": "It caches the server's response to speed up subsequent requests.",
+          "misconception": "Targets [function confusion]: While CORS responses can be cached (via `Access-Control-Max-Age`), the primary purpose of the preflight *request* is not caching."
+        },
+        {
+          "text": "It bypasses the Same-Origin Policy for all requests.",
+          "misconception": "Targets [policy misunderstanding]: CORS *controls* exceptions to the SOP; it doesn't bypass it entirely. Preflight is part of this controlled exception."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The OPTIONS preflight request serves as a security check. By sending it first, the browser can determine if the server permits the specific HTTP method and headers the actual request intends to use. If the server's response (via <code>Access-Control-Allow-Methods</code> and <code>Access-Control-Allow-Headers</code>) indicates that the intended request is not allowed, the browser blocks it, thus preventing potentially harmful operations or data leakage.",
+        "distractor_analysis": "The distractors misrepresent the function of preflight requests, attributing encryption, caching as the primary goal, or incorrectly stating it bypasses the SOP.",
+        "analogy": "Before sending a formal letter (actual request) with specific attachments (headers) to a government office (server), you first send a query (OPTIONS preflight) asking if they accept letters of that type and with those attachments. If they say no, you don't waste time sending the actual letter."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "CORS_PREFLIGHT",
+        "HTTP_METHODS",
+        "BROWSER_SECURITY"
+      ]
+    },
+    {
+      "question_text": "Which of the following is a potential security risk associated with improperly configured CORS, specifically related to the <code>Origin</code> header?",
+      "correct_answer": "A server might blindly trust the <code>Origin</code> header and allow requests from spoofed origins if not properly validated against an allow-list.",
+      "distractors": [
+        {
+          "text": "The browser will always block requests if the <code>Origin</code> header is missing.",
+          "misconception": "Targets [browser behavior misunderstanding]: The browser *sends* the Origin header for CORS requests; it doesn't block based on its absence, but rather on the server's response."
+        },
+        {
+          "text": "The <code>Origin</code> header itself is encrypted by the browser, making it secure.",
+          "misconception": "Targets [protocol misunderstanding]: The `Origin` header is sent in plain text (within HTTPS) and is not inherently encrypted."
+        },
+        {
+          "text": "JavaScript can easily modify the <code>Origin</code> header to bypass CORS checks.",
+          "misconception": "Targets [browser security misunderstanding]: Browsers prevent JavaScript from modifying the `Origin` header for security reasons."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "While browsers automatically add the <code>Origin</code> header to CORS requests and prevent JavaScript from altering it, servers must not implicitly trust this header. A server should validate the <code>Origin</code> header against a pre-defined list of allowed origins. If a server reflects the <code>Origin</code> header directly in <code>Access-Control-Allow-Origin</code> without validation, or allows requests based solely on its presence, it can be vulnerable if the header is somehow spoofed (e.g., via a proxy) or if the server's logic is flawed.",
+        "distractor_analysis": "The distractors incorrectly describe browser behavior regarding missing headers, header encryption, and JavaScript's ability to modify the <code>Origin</code> header.",
+        "analogy": "A receptionist (server) receives a visitor's ID badge (Origin header). The receptionist should check the badge against a list of authorized employees (allow-list). Simply accepting any badge presented without checking the list could let unauthorized people in."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "CORS_HEADERS",
+        "ORIGIN_HEADER",
+        "INPUT_VALIDATION"
+      ]
+    },
+    {
+      "question_text": "What is the role of the <code>Cross-Origin-Resource-Policy</code> (CORP) header in browser security?",
+      "correct_answer": "It allows websites to control whether resources loaded via elements like <code>&lt;img&gt;</code> or <code>&lt;script&gt;</code> can be accessed by cross-origin requests, mitigating side-channel attacks.",
+      "distractors": [
+        {
+          "text": "It enables JavaScript to make requests to any origin without restriction.",
+          "misconception": "Targets [policy confusion]: CORP restricts access *to* resources, it doesn't enable cross-origin JavaScript requests."
+        },
+        {
+          "text": "It forces all cross-origin requests to use the OPTIONS preflight method.",
+          "misconception": "Targets [mechanism confusion]: Preflight requests are part of CORS, not CORP. CORP is a response header that affects how the browser *uses* loaded resources."
+        },
+        {
+          "text": "It encrypts the data transferred between different origins.",
+          "misconception": "Targets [function confusion]: CORP is an access control policy, not an encryption mechanism."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The <code>Cross-Origin-Resource-Policy</code> (CORP) header is a security measure that allows a server to declare whether a resource can be loaded by cross-origin requests. It helps protect against certain types of attacks, like speculative side-channel attacks (e.g., Spectre), by ensuring that sensitive resources are only loaded by same-origin or same-site contexts when necessary. It works by instructing the browser to block the *result* of a <code>no-cors</code> request if the policy isn't met.",
+        "distractor_analysis": "The distractors confuse CORP with CORS, misattribute its function to enabling JavaScript requests, preflight checks, or encryption.",
+        "analogy": "Imagine a private art gallery (resource). CORP is like a sign on the gallery door stating who is allowed to view the art: 'Only gallery members' (<code>same-origin</code>), 'Only members and their immediate guests' (<code>same-site</code>), or 'Anyone can view' (<code>cross-origin</code>). It controls *who gets to see the art*, not how they request access."
+      },
+      "code_snippets": [
+        {
+          "language": "text",
+          "code": "Cross-Origin-Resource-Policy: same-origin",
+          "context": "explanation"
+        }
+      ],
+      "difficulty": "advanced",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "CORP_BASICS",
+        "SIDE_CHANNEL_ATTACKS"
+      ],
+      "_code_snippets_html": "<div class=\"code-snippet code-explanation\">\n<span class=\"code-label\">Code Example</span>\n<pre><code class=\"language-text\">Cross-Origin-Resource-Policy: same-origin</code></pre>\n</div>"
+    },
+    {
+      "question_text": "Which value for the <code>Cross-Origin-Resource-Policy</code> (CORP) header restricts resource loading to only requests originating from the exact same scheme, host, and port?",
+      "correct_answer": "<code>same-origin</code>",
+      "distractors": [
+        {
+          "text": "<code>same-site</code>",
+          "misconception": "Targets [scope confusion]: `same-site` allows requests from different subdomains within the same registrable domain (e.g., `app.example.com` and `api.example.com`)."
+        },
+        {
+          "text": "<code>cross-origin</code>",
+          "misconception": "Targets [scope confusion]: `cross-origin` allows requests from any origin, effectively disabling the policy's restriction."
+        },
+        {
+          "text": "<code>restricted</code>",
+          "misconception": "Targets [invalid value]: `restricted` is not a valid value for the `Cross-Origin-Resource-Policy` header."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The <code>Cross-Origin-Resource-Policy</code> header accepts three values: <code>same-origin</code>, <code>same-site</code>, and <code>cross-origin</code>. The <code>same-origin</code> value strictly enforces that the resource can only be loaded if the request originates from the exact same scheme, host, and port as the resource itself. This provides the strongest protection against cross-origin embedding.",
+        "distractor_analysis": "The distractors represent other valid CORP values (<code>same-site</code>, <code>cross-origin</code>) or an invalid value, testing the understanding of the specific scope each value provides.",
+        "analogy": "Imagine a private club. <code>same-origin</code> means only members with the exact same membership card number (scheme, host, port) can enter. <code>same-site</code> would be like allowing members of the same club *and* members of its sister clubs. <code>cross-origin</code> would be like allowing anyone with any membership card."
+      },
+      "code_snippets": [
+        {
+          "language": "text",
+          "code": "Cross-Origin-Resource-Policy: same-origin",
+          "context": "explanation"
+        }
+      ],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "CORP_VALUES",
+        "ORIGIN_DEFINITION"
+      ],
+      "_code_snippets_html": "<div class=\"code-snippet code-explanation\">\n<span class=\"code-label\">Code Example</span>\n<pre><code class=\"language-text\">Cross-Origin-Resource-Policy: same-origin</code></pre>\n</div>"
+    },
+    {
+      "question_text": "How does CORS relate to the browser's Same-Origin Policy (SOP)?",
+      "correct_answer": "CORS provides a mechanism for servers to explicitly relax the restrictions imposed by the SOP, allowing controlled cross-origin resource sharing.",
+      "distractors": [
+        {
+          "text": "CORS completely replaces the SOP, removing all cross-origin restrictions.",
+          "misconception": "Targets [policy replacement confusion]: CORS works *with* the SOP, not as a replacement. The SOP is the default, CORS is the exception."
+        },
+        {
+          "text": "The SOP is only enforced for non-CORS requests; CORS requests bypass it entirely.",
+          "misconception": "Targets [bypass misunderstanding]: CORS requests are still subject to SOP checks; CORS headers determine if the check passes."
+        },
+        {
+          "text": "CORS is a browser-only policy, while the SOP is a server-side policy.",
+          "misconception": "Targets [policy enforcement confusion]: Both SOP and CORS are primarily enforced by the browser, based on server-provided headers."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The Same-Origin Policy (SOP) is the default security model in browsers that prevents scripts from accessing resources from a different origin. Cross-Origin Resource Sharing (CORS) is a set of HTTP headers that allows a server to communicate with the browser, indicating which origins are permitted to access its resources. Essentially, CORS defines the rules for *exceptions* to the SOP, enabling secure cross-origin communication.",
+        "distractor_analysis": "The distractors incorrectly suggest CORS replaces or bypasses the SOP, or misattribute the enforcement mechanism.",
+        "analogy": "The SOP is like a strict rule: 'You can only talk to people from your own neighborhood.' CORS is like a special permit system: 'If someone from another neighborhood has this specific permit (CORS headers), you are allowed to talk to them.'"
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "comparison",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SOP_BASICS",
+        "CORS_BASICS"
+      ]
+    },
+    {
+      "question_text": "Which of the following is NOT a typical component of a CORS preflight request?",
+      "correct_answer": "The actual request body containing data to be sent.",
+      "distractors": [
+        {
+          "text": "The <code>Origin</code> header indicating the requesting origin.",
+          "misconception": "Targets [request component confusion]: The `Origin` header is fundamental to identifying the cross-origin context."
+        },
+        {
+          "text": "The <code>Access-Control-Request-Method</code> header specifying the intended HTTP method.",
+          "misconception": "Targets [request component confusion]: This header informs the server about the method the actual request will use."
+        },
+        {
+          "text": "The <code>Access-Control-Request-Headers</code> header listing the intended custom headers.",
+          "misconception": "Targets [request component confusion]: This header informs the server about any custom headers the actual request will include."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "A CORS preflight request (using the OPTIONS method) is designed solely to check permissions *before* the actual request is made. Therefore, it includes headers like <code>Origin</code>, <code>Access-Control-Request-Method</code>, and <code>Access-Control-Request-Headers</code> to inform the server about the intended request. It does *not* include the request body, as that data is part of the actual request that hasn't been sent yet.",
+        "distractor_analysis": "The distractors list essential components of a preflight request, while the correct answer describes something that belongs to the *actual* request, not the preflight check.",
+        "analogy": "Before sending a package (actual request) with specific contents (body) via a special courier (method) and including a unique tracking slip (custom headers), you first call the courier company (preflight OPTIONS request) to confirm they accept packages of that type and with those specific tracking slips. You don't send the package contents in that initial call."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "CORS_PREFLIGHT",
+        "HTTP_REQUEST_STRUCTURE"
+      ]
+    },
+    {
+      "question_text": "What is the security risk if a web application allows <code>Access-Control-Allow-Origin: *</code> and <code>Access-Control-Allow-Credentials: true</code> simultaneously?",
+      "correct_answer": "Any website can make authenticated requests to the server, potentially leading to unauthorized access to user data or session hijacking.",
+      "distractors": [
+        {
+          "text": "The browser will refuse to send any credentials, rendering the configuration useless.",
+          "misconception": "Targets [browser behavior misunderstanding]: Browsers *will* send credentials if both headers permit it, but this combination is insecure."
+        },
+        {
+          "text": "This configuration only affects non-JavaScript initiated requests, like images.",
+          "misconception": "Targets [request scope confusion]: This configuration critically impacts authenticated requests initiated by scripts (e.g., via fetch/XHR)."
+        },
+        {
+          "text": "It forces all requests to be encrypted using TLS, which is unnecessary overhead.",
+          "misconception": "Targets [protocol confusion]: CORS headers do not enforce TLS; that's handled by the transport layer."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The combination of <code>Access-Control-Allow-Origin: *</code> and <code>Access-Control-Allow-Credentials: true</code> is a severe security vulnerability. The wildcard <code>*</code> allows any origin to send a request, and <code>Allow-Credentials: true</code> permits that request to include sensitive credentials (like session cookies). This means any malicious website can craft a request to your server, impersonate a logged-in user, and access or modify their data.",
+        "distractor_analysis": "The distractors incorrectly describe browser behavior, the scope of the vulnerability, or confuse CORS headers with transport layer security (TLS).",
+        "analogy": "It's like having a secure vault (<code>server</code>) with a sign saying 'Anyone can enter' (<code>Access-Control-Allow-Origin: *</code>) and the vault door is left unlocked (<code>Access-Control-Allow-Credentials: true</code>). Anyone, including thieves (malicious websites), can walk in and take whatever they want (user data)."
+      },
+      "code_snippets": [
+        {
+          "language": "text",
+          "code": "HTTP/1.1 200 OK\nAccess-Control-Allow-Origin: *\nAccess-Control-Allow-Credentials: true",
+          "context": "explanation"
+        }
+      ],
+      "difficulty": "expert",
+      "question_type": "attack",
+      "bloom_level": "evaluate",
+      "prerequisites": [
+        "CORS_SECURITY_RISKS",
+        "AUTHENTICATION_VULNERABILITIES",
+        "SESSION_MANAGEMENT"
+      ],
+      "_code_snippets_html": "<div class=\"code-snippet code-explanation\">\n<span class=\"code-label\">Code Example</span>\n<pre><code class=\"language-text\">HTTP/1.1 200 OK\nAccess-Control-Allow-Origin: *\nAccess-Control-Allow-Credentials: true</code></pre>\n</div>"
+    },
+    {
+      "question_text": "What is the purpose of the <code>Access-Control-Expose-Headers</code> response header in CORS?",
+      "correct_answer": "It allows JavaScript code to access specific response headers that are not part of the CORS-safelisted headers.",
+      "distractors": [
+        {
+          "text": "It specifies which HTTP methods are allowed for cross-origin requests.",
+          "misconception": "Targets [header function confusion]: This is the function of `Access-Control-Allow-Methods`."
+        },
+        {
+          "text": "It indicates which origins are permitted to make requests.",
+          "misconception": "Targets [header function confusion]: This is the function of `Access-Control-Allow-Origin`."
+        },
+        {
+          "text": "It controls whether credentials can be sent with the request.",
+          "misconception": "Targets [header function confusion]: This is the function of `Access-Control-Allow-Credentials`."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "By default, browsers only expose a limited set of 'CORS-safelisted' response headers to JavaScript code making cross-origin requests. If a server needs to send custom headers (e.g., for tracking IDs, rate limiting information) that JavaScript needs to read, it must list these headers in the <code>Access-Control-Expose-Headers</code> response header. This allows JavaScript to access these otherwise hidden headers.",
+        "distractor_analysis": "The distractors confuse <code>Access-Control-Expose-Headers</code> with other CORS headers that control methods, origins, or credentials.",
+        "analogy": "Imagine a sealed envelope (response) containing important documents (response body) and a few standard notes (safelisted headers) that the recipient can read. <code>Access-Control-Expose-Headers</code> is like an additional note attached to the envelope saying, 'You are also allowed to read these specific extra documents inside' (custom headers)."
+      },
+      "code_snippets": [
+        {
+          "language": "text",
+          "code": "Access-Control-Expose-Headers: X-RateLimit-Limit, X-RateLimit-Remaining",
+          "context": "explanation"
+        }
+      ],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "CORS_HEADERS",
+        "HTTP_RESPONSE_HEADERS"
+      ],
+      "_code_snippets_html": "<div class=\"code-snippet code-explanation\">\n<span class=\"code-label\">Code Example</span>\n<pre><code class=\"language-text\">Access-Control-Expose-Headers: X-RateLimit-Limit, X-RateLimit-Remaining</code></pre>\n</div>"
+    },
+    {
+      "question_text": "What is the primary security concern addressed by the <code>Cross-Origin Embedder Policy</code> (COEP) header in conjunction with CORS?",
+      "correct_answer": "Preventing cross-origin resources from being embedded in a way that could facilitate speculative side-channel attacks (like Spectre) by requiring resources to be same-origin or explicitly opt-in.",
+      "distractors": [
+        {
+          "text": "Allowing JavaScript to make requests to any external API without restriction.",
+          "misconception": "Targets [policy confusion]: COEP restricts embedding, it doesn't enable arbitrary cross-origin requests."
+        },
+        {
+          "text": "Ensuring that all cross-origin requests are encrypted using TLS.",
+          "misconception": "Targets [protocol confusion]: COEP is an application-level policy, not related to transport layer encryption."
+        },
+        {
+          "text": "Blocking all cross-origin requests by default to enhance security.",
+          "misconception": "Targets [overly restrictive misunderstanding]: COEP works with CORP to allow specific cross-origin resources under controlled conditions."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The <code>Cross-Origin Embedder Policy</code> (COEP) header, often used with <code>Cross-Origin-Resource-Policy</code> (CORP), aims to create a more isolated browsing context. By requiring documents to either load resources from the same origin or from origins that explicitly opt-in via CORP, it helps mitigate vulnerabilities like Spectre, which exploit the ability to load and process data from cross-origin contexts in ways that can leak information. This isolation is crucial for protecting sensitive operations.",
+        "distractor_analysis": "The distractors misrepresent COEP's purpose, confusing it with enabling requests, enforcing TLS, or a blanket block on all cross-origin activity.",
+        "analogy": "Imagine building a secure facility (web page). COEP is like setting strict rules for what materials (resources) can be brought in. Only materials from your own factory (<code>same-origin</code>) are allowed by default. Materials from outside (<code>cross-origin</code>) are only permitted if they come with a special 'certified safe' label (<code>CORP</code> header), preventing potentially dangerous items that could be used in attacks."
+      },
+      "code_snippets": [
+        {
+          "language": "text",
+          "code": "Cross-Origin-Embedder-Policy: require-corp",
+          "context": "explanation"
+        }
+      ],
+      "difficulty": "expert",
+      "question_type": "defense",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "COEP_BASICS",
+        "SPECTRE_ATTACK",
+        "CORP_RELATIONSHIP"
+      ],
+      "_code_snippets_html": "<div class=\"code-snippet code-explanation\">\n<span class=\"code-label\">Code Example</span>\n<pre><code class=\"language-text\">Cross-Origin-Embedder-Policy: require-corp</code></pre>\n</div>"
+    },
+    {
+      "question_text": "In the context of CORS, what does the term 'origin' refer to?",
+      "correct_answer": "The combination of scheme (protocol), host (domain name), and port number.",
+      "distractors": [
+        {
+          "text": "Only the domain name (host).",
+          "misconception": "Targets [origin component omission]: Ignores the scheme and port, which are critical parts of an origin."
+        },
+        {
+          "text": "The domain name and the IP address.",
+          "misconception": "Targets [origin component confusion]: IP address is not part of the origin definition; domain name is used."
+        },
+        {
+          "text": "Any resource accessible via HTTP or HTTPS.",
+          "misconception": "Targets [vague definition]: This is too broad and doesn't define the specific components of an origin."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The 'origin' is a fundamental concept in browser security, particularly for the Same-Origin Policy and CORS. It is defined as the unique combination of the scheme (e.g., <code>http</code>, <code>https</code>), the host (e.g., <code>www.example.com</code>), and the port number (e.g., <code>80</code>, <code>443</code>, <code>8080</code>). Resources share the same origin only if all three components match exactly.",
+        "distractor_analysis": "The distractors incorrectly define origin by omitting essential components (scheme, port) or including irrelevant ones (IP address).",
+        "analogy": "Think of an address: 'Street Name' (host), 'House Number' (port), and 'City/State' (scheme). All three must match exactly for it to be the same specific location (origin)."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "remember",
+      "prerequisites": [
+        "URL_STRUCTURE",
+        "HTTP_BASICS"
+      ]
+    },
+    {
+      "question_text": "Which of the following is considered a 'simple' request in the context of CORS, meaning it typically does not require a preflight OPTIONS request?",
+      "correct_answer": "A GET request with only standard headers (like <code>Accept</code>, <code>Accept-Language</code>, <code>Content-Language</code>, <code>Last-Event-ID</code>).",
+      "distractors": [
+        {
+          "text": "A POST request with a custom <code>X-API-Key</code> header.",
+          "misconception": "Targets [simple request definition]: Custom headers like `X-API-Key` make the request non-simple and require a preflight."
+        },
+        {
+          "text": "A PUT request to update a resource.",
+          "misconception": "Targets [simple request definition]: PUT is a non-simple HTTP method that requires a preflight."
+        },
+        {
+          "text": "A request using <code>XMLHttpRequest</code> with <code>withCredentials</code> set to <code>true</code>.",
+          "misconception": "Targets [simple request definition]: Requests with credentials are not considered simple and require a preflight."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "CORS defines 'simple' requests as those that meet specific criteria: they must use one of the safe methods (GET, HEAD, POST), and they can only include specific, limited headers (like <code>Accept</code>, <code>Accept-Language</code>, <code>Content-Language</code>, <code>Content-Type</code> with specific values). Requests that deviate from these (e.g., using PUT/DELETE, custom headers, or sending credentials) are considered non-simple and trigger a preflight OPTIONS request.",
+        "distractor_analysis": "The distractors represent common scenarios that violate the definition of a simple request, either by using non-simple methods, custom headers, or by including credentials.",
+        "analogy": "A 'simple' request is like sending a postcard: standard format, no special handling required. A non-simple request is like sending a registered package: requires special forms (headers), specific courier (method), and proof of identity (credentials), necessitating a preliminary check (preflight)."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "CORS_PREFLIGHT",
+        "HTTP_METHODS",
+        "HTTP_HEADERS"
+      ]
+    },
+    {
+      "question_text": "What is the primary security risk of allowing a web application to embed resources from untrusted origins without proper controls like CORP?",
+      "correct_answer": "The untrusted resource could potentially execute malicious scripts or exploit browser vulnerabilities (like Spectre) to access sensitive data from the main page's origin.",
+      "distractors": [
+        {
+          "text": "It will cause the browser to crash due to excessive resource loading.",
+          "misconception": "Targets [performance vs security confusion]: While excessive loading can impact performance, the primary risk is security, not just crashing."
+        },
+        {
+          "text": "The browser will automatically encrypt all data transferred from the untrusted origin.",
+          "misconception": "Targets [protocol confusion]: Embedding resources doesn't automatically encrypt data; security relies on policies like CORP and CORS."
+        },
+        {
+          "text": "It allows the untrusted origin to directly modify the main page's HTML.",
+          "misconception": "Targets [DOM manipulation misunderstanding]: While possible in some contexts, the main risk addressed by CORP is data leakage via side-channels, not direct DOM manipulation by default."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "When a web page embeds resources (e.g., images, scripts, iframes) from other origins, these embedded resources can potentially interact with the main page's context. Without policies like <code>Cross-Origin-Resource-Policy</code> (CORP), an untrusted embedded resource might be able to exploit browser vulnerabilities (like Spectre) to read data from the main page's origin, or execute scripts that compromise the user's session. CORP helps mitigate this by restricting which origins can embed specific resources.",
+        "distractor_analysis": "The distractors misrepresent the primary security threat, focusing on performance, incorrect encryption assumptions, or a less direct form of attack (DOM manipulation) compared to data leakage via side-channels.",
+        "analogy": "Allowing untrusted origins to embed resources is like letting strangers into your house (main page's origin) without checking their intentions. They might just look around (Spectre attack), steal valuables (data leakage), or try to redecorate your living room (DOM manipulation), but the most insidious threat is often information theft."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "CORP_BASICS",
+        "EMBEDDING_SECURITY",
+        "SIDE_CHANNEL_ATTACKS"
+      ]
+    },
+    {
+      "question_text": "What is the role of the <code>Access-Control-Allow-Headers</code> response header in CORS?",
+      "correct_answer": "It specifies which HTTP headers the client is allowed to send in a cross-origin request, beyond the CORS-safelisted headers.",
+      "distractors": [
+        {
+          "text": "It lists the HTTP methods allowed for cross-origin requests.",
+          "misconception": "Targets [header function confusion]: This is the role of `Access-Control-Allow-Methods`."
+        },
+        {
+          "text": "It defines the origins permitted to make requests.",
+          "misconception": "Targets [header function confusion]: This is the role of `Access-Control-Allow-Origin`."
+        },
+        {
+          "text": "It indicates whether credentials should be included in the request.",
+          "misconception": "Targets [header function confusion]: This is the role of `Access-Control-Allow-Credentials`."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "When a browser makes a non-simple cross-origin request, it first sends an OPTIONS preflight request. The <code>Access-Control-Allow-Headers</code> response header from the server tells the browser which custom headers (beyond the standard ones) are permitted in the actual request. If the client tries to send a header not listed here (and not a CORS-safelisted header), the browser will block the request.",
+        "distractor_analysis": "The distractors confuse <code>Access-Control-Allow-Headers</code> with other CORS headers that manage methods, origins, or credentials.",
+        "analogy": "When asking permission to enter a secure facility (server) with specific tools (headers), the <code>Access-Control-Allow-Headers</code> is like the security guard listing exactly which tools you are allowed to bring inside. Other guards might check your ID (origin) or what you plan to do (method)."
+      },
+      "code_snippets": [
+        {
+          "language": "text",
+          "code": "Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With",
+          "context": "explanation"
+        }
+      ],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "CORS_PREFLIGHT",
+        "HTTP_HEADERS"
+      ],
+      "_code_snippets_html": "<div class=\"code-snippet code-explanation\">\n<span class=\"code-label\">Code Example</span>\n<pre><code class=\"language-text\">Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With</code></pre>\n</div>"
+    },
+    {
+      "question_text": "Why is it important for web developers to understand CORS and configure it correctly?",
+      "correct_answer": "Incorrect CORS configuration can lead to security vulnerabilities like unauthorized data access, CSRF attacks, or broken application functionality.",
+      "distractors": [
+        {
+          "text": "It is only relevant for developers working with legacy systems.",
+          "misconception": "Targets [relevance misunderstanding]: CORS is fundamental to modern, distributed web applications."
+        },
+        {
+          "text": "Correct CORS configuration primarily improves website performance.",
+          "misconception": "Targets [primary benefit confusion]: While proper configuration avoids unnecessary preflights, the main focus is security and functionality, not performance optimization."
+        },
+        {
+          "text": "Browsers automatically handle CORS correctly, requiring no developer intervention.",
+          "misconception": "Targets [automation misunderstanding]: Browsers enforce policies, but servers must provide the correct headers for cross-origin requests to succeed securely."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Cross-Origin Resource Sharing (CORS) is a critical security mechanism that governs how web applications can interact with resources from different origins. Misconfigurations can have severe consequences: overly permissive settings can expose sensitive data or enable attacks like CSRF, while overly restrictive settings can break legitimate application functionality. Therefore, understanding and correctly implementing CORS is essential for secure and functional web development.",
+        "distractor_analysis": "The distractors downplay CORS's importance, misattribute its primary benefit, or incorrectly suggest it's automated, all of which are common misconceptions.",
+        "analogy": "Understanding CORS is like understanding the rules for sharing tools between different workshops. If you share tools incorrectly, you might let someone borrow a dangerous tool they shouldn't have (security vulnerability), or you might refuse to share a necessary tool, stopping work altogether (broken functionality)."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "CORS_BASICS",
+        "WEB_SECURITY_FUNDAMENTALS"
+      ]
+    }
+  ],
+  "generation_metadata": {
+    "model": "google/gemini-2.5-flash-lite",
+    "num_generated": 22,
+    "temperature": 0.1,
+    "web_citations": [],
+    "research_method": "openrouter_web_plugin",
+    "search_query": "Cross-Origin Resource Sharing (CORS) 008_Application Security best practices",
+    "latency_ms": 45523.5
+  },
+  "timestamp": "2026-01-18T12:16:03.883098"
+}

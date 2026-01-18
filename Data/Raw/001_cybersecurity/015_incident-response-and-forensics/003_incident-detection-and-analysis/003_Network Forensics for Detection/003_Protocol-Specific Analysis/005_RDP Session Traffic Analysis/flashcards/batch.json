@@ -1,0 +1,492 @@
+{
+  "topic_title": "RDP Session Traffic Analysis",
+  "category": "002_Incident Response And Forensics - Incident 002_Detection and Analysis",
+  "flashcards": [
+    {
+      "question_text": "Which log source is MOST critical for detecting initial Remote Desktop Protocol (RDP) connection attempts, including reconnaissance phases?",
+      "correct_answer": "Network connection logs (e.g., Zeek's conn.log, firewall logs) showing connections to the RDP port (typically 3389 TCP).",
+      "distractors": [
+        {
+          "text": "Process creation logs (e.g., Sysmon Event ID 1) showing mstsc.exe execution.",
+          "misconception": "Targets [detection timing]: Focuses on client-side execution rather than network ingress."
+        },
+        {
+          "text": "Windows Security Event Logs (Event ID 4624) with Logon Type 10.",
+          "misconception": "Targets [detection timing]: Captures successful logons, missing the reconnaissance phase."
+        },
+        {
+          "text": "RDP-specific logs (e.g., Zeek's rdp.log) detailing session parameters.",
+          "misconception": "Targets [detection scope]: These logs are useful for post-connection analysis, not initial connection attempts."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Network connection logs are crucial because they capture the initial reconnaissance and connection attempts to the RDP port, often before successful authentication occurs. This allows for early detection of brute-force or scanning activities.",
+        "distractor_analysis": "Process creation logs detect client execution, not server-side connection attempts. Security logs capture successful logins, missing pre-authentication reconnaissance. RDP-specific logs analyze established sessions, not initial probes.",
+        "analogy": "Detecting RDP connection attempts is like monitoring the front door for someone trying different keys (network logs), rather than just seeing them enter the house after they've successfully picked the lock (security logs) or are already inside (RDP logs)."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "RDP_BASICS",
+        "NETWORK_FORENSICS_FUNDAMENTALS"
+      ]
+    },
+    {
+      "question_text": "When analyzing RDP traffic for suspicious activity, what does a high volume of connections to port 3389 from a single source IP address, with minimal data transfer per connection, typically indicate?",
+      "correct_answer": "RDP brute-force or credential stuffing attempts.",
+      "distractors": [
+        {
+          "text": "A legitimate administrative session with extensive file transfers.",
+          "misconception": "Targets [traffic volume/pattern]: Misinterprets high connection count and low data per connection as normal activity."
+        },
+        {
+          "text": "Successful lateral movement using RDP for remote code execution.",
+          "misconception": "Targets [activity type]: Associates high connection volume with execution rather than authentication attempts."
+        },
+        {
+          "text": "A denial-of-service (DoS) attack targeting the RDP service.",
+          "misconception": "Targets [attack vector]: Confuses connection attempts with resource exhaustion attacks."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "A high number of RDP connection attempts from one source, each with minimal data, strongly suggests a brute-force attack. Attackers repeatedly try credentials, establishing and tearing down connections quickly, because they are testing many password combinations.",
+        "distractor_analysis": "Legitimate admin sessions involve more data per connection. Lateral movement often involves fewer, more sustained connections after initial access. DoS attacks aim to overwhelm the service, not necessarily test credentials.",
+        "analogy": "This scenario is like someone repeatedly knocking on a door with different keys, trying to find the right one to get in, rather than having a conversation (legitimate session) or breaking down the door (DoS)."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "RDP_BASICS",
+        "NETWORK_FORENSICS_FUNDAMENTALS",
+        "BRUTE_FORCE_ATTACKS"
+      ]
+    },
+    {
+      "question_text": "According to MITRE ATT&CK, what is the primary tactic associated with the 'Remote Desktop Protocol' (T1021.001) technique?",
+      "correct_answer": "Lateral Movement",
+      "distractors": [
+        {
+          "text": "Credential Access",
+          "misconception": "Targets [tactic confusion]: While credential access might precede RDP use, RDP itself is primarily for movement."
+        },
+        {
+          "text": "Discovery",
+          "misconception": "Targets [tactic confusion]: RDP can be used for discovery, but its main purpose in ATT&CK is movement."
+        },
+        {
+          "text": "Collection",
+          "misconception": "Targets [tactic confusion]: Data collection can occur over RDP, but the technique's core is movement."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The Remote Desktop Protocol (T1021.001) is categorized under the Lateral Movement tactic in MITRE ATT&CK because it enables adversaries to move from one system to another within a network after gaining initial access. It functions by leveraging legitimate remote access protocols.",
+        "distractor_analysis": "Credential Access is about obtaining credentials, Discovery is about mapping the environment, and Collection is about exfiltrating data. While RDP can facilitate these, its primary role in ATT&CK is enabling movement between systems.",
+        "analogy": "Using RDP for lateral movement is like an intruder using a building's internal elevator system to travel between floors after they've already entered the building, rather than just finding keys or looking around."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "MITRE_ATTACK_FRAMEWORK",
+        "RDP_BASICS"
+      ]
+    },
+    {
+      "question_text": "What does the 'LogonType' field with a value of '10' in Windows Security Event Logs typically signify in the context of RDP analysis?",
+      "correct_answer": "RemoteInteractive logon, indicating a user logged in via RDP.",
+      "distractors": [
+        {
+          "text": "Local logon via console session.",
+          "misconception": "Targets [logon type confusion]: Confuses remote interactive logon with local console access."
+        },
+        {
+          "text": "Network logon, often for service accounts.",
+          "misconception": "Targets [logon type confusion]: Distinguishes from network-based authentication."
+        },
+        {
+          "text": "Batch logon, typically for scheduled tasks.",
+          "misconception": "Targets [logon type confusion]: Differentiates from non-interactive, automated logons."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Windows Security Event ID 4624 logs successful logons, and the 'LogonType' field specifies the method. A value of 10 indicates a RemoteInteractive logon, which is characteristic of a user connecting via Remote Desktop Protocol (RDP).",
+        "distractor_analysis": "LogonType 2 is for interactive (console) logons, Type 3 is network, and Type 4 is batch. Type 10 specifically denotes RDP or similar remote graphical sessions.",
+        "analogy": "The LogonType is like a badge indicating how someone entered a building: '10' means they used the remote access portal (RDP), not the main entrance (console) or a service door (network)."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "WINDOWS_EVENT_LOGS",
+        "RDP_BASICS"
+      ]
+    },
+    {
+      "question_text": "When analyzing RDP traffic using Zeek (formerly Bro), what information can be found in the <code>rdp.log</code> file?",
+      "correct_answer": "Details about the RDP session, including security protocols used, capabilities exchanged, and potentially user information.",
+      "distractors": [
+        {
+          "text": "Only the source and destination IP addresses and ports of RDP connections.",
+          "misconception": "Targets [log detail level]: Overlooks the richer session-specific data in rdp.log."
+        },
+        {
+          "text": "Raw packet payloads for deep packet inspection of RDP commands.",
+          "misconception": "Targets [log type]: rdp.log is a parsed log, not raw packet capture."
+        },
+        {
+          "text": "Information about failed RDP login attempts and brute-force patterns.",
+          "misconception": "Targets [log content focus]: While some failures might be logged, its primary focus is session details, not brute-force patterns which are better seen in conn.log or security logs."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Zeek's <code>rdp.log</code> parses RDP traffic to extract session-specific details beyond basic connection information. It provides insights into the RDP handshake, security protocols (like TLS/SSL), and negotiated capabilities, aiding in understanding the nature of the RDP session.",
+        "distractor_analysis": "Basic connection info is in <code>conn.log</code>. Raw payloads are in packet captures. Brute-force patterns are better inferred from connection frequency and security logs, not detailed RDP session logs.",
+        "analogy": "If <code>conn.log</code> tells you someone entered a room, <code>rdp.log</code> tells you what they did inside that room – what furniture they used, what settings they adjusted, and what security measures were in place."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "ZEEK_LOGGING",
+        "RDP_BASICS",
+        "NETWORK_FORENSICS_FUNDAMENTALS"
+      ]
+    },
+    {
+      "question_text": "What is a key challenge in analyzing encrypted RDP traffic (e.g., using TLS)?",
+      "correct_answer": "The inability to inspect the RDP protocol payload content without decryption keys.",
+      "distractors": [
+        {
+          "text": "RDP traffic is always unencrypted, making analysis straightforward.",
+          "misconception": "Targets [protocol knowledge]: Ignores that modern RDP uses encryption."
+        },
+        {
+          "text": "The RDP protocol itself is too complex to parse, even when unencrypted.",
+          "misconception": "Targets [protocol complexity]: Overstates the difficulty of parsing compared to the encryption barrier."
+        },
+        {
+          "text": "Encrypted RDP traffic generates significantly less network volume.",
+          "misconception": "Targets [traffic characteristics]: Encryption does not inherently reduce traffic volume; it obscures content."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Modern RDP implementations commonly use TLS for encryption, which protects the confidentiality of the session. This means that standard network analysis tools cannot inspect the RDP commands and data within the traffic without access to the decryption keys, posing a significant challenge for forensics.",
+        "distractor_analysis": "RDP can be encrypted. While complex, parsing is feasible with tools like Zeek or Wireshark when unencrypted. Encryption obscures content, it doesn't necessarily reduce volume.",
+        "analogy": "Analyzing encrypted RDP traffic is like trying to understand a conversation happening inside a locked, soundproof box – you can see the box is there and maybe how big it is, but you can't hear or read what's inside."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "RDP_BASICS",
+        "NETWORK_FORENSICS_FUNDAMENTALS",
+        "ENCRYPTION_BASICS"
+      ]
+    },
+    {
+      "question_text": "Which of the following best describes the purpose of correlating RDP logon events (e.g., Windows Event ID 4624, LogonType 10) with subsequent process execution or file access logs?",
+      "correct_answer": "To detect post-compromise activity and lateral movement initiated via RDP.",
+      "distractors": [
+        {
+          "text": "To verify the RDP client's software version.",
+          "misconception": "Targets [analysis goal]: Irrelevant detail for security analysis."
+        },
+        {
+          "text": "To confirm the network bandwidth used during the RDP session.",
+          "misconception": "Targets [analysis goal]: Bandwidth is a metric, not the primary indicator of malicious post-logon activity."
+        },
+        {
+          "text": "To identify the specific RDP client application used.",
+          "misconception": "Targets [analysis goal]: While potentially useful, it's secondary to detecting malicious actions."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Correlating RDP logons with subsequent actions helps analysts understand what happened *after* a user successfully connected. This is crucial for identifying malicious activity, such as attackers executing commands or accessing sensitive files, which signifies lateral movement or further compromise.",
+        "distractor_analysis": "Verifying client version, bandwidth, or application are secondary details. The primary goal is to link the authenticated session to potentially harmful actions occurring on the system.",
+        "analogy": "It's like seeing someone enter a building (RDP logon) and then watching to see if they go to the vault or start copying files (post-logon activity) to determine if they are an authorized employee or an intruder."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "RDP_BASICS",
+        "INCIDENT_RESPONSE_PROCESS",
+        "LOG_CORRELATION"
+      ]
+    },
+    {
+      "question_text": "What does the MITRE ATT&CK Detection Strategy DET0327 focus on detecting?",
+      "correct_answer": "Multi-event RDP logons followed by suspicious post-access activity within a defined timeframe.",
+      "distractors": [
+        {
+          "text": "Single RDP connection attempts from unknown IP addresses.",
+          "misconception": "Targets [detection scope]: DET0327 requires multiple events, not just single connection attempts."
+        },
+        {
+          "text": "RDP brute-force attacks based solely on connection volume.",
+          "misconception": "Targets [detection criteria]: DET0327 includes post-access activity, not just connection volume."
+        },
+        {
+          "text": "Unencrypted RDP sessions to critical servers.",
+          "misconception": "Targets [detection criteria]: Focuses on encryption status, not the sequence of events."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "DET0327 is designed to detect sophisticated RDP-based threats by looking for a pattern: an RDP login followed by suspicious actions (process execution, file access, lateral movement) within a short 'TimeWindow'. This multi-event approach aims to catch attackers who gain access and immediately begin malicious operations.",
+        "distractor_analysis": "DET0327 requires more than just single connections or brute-force indicators; it links the login to subsequent suspicious behavior. Encryption status is not the primary focus.",
+        "analogy": "DET0327 is like a security guard watching not just who enters a restricted area (RDP logon), but also what they do immediately after entering (suspicious activity) within a specific time limit."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "MITRE_ATTACK_FRAMEWORK",
+        "RDP_BASICS",
+        "DETECTION_STRATEGIES"
+      ]
+    },
+    {
+      "question_text": "In the context of RDP traffic analysis, what is the significance of the 'security_protocol' field in Zeek's <code>rdp.log</code>?",
+      "correct_answer": "It indicates whether the RDP session is using encryption like TLS/SSL, which impacts forensic analysis capabilities.",
+      "distractors": [
+        {
+          "text": "It shows the specific version of the RDP protocol being used.",
+          "misconception": "Targets [field meaning]: Confuses security protocol with protocol version."
+        },
+        {
+          "text": "It identifies the authentication method, such as NTLM or Kerberos.",
+          "misconception": "Targets [field meaning]: Authentication methods are separate from the transport security protocol."
+        },
+        {
+          "text": "It confirms the RDP server's certificate validity.",
+          "misconception": "Targets [field meaning]: Certificate validation is a related but distinct aspect of secure RDP."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The 'security_protocol' field in Zeek's <code>rdp.log</code> (e.g., 'HYBRID', 'TLS') reveals the encryption status of the RDP session. Understanding this is vital because encrypted traffic requires different forensic approaches (like decryption if keys are available) compared to unencrypted traffic.",
+        "distractor_analysis": "Protocol version, authentication method, and certificate validity are different aspects of an RDP session. The 'security_protocol' field specifically addresses the use of encryption for confidentiality.",
+        "analogy": "The 'security_protocol' field is like knowing if a conversation is happening in a private room (encrypted) or in a public square (unencrypted), which changes how easily you can listen in."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "ZEEK_LOGGING",
+        "RDP_BASICS",
+        "ENCRYPTION_BASICS"
+      ]
+    },
+    {
+      "question_text": "What is a common indicator of compromise (IOC) related to RDP traffic analysis, as suggested by MITRE's CAR-2016-005?",
+      "correct_answer": "Remote Desktop logons originating from workstations not typically used by administrators.",
+      "distractors": [
+        {
+          "text": "High volume of successful RDP connections from a single internal IP.",
+          "misconception": "Targets [IOC definition]: While potentially suspicious, this is more indicative of brute-force or scanning, not necessarily post-compromise movement from an unusual source."
+        },
+        {
+          "text": "RDP connections using older, unencrypted protocols.",
+          "misconception": "Targets [IOC definition]: While a security risk, it's not the specific IOC highlighted for detecting lateral movement via RDP in this context."
+        },
+        {
+          "text": "RDP sessions that last longer than 2 hours.",
+          "misconception": "Targets [IOC definition]: Session duration is not a primary indicator of compromise for RDP lateral movement detection."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "MITRE's CAR-2016-005 highlights that RDP logons are often legitimate for administrators, but monitoring them against known originating systems can detect adversary lateral movement. Therefore, an RDP login from an unusual or unexpected source workstation is a key indicator.",
+        "distractor_analysis": "The core idea is detecting *unusual* RDP usage. High volume might be brute-force, unencrypted is a vulnerability, and long duration is circumstantial. An RDP login from an unexpected source directly points to potential unauthorized access.",
+        "analogy": "It's like noticing someone using the CEO's office key card to enter a floor they never visit; the action itself (entering) might be normal, but the source (unusual key card usage) makes it suspicious."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "RDP_BASICS",
+        "MITRE_CAR",
+        "IOC_FUNDAMENTALS"
+      ]
+    },
+    {
+      "question_text": "Which Zeek log file would be MOST useful for identifying the specific RDP security protocol (e.g., TLS, NLA) and handshake details?",
+      "correct_answer": "rdp.log",
+      "distractors": [
+        {
+          "text": "conn.log",
+          "misconception": "Targets [log scope]: Primarily logs connection metadata (IPs, ports, duration, bytes), not protocol-specific handshake details."
+        },
+        {
+          "text": "http.log",
+          "misconception": "Targets [protocol confusion]: Logs HTTP traffic, irrelevant to RDP."
+        },
+        {
+          "text": "ssl.log",
+          "misconception": "Targets [protocol scope]: Logs general SSL/TLS activity, but `rdp.log` specifically parses RDP's use of it."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Zeek's <code>rdp.log</code> is specifically designed to parse and record details of Remote Desktop Protocol sessions. This includes information about the security protocols negotiated during the handshake, such as TLS or Network Level Authentication (NLA), which are critical for understanding session security.",
+        "distractor_analysis": "<code>conn.log</code> provides basic connection data. <code>http.log</code> is for web traffic. <code>ssl.log</code> captures general SSL/TLS events, but <code>rdp.log</code> provides the RDP-specific context for those events.",
+        "analogy": "If <code>conn.log</code> is the phone number dialed, and <code>ssl.log</code> is noting that the call was encrypted, <code>rdp.log</code> is the transcript of the actual conversation, detailing who said what and how securely."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "ZEEK_LOGGING",
+        "RDP_BASICS",
+        "NETWORK_FORENSICS_FUNDAMENTALS"
+      ]
+    },
+    {
+      "question_text": "What is the standard TCP port commonly used by Remote Desktop Protocol (RDP)?",
+      "correct_answer": "3389",
+      "distractors": [
+        {
+          "text": "80",
+          "misconception": "Targets [port knowledge]: Confuses RDP with HTTP."
+        },
+        {
+          "text": "443",
+          "misconception": "Targets [port knowledge]: Confuses RDP with HTTPS."
+        },
+        {
+          "text": "22",
+          "misconception": "Targets [port knowledge]: Confuses RDP with SSH."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The default and most common port for Remote Desktop Protocol (RDP) is TCP port 3389. While administrators can change this for security through obscurity, network forensic analysis should always consider this port as a primary target for RDP traffic.",
+        "distractor_analysis": "Ports 80 (HTTP), 443 (HTTPS), and 22 (SSH) are standard ports for different protocols and are not typically used by RDP.",
+        "analogy": "Port 3389 is like the standard address for the RDP service; while you could theoretically move the service to a different address, most people still use the default."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "remember",
+      "prerequisites": [
+        "RDP_BASICS",
+        "NETWORK_FUNDAMENTALS"
+      ]
+    },
+    {
+      "question_text": "When analyzing RDP traffic for signs of lateral movement, what specific post-logon activity should analysts prioritize investigating?",
+      "correct_answer": "Execution of command-line shells (cmd.exe, powershell.exe) or suspicious binaries.",
+      "distractors": [
+        {
+          "text": "Accessing the user's profile directory.",
+          "misconception": "Targets [activity significance]: Normal user activity, not necessarily malicious."
+        },
+        {
+          "text": "Opening the RDP client application again on the same machine.",
+          "misconception": "Targets [activity significance]: Redundant action, not indicative of lateral movement."
+        },
+        {
+          "text": "Changing the desktop background.",
+          "misconception": "Targets [activity significance]: Trivial user customization, unlikely to be part of an attack."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Following an RDP logon, attackers often execute command-line shells or download/run malicious binaries to gain further control or move to other systems. These actions are strong indicators of post-compromise activity and lateral movement because they represent direct interaction and execution of commands.",
+        "distractor_analysis": "Accessing user profiles or changing backgrounds are typical user actions. Re-opening the RDP client is usually non-malicious. The execution of shells or unknown binaries is a direct sign of attacker control.",
+        "analogy": "After an intruder uses a key to enter a room (RDP logon), you'd be most concerned if they immediately start using tools (command shells) or bringing in new equipment (suspicious binaries), rather than just looking at the furniture (user profile)."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "RDP_BASICS",
+        "LATERAL_MOVEMENT",
+        "INCIDENT_RESPONSE_PROCESS"
+      ]
+    },
+    {
+      "question_text": "How can network traffic analysis tools like Wireshark assist in RDP session analysis, particularly for unencrypted traffic?",
+      "correct_answer": "By dissecting RDP protocol fields, identifying session parameters, and potentially capturing commands or data.",
+      "distractors": [
+        {
+          "text": "By automatically decrypting all RDP traffic using built-in keys.",
+          "misconception": "Targets [tool capability]: Wireshark cannot decrypt traffic without provided keys."
+        },
+        {
+          "text": "By providing real-time alerts for suspicious RDP login patterns.",
+          "misconception": "Targets [tool function]: Wireshark is primarily a packet analyzer, not an alerting system."
+        },
+        {
+          "text": "By correlating RDP logs with firewall events automatically.",
+          "misconception": "Targets [tool function]: Correlation typically requires SIEM or custom scripting, not just Wireshark."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Wireshark's deep packet inspection capabilities allow it to dissect the RDP protocol when unencrypted. This enables analysts to examine specific fields, understand session negotiation, and even view the commands being sent and received, which is invaluable for forensic analysis.",
+        "distractor_analysis": "Wireshark requires decryption keys for encrypted traffic. Its core function is packet analysis, not automated alerting or cross-log correlation.",
+        "analogy": "Wireshark is like a microscope for network traffic; for unencrypted RDP, it lets you zoom in and see the exact details of the communication, but it can't magically read messages sealed in envelopes."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "RDP_BASICS",
+        "NETWORK_FORENSICS_FUNDAMENTALS",
+        "WIRESHARK"
+      ]
+    },
+    {
+      "question_text": "What is the primary risk associated with older versions of RDP that lack encryption?",
+      "correct_answer": "Credentials and session data are transmitted in cleartext, making them vulnerable to eavesdropping.",
+      "distractors": [
+        {
+          "text": "They consume significantly more network bandwidth.",
+          "misconception": "Targets [risk assessment]: Encryption status doesn't directly correlate with bandwidth consumption."
+        },
+        {
+          "text": "They are more prone to buffer overflow vulnerabilities.",
+          "misconception": "Targets [vulnerability type]: While possible, the primary risk of *unencrypted* RDP is eavesdropping, not buffer overflows specifically."
+        },
+        {
+          "text": "They require higher system resources to establish a connection.",
+          "misconception": "Targets [risk assessment]: Encryption/decryption adds overhead; unencrypted is often less resource-intensive."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Older RDP versions that do not implement encryption protocols like TLS transmit all data, including usernames, passwords, and session content, unencrypted over the network. This makes the traffic susceptible to sniffing and interception by attackers, leading to credential theft and session hijacking.",
+        "distractor_analysis": "Bandwidth usage is not directly tied to encryption. While vulnerabilities exist in all software, the defining risk of *unencrypted* protocols is the lack of confidentiality. Resource usage is generally lower without encryption.",
+        "analogy": "Using unencrypted RDP is like sending a postcard instead of a sealed letter; anyone handling it can easily read the contents, including sensitive information like your password."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "RDP_BASICS",
+        "NETWORK_SECURITY_FUNDAMENTALS",
+        "ENCRYPTION_BASICS"
+      ]
+    }
+  ],
+  "generation_metadata": {
+    "model": "google/gemini-2.5-flash-lite",
+    "num_generated": 15,
+    "temperature": 0.1,
+    "web_citations": [],
+    "research_method": "openrouter_web_plugin",
+    "search_query": "RDP Session Traffic Analysis 002_Incident Response And Forensics best practices",
+    "latency_ms": 23992.872
+  },
+  "timestamp": "2026-01-18T13:19:43.157996"
+}

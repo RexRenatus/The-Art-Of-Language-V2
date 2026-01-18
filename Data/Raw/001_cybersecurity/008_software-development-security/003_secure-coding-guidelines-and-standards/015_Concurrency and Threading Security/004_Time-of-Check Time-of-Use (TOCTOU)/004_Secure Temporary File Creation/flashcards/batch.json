@@ -1,0 +1,482 @@
+{
+  "topic_title": "Secure Temporary File Creation",
+  "category": "Software Development Security - Secure Coding Guidelines and Standards",
+  "flashcards": [
+    {
+      "question_text": "What is the primary security risk associated with using predictable filenames for temporary files in shared directories?",
+      "correct_answer": "Time-of-Check Time-of-Use (TOCTOU) attacks, where an attacker can replace the temporary file before the application uses it.",
+      "distractors": [
+        {
+          "text": "Denial-of-Service (DoS) by filling up disk space.",
+          "misconception": "Targets [resource exhaustion]: Confuses file creation with excessive resource consumption."
+        },
+        {
+          "text": "Data corruption due to concurrent write operations.",
+          "misconception": "Targets [concurrency issue]: Focuses on simultaneous writes rather than malicious replacement."
+        },
+        {
+          "text": "Information disclosure through unauthorized access to temporary data.",
+          "misconception": "Targets [access control failure]: Overlooks the specific TOCTOU exploit mechanism."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Predictable temporary filenames in shared directories create a race condition, enabling TOCTOU attacks because an attacker can create a malicious file with the same name after the application checks for its existence but before it's used.",
+        "distractor_analysis": "The first distractor focuses on resource exhaustion, the second on general concurrency issues, and the third on general unauthorized access, none of which specifically address the TOCTOU vulnerability inherent in predictable filenames.",
+        "analogy": "Imagine leaving a key under a doormat with a label saying 'spare key'. Anyone can see the label, take the key, and enter before you do."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "TOCTOU_BASICS",
+        "SHARED_DIRECTORY_RISKS"
+      ]
+    },
+    {
+      "question_text": "According to OWASP, which category of functions is inherently vulnerable when creating temporary files?",
+      "correct_answer": "Functions that generate a unique filename, which the application then opens.",
+      "distractors": [
+        {
+          "text": "Functions that directly open a file with a fixed, known name.",
+          "misconception": "Targets [fixed name vulnerability]: Overlooks the race condition in unique filename generation."
+        },
+        {
+          "text": "Functions that create temporary files in non-shared directories.",
+          "misconception": "Targets [directory security]: Ignores the filename generation vulnerability itself."
+        },
+        {
+          "text": "Functions that use cryptographic randomness for filenames.",
+          "misconception": "Targets [randomness misconception]: Assumes all random generation is secure, ignoring race conditions."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Functions like tmpnam() or GetTempFileName() generate a filename, but a race condition exists between filename generation and file opening, allowing attackers to exploit this window.",
+        "distractor_analysis": "The distractors incorrectly focus on fixed names, directory security, or assume all random generation is inherently safe, missing the core issue of the time gap in unique filename functions.",
+        "analogy": "It's like a lottery ticket system where the number is announced, but the ticket isn't printed until later. Someone could try to forge a ticket with the announced number in that gap."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "OWASP_GUIDELINES",
+        "RACE_CONDITIONS"
+      ]
+    },
+    {
+      "question_text": "Which of the following is a recommended secure practice for creating temporary files, as per SEI CERT C Coding Standard?",
+      "correct_answer": "Use atomic operations to create and open temporary files, ensuring the file doesn't exist before opening.",
+      "distractors": [
+        {
+          "text": "Create temporary files in the system's default /tmp directory.",
+          "misconception": "Targets [default directory risk]: Ignores that /tmp is often a shared, insecure directory."
+        },
+        {
+          "text": "Use the mktemp() function to generate unique temporary filenames.",
+          "misconception": "Targets [insecure function usage]: mktemp() is known to be vulnerable to race conditions."
+        },
+        {
+          "text": "Store temporary files on network file systems like NFS for accessibility.",
+          "misconception": "Targets [remote filesystem risk]: Many remote file systems lack necessary flags for secure temporary file creation."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Atomic operations, like using flags that ensure a file is created only if it doesn't exist, prevent race conditions. This is crucial because shared directories like /tmp are inherently risky.",
+        "distractor_analysis": "The distractors suggest using default shared directories, known insecure functions, or risky network file systems, all of which violate secure temporary file creation principles.",
+        "analogy": "It's like a bank teller opening a new account: they ensure no account with that name exists before creating it, preventing someone else from claiming it first."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "defense",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "SEI_CERT_C_STANDARD",
+        "ATOMIC_OPERATIONS"
+      ]
+    },
+    {
+      "question_text": "Why is it generally discouraged to create temporary files in shared directories like /tmp or %TEMP%?",
+      "correct_answer": "Shared directories are often writable by multiple users or processes, increasing the risk of malicious manipulation or hijacking.",
+      "distractors": [
+        {
+          "text": "Temporary files in shared directories are automatically deleted by the system.",
+          "misconception": "Targets [automatic cleanup misconception]: While some cleanup occurs, it doesn't negate the security risk during operation."
+        },
+        {
+          "text": "Shared directories have slower I/O performance compared to local directories.",
+          "misconception": "Targets [performance concern]: Focuses on a secondary performance issue rather than the primary security risk."
+        },
+        {
+          "text": "Operating systems restrict the number of files that can be created in shared directories.",
+          "misconception": "Targets [resource limitation]: This is not a standard restriction and doesn't address the core security problem."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Shared directories allow multiple entities to write, creating a vulnerability where one process's temporary file can be replaced by another's (malicious or otherwise) before it's used, leading to attacks like TOCTOU.",
+        "distractor_analysis": "The distractors incorrectly cite automatic deletion, performance issues, or resource limitations as the primary reason, rather than the inherent insecurity of shared write permissions.",
+        "analogy": "Leaving valuables in a public park's shared locker: while it's convenient, anyone could potentially access or tamper with your items."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SHARED_DIRECTORY_RISKS",
+        "FILE_PERMISSIONS"
+      ]
+    },
+    {
+      "question_text": "What is the main advantage of using <code>tempfile.TemporaryFile</code> in Python for creating temporary files?",
+      "correct_answer": "It provides automatic cleanup and can be used as a context manager, ensuring the file is removed even if errors occur.",
+      "distractors": [
+        {
+          "text": "It always creates a named file in the system's temporary directory.",
+          "misconception": "Targets [naming convention]: `TemporaryFile` may not have a visible name and is automatically cleaned up."
+        },
+        {
+          "text": "It guarantees that the temporary file is stored on local disk only.",
+          "misconception": "Targets [storage location]: While preferred, it doesn't strictly guarantee local storage across all environments."
+        },
+        {
+          "text": "It uses a more complex encryption algorithm for temporary data.",
+          "misconception": "Targets [feature confusion]: Encryption is not a primary feature of `TemporaryFile`; security comes from proper handling and cleanup."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "<code>tempfile.TemporaryFile</code> securely creates a temporary file and automatically removes it upon closing or garbage collection, especially when used with a context manager, preventing resource leaks and security issues.",
+        "distractor_analysis": "The distractors misrepresent the naming behavior, storage guarantees, and introduce an unrelated encryption feature, failing to identify the core benefit of automatic, secure cleanup.",
+        "analogy": "It's like using a disposable coffee cup: you use it, and when you're done, it's automatically discarded, leaving no mess behind."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "PYTHON_TEMPFILE",
+        "CONTEXT_MANAGERS"
+      ]
+    },
+    {
+      "question_text": "Which of the following C Library functions for temporary file creation is considered insecure due to a race condition vulnerability?",
+      "correct_answer": "tmpnam()",
+      "distractors": [
+        {
+          "text": "fopen()",
+          "misconception": "Targets [general file operation]: fopen() is a standard file opening function, not specifically for secure temp file generation."
+        },
+        {
+          "text": "fwrite()",
+          "misconception": "Targets [data writing]: fwrite() is for writing data to an already opened file, not for creating temporary files securely."
+        },
+        {
+          "text": "fclose()",
+          "misconception": "Targets [file closing]: fclose() is for closing files, not for their secure creation."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "<code>tmpnam()</code> generates a unique filename but doesn't guarantee its safety against race conditions, as another process could create a file with that name between <code>tmpnam()</code>'s execution and the application's <code>fopen()</code> call.",
+        "distractor_analysis": "The distractors are standard C library functions for file operations (opening, writing, closing) and do not directly relate to the specific vulnerability of temporary filename generation functions like <code>tmpnam()</code>.",
+        "analogy": "It's like calling out a name in a crowded room and then waiting to see who responds. Someone else might claim the name before the intended person does."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "definition",
+      "bloom_level": "remember",
+      "prerequisites": [
+        "C_LIBRARY_FUNCTIONS",
+        "RACE_CONDITIONS"
+      ]
+    },
+    {
+      "question_text": "What is the primary security concern with using <code>tempfile.mktemp</code> in Python?",
+      "correct_answer": "It is vulnerable to race conditions, as it generates a filename but does not create the file, leaving a window for attackers.",
+      "distractors": [
+        {
+          "text": "It always creates temporary files with predictable names.",
+          "misconception": "Targets [predictability]: While potentially predictable if not seeded well, the main issue is the race condition, not inherent predictability."
+        },
+        {
+          "text": "It fails to clean up temporary files automatically.",
+          "misconception": "Targets [cleanup]: `mktemp` itself doesn't handle cleanup; the user must. However, the core vulnerability is the race condition."
+        },
+        {
+          "text": "It requires elevated privileges to create temporary files.",
+          "misconception": "Targets [privilege requirement]: `mktemp` does not inherently require elevated privileges; its insecurity lies elsewhere."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "<code>tempfile.mktemp</code> is unsafe because it only generates a filename. An attacker can create a file with that name between the call to <code>mktemp</code> and the subsequent <code>open</code> call, leading to a TOCTOU vulnerability.",
+        "distractor_analysis": "The distractors focus on predictability, cleanup, or privilege issues, which are either secondary, incorrect, or not the primary security flaw of <code>mktemp</code> compared to the race condition.",
+        "analogy": "It's like writing down a house address on a piece of paper and handing it to someone, but not actually building the house yet. Someone else could buy and occupy the land in the meantime."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "PYTHON_TEMPFILE",
+        "TOCTOU_BASICS"
+      ]
+    },
+    {
+      "question_text": "When creating temporary files, why is it recommended to use functions that create and open the file atomically?",
+      "correct_answer": "Atomic creation ensures that the file is created and opened in a single, indivisible operation, preventing race conditions.",
+      "distractors": [
+        {
+          "text": "Atomic operations are always faster than separate create and open calls.",
+          "misconception": "Targets [performance assumption]: While often efficient, the primary benefit is security, not speed."
+        },
+        {
+          "text": "Atomic operations encrypt the temporary file contents automatically.",
+          "misconception": "Targets [encryption confusion]: Atomicity relates to operation indivisibility, not encryption."
+        },
+        {
+          "text": "Atomic operations guarantee that the file will be deleted after use.",
+          "misconception": "Targets [automatic deletion]: Atomicity prevents race conditions during creation; cleanup is a separate concern."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Atomic operations prevent intermediate states that attackers can exploit. By creating and opening the file as one uninterruptible step, the window for a TOCTOU attack is eliminated.",
+        "distractor_analysis": "The distractors incorrectly attribute speed, encryption, or automatic deletion as benefits of atomic operations, missing the core security advantage of preventing race conditions.",
+        "analogy": "It's like a single, secure transaction at an ATM: you insert your card, enter your PIN, and withdraw cash all in one go, without intermediate steps where someone could interfere."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "ATOMIC_OPERATIONS",
+        "RACE_CONDITIONS"
+      ]
+    },
+    {
+      "question_text": "What is the purpose of the <code>dir</code> parameter in functions like Python's <code>tempfile.mkstemp()</code>?",
+      "correct_answer": "To specify a directory where the temporary file should be created, allowing control over location and security.",
+      "distractors": [
+        {
+          "text": "To set the access permissions for the temporary file.",
+          "misconception": "Targets [permission confusion]: Permissions are typically handled separately or by default secure settings."
+        },
+        {
+          "text": "To define a prefix for the temporary filename.",
+          "misconception": "Targets [prefix confusion]: The `prefix` parameter serves this purpose."
+        },
+        {
+          "text": "To automatically delete the temporary file after creation.",
+          "misconception": "Targets [automatic deletion]: Cleanup is handled by other means (e.g., manual deletion or context managers), not the `dir` parameter."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The <code>dir</code> parameter allows developers to explicitly choose a secure, potentially non-shared directory for temporary file creation, mitigating risks associated with default system temporary locations.",
+        "distractor_analysis": "The distractors confuse the <code>dir</code> parameter with file permissions, filename prefixes, or automatic deletion, none of which are its function.",
+        "analogy": "It's like choosing a specific, secure safe deposit box at a bank, rather than just leaving valuables in a general-purpose storage area."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "PYTHON_TEMPFILE",
+        "SECURE_DIRECTORY_CHOICE"
+      ]
+    },
+    {
+      "question_text": "Which of the following is NOT a recommended mitigation strategy for insecure temporary file creation, according to SEI CERT?",
+      "correct_answer": "Using temporary files with well-known names in shared directories for inter-process communication.",
+      "distractors": [
+        {
+          "text": "Using other inter-process communication (IPC) mechanisms like sockets.",
+          "misconception": "Targets [alternative IPC]: This is a recommended alternative to avoid temporary files."
+        },
+        {
+          "text": "Creating temporary files in secure directories accessible only by the application.",
+          "misconception": "Targets [secure directory usage]: This is a recommended practice to isolate temporary files."
+        },
+        {
+          "text": "Ensuring temporary files have unpredictable and unique names.",
+          "misconception": "Targets [filename uniqueness]: This is a fundamental security requirement for temporary files."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Using well-known names in shared directories is precisely what SEI CERT discourages due to the high risk of manipulation and hijacking; secure IPC or isolated directories are preferred.",
+        "distractor_analysis": "The distractors represent valid secure coding practices for temporary files or IPC, making the incorrect option the one that directly contradicts established security advice.",
+        "analogy": "It's like using a public bulletin board with a universally known password for sensitive messages, instead of a private, encrypted channel."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "defense",
+      "bloom_level": "evaluate",
+      "prerequisites": [
+        "SEI_CERT_GUIDELINES",
+        "IPC_MECHANISMS"
+      ]
+    },
+    {
+      "question_text": "What is the core security principle violated when an application uses <code>GetTempFileName()</code> on Windows without proper checks?",
+      "correct_answer": "The principle of preventing race conditions, as the filename is generated but not atomically secured.",
+      "distractors": [
+        {
+          "text": "The principle of least privilege.",
+          "misconception": "Targets [privilege confusion]: While privilege is important, the direct violation is race condition vulnerability."
+        },
+        {
+          "text": "The principle of data confidentiality.",
+          "misconception": "Targets [confidentiality focus]: The primary risk is manipulation (integrity/availability), not necessarily secrecy."
+        },
+        {
+          "text": "The principle of input validation.",
+          "misconception": "Targets [input validation focus]: This applies more to user-supplied data, not the internal generation of temporary filenames."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "<code>GetTempFileName()</code> generates a name, but there's a time gap before the file is created, allowing an attacker to create a file with that name, exploiting a race condition (TOCTOU).",
+        "distractor_analysis": "The distractors incorrectly identify least privilege, data confidentiality, or input validation as the primary violated principle, missing the critical race condition vulnerability inherent in the function's usage.",
+        "analogy": "It's like announcing you're going to build a house at a specific address, but not starting construction immediately. Someone else could claim the address and start building first."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "attack",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "WINDOWS_API",
+        "RACE_CONDITIONS"
+      ]
+    },
+    {
+      "question_text": "Why should temporary files generally be created on the local filesystem rather than remote ones like NFS?",
+      "correct_answer": "Many remote filesystems (e.g., NFSv2) do not support the necessary file flags (like O_EXCL) required for safely creating temporary files atomically.",
+      "distractors": [
+        {
+          "text": "Local filesystems are always faster than remote ones.",
+          "misconception": "Targets [performance assumption]: While often true, the primary reason is security due to missing atomic flags, not just speed."
+        },
+        {
+          "text": "Remote filesystems are more prone to data corruption.",
+          "misconception": "Targets [data corruption]: This is a general risk, but the specific issue with NFS for temp files is lack of atomic flag support."
+        },
+        {
+          "text": "Temporary files on remote systems cannot be automatically cleaned up.",
+          "misconception": "Targets [cleanup mechanism]: Cleanup is a separate concern; the core issue is the inability to create them securely in the first place."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Secure temporary file creation often relies on atomic operations (e.g., <code>O_EXCL</code> flag) to prevent race conditions. Older NFS versions lack support for these critical flags, making secure creation impossible.",
+        "distractor_analysis": "The distractors focus on speed, general data corruption, or cleanup issues, failing to identify the specific technical limitation of remote filesystems regarding atomic file creation flags.",
+        "analogy": "It's like trying to use a special tool that only works on local materials, but the remote materials (NFS) don't have the right properties (flags) for the tool to function securely."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "comparison",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "REMOTE_FILESYSTEMS",
+        "ATOMIC_OPERATIONS",
+        "NFS_PROTOCOL"
+      ]
+    },
+    {
+      "question_text": "What is the primary goal of using unique, unpredictable filenames when creating temporary files?",
+      "correct_answer": "To make it difficult for attackers to guess the filename and perform a TOCTOU attack.",
+      "distractors": [
+        {
+          "text": "To ensure the temporary file is automatically deleted after use.",
+          "misconception": "Targets [automatic deletion]: Filename uniqueness is about preventing attacks, not managing cleanup."
+        },
+        {
+          "text": "To improve the performance of file I/O operations.",
+          "misconception": "Targets [performance benefit]: Filename generation strategy does not impact I/O performance."
+        },
+        {
+          "text": "To allow multiple instances of an application to use temporary files simultaneously.",
+          "misconception": "Targets [concurrency management]: While uniqueness helps, it's primarily for security, not enabling concurrency."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Unique and unpredictable filenames are crucial because they thwart attackers' attempts to predict and exploit the temporary file during the time-of-check to time-of-use window.",
+        "distractor_analysis": "The distractors incorrectly associate filename uniqueness with automatic deletion, performance improvements, or enabling concurrency, missing its core purpose of preventing predictable attacks.",
+        "analogy": "It's like using a randomly generated, complex password for a temporary online account instead of 'password123', making it much harder for someone to guess and hijack."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "FILENAME_SECURITY",
+        "TOCTOU_BASICS"
+      ]
+    },
+    {
+      "question_text": "Consider a scenario where an application needs to process sensitive data temporarily. Which approach best minimizes security risks?",
+      "correct_answer": "Use a language's secure temporary file API (like Python's <code>tempfile.TemporaryFile</code>) within a secure, local directory, and ensure automatic cleanup.",
+      "distractors": [
+        {
+          "text": "Create a temporary file with a predictable name in the system's default <code>/tmp</code> directory.",
+          "misconception": "Targets [predictable naming/shared directory]: Combines two major security anti-patterns."
+        },
+        {
+          "text": "Store the sensitive data in memory without using any temporary files.",
+          "misconception": "Targets [memory storage risk]: Sensitive data in memory can still be vulnerable to memory scraping attacks."
+        },
+        {
+          "text": "Use a network file share (like NFS) for the temporary file, as it's easily accessible.",
+          "misconception": "Targets [remote filesystem risk]: NFS often lacks atomic creation flags, making it insecure for temporary files."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Secure APIs, local directories, and automatic cleanup collectively address the main risks: race conditions, shared directory vulnerabilities, and resource leaks, thus protecting sensitive temporary data.",
+        "distractor_analysis": "The distractors propose using predictable names in shared directories, relying solely on memory (which has its own risks), or using insecure remote file systems, all of which are less secure than the recommended approach.",
+        "analogy": "It's like storing confidential documents in a locked, private safe in your own secure office, rather than leaving them on a public desk or in a shared, unlocked cabinet."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "scenario",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "SECURE_TEMP_FILE_APIS",
+        "LOCAL_FILESYSTEM_PREFERENCE"
+      ]
+    },
+    {
+      "question_text": "What is the role of temporary file cleaner utilities mentioned in SEI CERT standards?",
+      "correct_answer": "To sweep temporary directories and remove old files, mitigating risks from orphaned temporary files, especially after abnormal termination.",
+      "distractors": [
+        {
+          "text": "To prevent applications from creating temporary files in the first place.",
+          "misconception": "Targets [prevention vs. cleanup]: These utilities handle cleanup, not prevention of creation."
+        },
+        {
+          "text": "To encrypt temporary files automatically to protect sensitive data.",
+          "misconception": "Targets [encryption function]: Their role is cleanup, not encryption."
+        },
+        {
+          "text": "To enforce secure temporary file creation practices during runtime.",
+          "misconception": "Targets [runtime enforcement]: They operate post-creation or post-termination, not during the creation process itself."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Temporary file cleaner utilities act as a safety net, removing orphaned files that weren't cleaned up by the application, thereby freeing resources and reducing potential security exposure.",
+        "distractor_analysis": "The distractors misrepresent the function of these utilities as preventing creation, performing encryption, or enforcing runtime security, rather than their actual role of post-termination cleanup.",
+        "analogy": "Think of them as janitors who clean up a workspace after everyone has left, ensuring no leftover materials pose a hazard or waste space."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "SEI_CERT_GUIDELINES",
+        "RESOURCE_MANAGEMENT"
+      ]
+    }
+  ],
+  "generation_metadata": {
+    "model": "google/gemini-2.5-flash-lite",
+    "num_generated": 15,
+    "temperature": 0.1,
+    "web_citations": [],
+    "research_method": "openrouter_web_plugin",
+    "search_query": "Secure Temporary File Creation Software Development Security best practices",
+    "latency_ms": 23890.121
+  },
+  "timestamp": "2026-01-18T11:00:18.814550"
+}

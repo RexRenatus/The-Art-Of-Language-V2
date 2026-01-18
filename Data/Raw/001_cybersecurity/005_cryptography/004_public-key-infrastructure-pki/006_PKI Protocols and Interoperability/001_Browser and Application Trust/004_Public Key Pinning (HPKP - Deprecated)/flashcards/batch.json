@@ -1,0 +1,574 @@
+{
+  "topic_title": "Public Key Pinning (HPKP - Deprecated)",
+  "category": "001_Cryptography - 009_Public Key Infrastructure (PKI)",
+  "flashcards": [
+    {
+      "question_text": "What was the primary security goal of HTTP Public Key Pinning (HPKP)?",
+      "correct_answer": "To mitigate man-in-the-middle (MITM) attacks by reducing reliance on Certificate Authorities (CAs) for authentication.",
+      "distractors": [
+        {
+          "text": "To encrypt all HTTP traffic between the client and server.",
+          "misconception": "Targets [encryption vs. authentication confusion]: Students who believe pinning is a form of encryption rather than an authentication mechanism."
+        },
+        {
+          "text": "To enforce the use of specific cipher suites for TLS connections.",
+          "misconception": "Targets [protocol configuration vs. identity pinning]: Students who confuse key pinning with cipher suite negotiation."
+        },
+        {
+          "text": "To prevent cross-site scripting (XSS) attacks by validating script sources.",
+          "misconception": "Targets [unrelated security domain]: Students who misapply PKI concepts to web application vulnerabilities."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "HPKP aimed to reduce MITM risks by allowing hosts to 'pin' specific public keys, meaning clients would only trust certificates containing those keys. This bypasses the need for a trusted CA for every connection, because the identity is directly tied to the public key.",
+        "distractor_analysis": "The first distractor confuses pinning with encryption. The second misattributes cipher suite enforcement to HPKP. The third incorrectly links HPKP to XSS prevention.",
+        "analogy": "Imagine you always expect a specific doorman (public key) to let you into a building. Even if other people (CAs) claim to be authorized, you only trust the specific doorman you know."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "CRYPTO_PKI_BASICS",
+        "CRYPTO_TLS",
+        "CRYPTO_MITM"
+      ]
+    },
+    {
+      "question_text": "According to RFC 7469, what is the purpose of the <code>max-age</code> directive in an HPKP header?",
+      "correct_answer": "It specifies the duration, in seconds, for which the user agent (UA) should remember the pinned public keys for the host.",
+      "distractors": [
+        {
+          "text": "It indicates the maximum number of subdomains that can be pinned.",
+          "misconception": "Targets [directive misinterpretation]: Students who confuse `max-age` with subdomain inclusion or count."
+        },
+        {
+          "text": "It sets the maximum length of the Base64 encoded public key fingerprint.",
+          "misconception": "Targets [parameter scope confusion]: Students who misapply `max-age` to the format of the pinned key itself."
+        },
+        {
+          "text": "It defines the maximum number of CAs that can issue certificates for the host.",
+          "misconception": "Targets [CA trust model confusion]: Students who believe `max-age` relates to the number of trusted CAs rather than pin duration."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The <code>max-age</code> directive in HPKP, as defined in [RFC 7469](https://www.rfc-editor.org/rfc/rfc7469), dictates how long a browser should enforce the pinning policy. This duration is crucial because it determines the window of vulnerability if a pin is misconfigured or compromised, thus it functions by setting a time limit on the trust anchor.",
+        "distractor_analysis": "The first distractor confuses <code>max-age</code> with subdomain handling. The second incorrectly associates it with key format length. The third misinterprets it as a limit on trusted CAs.",
+        "analogy": "Think of <code>max-age</code> as an expiration date for a special security pass. The pass (pin) is only valid for a certain period, after which you need a new one or revert to standard checks."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "CRYPTO_HPKP_DIRECTIVES"
+      ]
+    },
+    {
+      "question_text": "What is the primary risk associated with implementing HPKP, especially for less experienced administrators?",
+      "correct_answer": "Accidentally pinning an incorrect or expired public key, leading to a lockout where legitimate users cannot access the site.",
+      "distractors": [
+        {
+          "text": "Over-reliance on Certificate Authorities, negating the benefit of HPKP.",
+          "misconception": "Targets [misunderstanding of risk mitigation]: Students who believe HPKP increases CA reliance rather than decreasing it."
+        },
+        {
+          "text": "Increased susceptibility to brute-force attacks on the pinned keys.",
+          "misconception": "Targets [attack vector confusion]: Students who assume pinning makes keys more vulnerable to brute-force."
+        },
+        {
+          "text": "Reduced performance due to the overhead of checking pinned keys.",
+          "misconception": "Targets [performance impact misattribution]: Students who overestimate the performance impact of HPKP checks."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "HPKP's 'Trust on First Use' (TOFU) model means that if a server misconfigures its pins (e.g., pins an old key or fails to update pins after a CA change), clients will refuse to connect. This is because the client's stored identity no longer matches the presented identity, effectively locking users out, since the mechanism relies on exact matches.",
+        "distractor_analysis": "The first distractor suggests HPKP increases CA reliance, which is the opposite of its intent. The second incorrectly posits brute-force vulnerability. The third overstates performance issues.",
+        "analogy": "It's like locking yourself out of your house by losing the only key you told your friend to use, and your friend can't get in either because they only have that one specific key."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "CRYPTO_HPKP_RISKS",
+        "CRYPTO_PKI_CERTIFICATES"
+      ]
+    },
+    {
+      "question_text": "How does HPKP's 'Trust on First Use' (TOFU) mechanism work?",
+      "correct_answer": "The first time a client successfully connects to a host with a valid certificate, it stores the host's public key(s) and enforces them on subsequent connections.",
+      "distractors": [
+        {
+          "text": "The client immediately trusts any public key presented by a host on the first connection.",
+          "misconception": "Targets [TOFU vs. no validation]: Students who think TOFU means no validation on the first use, rather than establishing a pin."
+        },
+        {
+          "text": "The client requires a CA to explicitly approve the pinned public key before trusting it.",
+          "misconception": "Targets [CA reliance in TOFU]: Students who believe CAs are still central to the TOFU pinning process."
+        },
+        {
+          "text": "The server sends a list of all acceptable public keys to the client on every connection.",
+          "misconception": "Targets [mechanism misunderstanding]: Students who believe the pinning information is sent dynamically on each connection, not stored."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "HPKP operates on a TOFU principle: the first successful TLS handshake establishes the 'pin'. The client then stores this public key information and uses it as a reference for future connections, functioning by creating a local, host-specific trust anchor that supplements or overrides traditional CA trust.",
+        "distractor_analysis": "The first distractor misrepresents TOFU as a lack of initial validation. The second incorrectly reintroduces CA authority into the TOFU process. The third misunderstands the persistence of the pinned information.",
+        "analogy": "It's like meeting someone for the first time and recognizing their unique handshake. From then on, you only accept that specific handshake from them, ignoring others."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "procedure",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "CRYPTO_HPKP_TOFU",
+        "CRYPTO_TLS_HANDSHAKE"
+      ]
+    },
+    {
+      "question_text": "What is the purpose of the <code>includeSubDomains</code> directive in HPKP?",
+      "correct_answer": "To extend the public key pinning policy to all subdomains of the current host.",
+      "distractors": [
+        {
+          "text": "To include certificates issued by any Certificate Authority for subdomains.",
+          "misconception": "Targets [directive scope confusion]: Students who confuse subdomain inclusion with CA trust for subdomains."
+        },
+        {
+          "text": "To enforce a minimum <code>max-age</code> value for pinned keys across subdomains.",
+          "misconception": "Targets [directive interaction confusion]: Students who mix `includeSubDomains` with `max-age` enforcement."
+        },
+        {
+          "text": "To require that subdomains use the same public key as the main domain.",
+          "misconception": "Targets [pinning mechanism misunderstanding]: Students who believe `includeSubDomains` forces identical key usage, rather than just applying the pin."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The <code>includeSubDomains</code> directive, when present in an HPKP header, ensures that the pinning policy applies not only to the specified host but also to any subdomains. This is crucial for organizations with complex domain structures, because it extends the protection against MITM attacks across the entire domain hierarchy, functioning by applying the same pin validation rules.",
+        "distractor_analysis": "The first distractor incorrectly links subdomain inclusion to CA trust. The second confuses it with <code>max-age</code> settings. The third misunderstands that it applies the *pin*, not necessarily the *exact same key*, to subdomains.",
+        "analogy": "It's like saying a security rule for the main office also applies to all branch offices under the same company umbrella."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "CRYPTO_HPKP_DIRECTIVES",
+        "CRYPTO_DNS_SUBDOMAINS"
+      ]
+    },
+    {
+      "question_text": "Why is HPKP considered deprecated and generally not recommended for new implementations?",
+      "correct_answer": "The high risk of lockout due to misconfiguration, combined with the complexity of managing pins, led to its deprecation by major browsers.",
+      "distractors": [
+        {
+          "text": "It was found to be ineffective against modern cryptographic attacks.",
+          "misconception": "Targets [effectiveness misunderstanding]: Students who believe HPKP failed to provide security benefits."
+        },
+        {
+          "text": "It significantly slowed down TLS handshakes, impacting web performance.",
+          "misconception": "Targets [performance impact overestimation]: Students who believe performance degradation was the primary reason for deprecation."
+        },
+        {
+          "text": "It was replaced by a more robust protocol that offers end-to-end encryption.",
+          "misconception": "Targets [protocol replacement confusion]: Students who think HPKP was superseded by a direct encryption protocol."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "HPKP's primary downfall was its inherent risk: a mistake in pinning could render a site inaccessible. Because browsers like Chrome and Firefox began to phase out support, citing the potential for accidental lockouts and the complexity of management, it is now considered a deprecated feature, because its risks often outweighed its benefits for most use cases.",
+        "distractor_analysis": "The first distractor wrongly claims ineffectiveness. The second overstates performance issues as the main reason. The third incorrectly suggests it was replaced by an encryption protocol.",
+        "analogy": "It's like a complex security system that's so hard to manage that people often break it, leading the manufacturer to stop selling it."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "CRYPTO_HPKP_DEPRECATION",
+        "CRYPTO_PKI_MANAGEMENT"
+      ]
+    },
+    {
+      "question_text": "What is the role of the <code>report-uri</code> directive in HPKP?",
+      "correct_answer": "It allows the server to receive reports when a client encounters a pinning violation, aiding in detection of potential attacks or misconfigurations.",
+      "distractors": [
+        {
+          "text": "It forces the client to report all successful TLS handshakes to the server.",
+          "misconception": "Targets [reporting scope confusion]: Students who believe `report-uri` logs all connections, not just violations."
+        },
+        {
+          "text": "It provides a URI for the server to download its own public key.",
+          "misconception": "Targets [misunderstanding of reporting function]: Students who confuse reporting violations with key retrieval."
+        },
+        {
+          "text": "It instructs the client to report any CA compromise to a central authority.",
+          "misconception": "Targets [unrelated reporting function]: Students who believe `report-uri` is for reporting CA issues, not client-side violations."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The <code>report-uri</code> directive in HPKP serves as a crucial diagnostic tool. When a browser detects a mismatch between the presented certificate's public key and the pinned keys, it can send a report to the specified URI. This allows administrators to identify potential MITM attempts or, more commonly, misconfigurations, because the reporting mechanism provides visibility into policy enforcement failures.",
+        "distractor_analysis": "The first distractor incorrectly broadens the reporting scope. The second misinterprets the function as key retrieval. The third wrongly assigns the reporting target to CA compromises.",
+        "analogy": "It's like a silent alarm system that notifies the security office whenever someone tries to use the wrong key to enter, helping to identify problems."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "procedure",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "CRYPTO_HPKP_DIRECTIVES",
+        "CRYPTO_SECURITY_MONITORING"
+      ]
+    },
+    {
+      "question_text": "How does HPKP differ from Certificate Transparency (CT) logging?",
+      "correct_answer": "HPKP pins specific public keys to a host, while CT logs publicly trusted certificates issued for domains, providing transparency into CA issuance.",
+      "distractors": [
+        {
+          "text": "HPKP encrypts the certificate chain, while CT logs the unencrypted chain.",
+          "misconception": "Targets [encryption vs. logging confusion]: Students who confuse pinning with encryption and CT with data transmission."
+        },
+        {
+          "text": "HPKP relies on CAs to verify keys, while CT relies on browser enforcement.",
+          "misconception": "Targets [role reversal]: Students who swap the roles of CAs and browsers in HPKP and CT."
+        },
+        {
+          "text": "HPKP is a proactive defense against MITM, while CT is a reactive detection mechanism.",
+          "misconception": "Targets [proactive vs. reactive confusion]: Students who mischaracterize the primary function of each."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "HPKP is a client-side enforcement mechanism that pins specific public keys to a domain, directly preventing MITM attacks from CAs that deviate from the pin. Certificate Transparency (CT), conversely, is a logging system that makes CA certificate issuance public, allowing detection of mis-issued certificates, because it provides an auditable record of certificates issued by CAs.",
+        "distractor_analysis": "The first distractor incorrectly associates encryption with HPKP and data transmission with CT. The second reverses the roles of CAs and browsers. The third mischaracterizes HPKP as purely proactive and CT as purely reactive.",
+        "analogy": "HPKP is like having a specific bodyguard for your house who only lets in people you've pre-approved. CT is like a public registry of everyone who has ever been given a key to any house in the neighborhood, so you can see if any suspicious keys were issued."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "comparison",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "CRYPTO_HPKP",
+        "CRYPTO_CERTIFICATE_TRANSPARENCY"
+      ]
+    },
+    {
+      "question_text": "Consider a scenario where a website administrator implements HPKP with a <code>max-age</code> of 1 year and includes the <code>includeSubDomains</code> directive. If a new subdomain is added later, what is the expected behavior for a browser that has previously visited the main domain?",
+      "correct_answer": "The browser will expect the new subdomain to present a certificate whose public key matches one of the pinned keys from the main domain.",
+      "distractors": [
+        {
+          "text": "The browser will automatically trust the new subdomain's certificate as it's a new entity.",
+          "misconception": "Targets [TOFU scope misunderstanding]: Students who believe TOFU only applies to the initial domain and not subdomains with `includeSubDomains`."
+        },
+        {
+          "text": "The browser will ignore the pinning policy for the new subdomain because it's newly added.",
+          "misconception": "Targets [dynamic policy application confusion]: Students who think pinning policies don't apply to newly created subdomains."
+        },
+        {
+          "text": "The browser will prompt the user to manually pin the new subdomain's key.",
+          "misconception": "Targets [user interaction misinterpretation]: Students who believe HPKP requires manual user intervention for subdomains."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Because the <code>includeSubDomains</code> directive was set, the HPKP policy applies to all subdomains. Therefore, when the browser first connects to the new subdomain, it will check its stored pins. If the subdomain's certificate does not contain a matching public key, the connection will likely fail, because the pinning mechanism enforces identity consistency across the domain hierarchy.",
+        "distractor_analysis": "The first distractor incorrectly assumes new entities are exempt from pinning. The second wrongly suggests newly added subdomains bypass the policy. The third introduces a false requirement for manual user pinning.",
+        "analogy": "If you told your security guard (browser) that only a specific person (public key) can enter your main office and all its connected rooms (subdomains), the guard will stop anyone else trying to enter any of those rooms, even if they are newly opened."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "scenario",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "CRYPTO_HPKP_DIRECTIVES",
+        "CRYPTO_PKI_CERTIFICATES"
+      ]
+    },
+    {
+      "question_text": "What is the 'Subject Public Key Info' (SPKI) fingerprint mentioned in RFC 7469?",
+      "correct_answer": "A unique identifier derived from the public key component of a digital certificate, used for matching in HPKP.",
+      "distractors": [
+        {
+          "text": "The entire X.509 certificate, Base64 encoded.",
+          "misconception": "Targets [component confusion]: Students who believe the fingerprint represents the entire certificate, not just the public key."
+        },
+        {
+          "text": "A hash of the certificate's serial number and issuer name.",
+          "misconception": "Targets [fingerprint calculation misunderstanding]: Students who confuse SPKI fingerprint calculation with other certificate identifiers."
+        },
+        {
+          "text": "The private key associated with the public key.",
+          "misconception": "Targets [key type confusion]: Students who mix up public keys with their corresponding private keys."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The Subject Public Key Info (SPKI) fingerprint is a cryptographic hash (often SHA-256) of the public key itself, as found within a certificate. HPKP uses this fingerprint to create a specific, verifiable identity for a host, because it provides a compact and unique representation of the public key that can be easily compared.",
+        "distractor_analysis": "The first distractor incorrectly equates the fingerprint with the entire certificate. The second proposes an incorrect method for calculating the fingerprint. The third confuses public keys with private keys.",
+        "analogy": "It's like a unique serial number for a specific tool (public key), allowing you to identify that exact tool without needing the entire toolbox (certificate)."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "CRYPTO_PKI_CERTIFICATES",
+        "CRYPTO_PUBLIC_KEY_CRYPTO"
+      ]
+    },
+    {
+      "question_text": "Which of the following is a key difference between HPKP and TLS Server Name Indication (SNI)?",
+      "correct_answer": "HPKP pins specific public keys to a host to prevent MITM attacks, while SNI allows a server to present different certificates based on the requested hostname.",
+      "distractors": [
+        {
+          "text": "HPKP is used for encrypting traffic, while SNI is used for authentication.",
+          "misconception": "Targets [purpose confusion]: Students who misattribute encryption to HPKP and authentication to SNI."
+        },
+        {
+          "text": "HPKP requires a CA to issue the pinned key, while SNI does not involve CAs.",
+          "misconception": "Targets [CA involvement misunderstanding]: Students who believe HPKP bypasses CAs entirely and SNI is CA-independent."
+        },
+        {
+          "text": "HPKP is a client-side policy, while SNI is a server-side protocol extension.",
+          "misconception": "Targets [client/server role confusion]: Students who swap the primary roles of client and server in HPKP and SNI."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "HPKP is a security policy enforced by the client (browser) to ensure a specific public key is used, thereby preventing certain MITM attacks. SNI, conversely, is a TLS extension where the client tells the server which hostname it's trying to reach, allowing the server to select the correct certificate, because servers often host multiple domains on a single IP address.",
+        "distractor_analysis": "The first distractor incorrectly assigns encryption to HPKP and authentication to SNI. The second misrepresents CA involvement in both protocols. The third swaps the client-side policy of HPKP with the server-side extension of SNI.",
+        "analogy": "HPKP is like telling your security guard to *only* accept a specific ID card (public key) for your building. SNI is like telling the receptionist at a large office building *which company* you're visiting so they can direct you to the right department (certificate)."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "comparison",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "CRYPTO_HPKP",
+        "CRYPTO_TLS_SNI"
+      ]
+    },
+    {
+      "question_text": "What is the 'Report-Only' mode in HPKP?",
+      "correct_answer": "A mode where the browser logs potential pinning violations but does not block access, allowing administrators to test policies without risking lockouts.",
+      "distractors": [
+        {
+          "text": "A mode where the browser only reports successful connections to the server.",
+          "misconception": "Targets [reporting scope confusion]: Students who believe 'Report-Only' logs successful connections, not violations."
+        },
+        {
+          "text": "A mode where the browser ignores pinning policies unless explicitly told to report.",
+          "misconception": "Targets [policy enforcement misunderstanding]: Students who think 'Report-Only' disables enforcement entirely."
+        },
+        {
+          "text": "A mode where the browser reports all certificate details to a central authority.",
+          "misconception": "Targets [unrelated reporting function]: Students who believe 'Report-Only' is for general certificate reporting, not violation logging."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The 'Report-Only' mode for HPKP, often implemented via a separate header, allows administrators to monitor how their pinning policy would affect users without actually blocking access. This is invaluable for testing and debugging, because it provides visibility into potential issues (like misconfigurations or CA compromises) before enforcing the policy strictly.",
+        "distractor_analysis": "The first distractor incorrectly states it logs successful connections. The second wrongly suggests it completely disables policy enforcement. The third misinterprets the reporting target and scope.",
+        "analogy": "It's like a practice drill for a security system. The system logs any attempted breaches but doesn't sound the alarm or lock doors, letting you see if the drill would have worked without causing real disruption."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "procedure",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "CRYPTO_HPKP_MODES",
+        "CRYPTO_SECURITY_TESTING"
+      ]
+    },
+    {
+      "question_text": "Why was the <code>Public-Key-Pins</code> header itself considered a potential security risk?",
+      "correct_answer": "If the <code>Public-Key-Pins</code> header was delivered over an insecure channel (HTTP) or contained incorrect pins, it could be intercepted and manipulated.",
+      "distractors": [
+        {
+          "text": "The header itself contained weak cryptographic algorithms.",
+          "misconception": "Targets [algorithm confusion]: Students who believe the header format itself used weak crypto."
+        },
+        {
+          "text": "It required clients to store sensitive private keys.",
+          "misconception": "Targets [key storage misunderstanding]: Students who believe HPKP requires clients to store private keys."
+        },
+        {
+          "text": "It was too easily spoofed by attackers without proper CA validation.",
+          "misconception": "Targets [spoofing mechanism confusion]: Students who believe HPKP is easily spoofed even with correct implementation."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The <code>Public-Key-Pins</code> header, if served over plain HTTP, could be intercepted and modified by an attacker to inject malicious pins or remove legitimate ones. This is because the header itself is just data, and its integrity relies on the security of the channel it's transmitted over, thus it requires HTTPS to be secure.",
+        "distractor_analysis": "The first distractor wrongly claims the header used weak algorithms. The second incorrectly states clients store private keys. The third misrepresents the ease of spoofing if the header is delivered securely.",
+        "analogy": "It's like sending a secret code via postcard. If someone intercepts the postcard, they can change the code before it reaches the recipient, rendering it useless or dangerous."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "CRYPTO_HPKP_RISKS",
+        "CRYPTO_HTTP_SECURITY"
+      ]
+    },
+    {
+      "question_text": "What is the relationship between HPKP and Certificate Authority (CA) compromise?",
+      "correct_answer": "HPKP was designed to mitigate the impact of a CA compromise by allowing hosts to pin keys directly, bypassing the need to trust potentially compromised CAs.",
+      "distractors": [
+        {
+          "text": "HPKP requires CAs to implement stronger security measures to prevent compromise.",
+          "misconception": "Targets [mitigation vs. prevention confusion]: Students who believe HPKP forces CA security improvements rather than bypassing compromised CAs."
+        },
+        {
+          "text": "HPKP increases the importance of CA validation to ensure correct pins are set.",
+          "misconception": "Targets [role reversal]: Students who believe HPKP makes CA validation more critical, rather than less."
+        },
+        {
+          "text": "HPKP is only effective if the CA itself supports the pinning mechanism.",
+          "misconception": "Targets [dependency misunderstanding]: Students who believe CA cooperation is a prerequisite for HPKP."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "A CA compromise allows an attacker to obtain fraudulent certificates for any domain. HPKP counters this by allowing a website owner to specify which public keys are acceptable. Therefore, even if a CA is compromised and issues a fraudulent certificate, the client will reject it if its public key doesn't match the pinned key, because the trust is shifted from the CA to the pinned identity.",
+        "distractor_analysis": "The first distractor misrepresents HPKP as a CA security enforcement tool. The second incorrectly suggests HPKP increases reliance on CA validation. The third wrongly posits CA support as a requirement for HPKP.",
+        "analogy": "If you don't trust the gatekeepers (CAs) at the main entrance to your city, you can set up your own personal checkpoint (HPKP pin) at your house, only letting in people you recognize by sight (public key)."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "CRYPTO_HPKP",
+        "CRYPTO_CA_COMPROMISE"
+      ]
+    },
+    {
+      "question_text": "What does the <code>pin-sha256</code> directive in HPKP specify?",
+      "correct_answer": "It provides the Base64 encoded SHA-256 hash of the Subject Public Key Info (SPKI) for a trusted public key.",
+      "distractors": [
+        {
+          "text": "It specifies the entire public key in PEM format.",
+          "misconception": "Targets [format confusion]: Students who confuse a hash with the raw public key format."
+        },
+        {
+          "text": "It indicates the number of seconds the pin is valid.",
+          "misconception": "Targets [directive misinterpretation]: Students who confuse `pin-sha256` with the `max-age` directive."
+        },
+        {
+          "text": "It is a placeholder for the certificate's serial number.",
+          "misconception": "Targets [identifier confusion]: Students who confuse the public key hash with the certificate serial number."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The <code>pin-sha256</code> directive is fundamental to HPKP, as it contains the actual identifier for the trusted public key. It's a Base64 encoded SHA-256 hash of the SPKI, ensuring a compact and verifiable representation of the key. This allows browsers to efficiently check if the presented certificate's public key matches the pinned one, because hashing provides a unique fingerprint.",
+        "distractor_analysis": "The first distractor incorrectly suggests the raw public key is provided. The second confuses it with the <code>max-age</code> directive. The third misidentifies the value as a certificate serial number.",
+        "analogy": "It's like providing a unique fingerprint (SHA-256 hash) of a person's face (public key) to security, rather than asking them to remember the entire face or description."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "CRYPTO_HPKP_DIRECTIVES",
+        "CRYPTO_HASHING_FUNCTIONS"
+      ]
+    },
+    {
+      "question_text": "In the context of HPKP, what is the difference between a 'pinned' key and a 'backup' key?",
+      "correct_answer": "A pinned key is the primary key that must be present, while backup keys provide alternatives if the primary key is rotated or expires, preventing lockouts.",
+      "distractors": [
+        {
+          "text": "Pinned keys are for encryption, while backup keys are for authentication.",
+          "misconception": "Targets [encryption vs. authentication confusion]: Students who mix up the purpose of keys in HPKP."
+        },
+        {
+          "text": "Pinned keys are provided by the server, while backup keys are generated by the browser.",
+          "misconception": "Targets [key origin misunderstanding]: Students who believe browsers generate backup keys."
+        },
+        {
+          "text": "Pinned keys are always SHA-256 hashes, while backup keys use SHA-1.",
+          "misconception": "Targets [algorithm confusion]: Students who incorrectly associate specific hash algorithms with primary vs. backup keys."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "HPKP allows multiple pins. A primary 'pinned' key is essential for initial trust establishment. Backup keys are additional SPKI fingerprints that the browser will also accept. This redundancy is critical because it allows administrators to rotate keys (e.g., due to expiration or security concerns) without causing user lockouts, since the browser can still validate against the backup pins.",
+        "distractor_analysis": "The first distractor incorrectly assigns encryption/authentication roles. The second wrongly suggests browsers generate backup keys. The third misattributes specific hash algorithms to primary vs. backup keys.",
+        "analogy": "Think of your main house key (pinned key) and a spare key hidden under the mat (backup key). If you lose the main key, you can still get in with the spare, preventing you from being locked out."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "comparison",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "CRYPTO_HPKP_KEYS",
+        "CRYPTO_PUBLIC_KEY_ROTATION"
+      ]
+    },
+    {
+      "question_text": "What is the primary reason browsers like Chrome and Firefox have deprecated HPKP support?",
+      "correct_answer": "The significant risk of accidental website lockout due to misconfiguration or key rotation errors, which outweighed the security benefits for many sites.",
+      "distractors": [
+        {
+          "text": "HPKP was found to be ineffective against sophisticated state-sponsored attacks.",
+          "misconception": "Targets [effectiveness misunderstanding]: Students who believe HPKP failed against advanced threats."
+        },
+        {
+          "text": "The complexity of managing HPKP pins made it impractical for most webmasters.",
+          "misconception": "Targets [complexity oversimplification]: Students who focus solely on management complexity, not the critical lockout risk."
+        },
+        {
+          "text": "HPKP was superseded by newer protocols that offer stronger encryption.",
+          "misconception": "Targets [protocol replacement confusion]: Students who believe HPKP was replaced by a protocol offering better encryption, rather than a different security mechanism."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The critical flaw in HPKP was its 'all-or-nothing' enforcement. A single mistake in pinning could make a website inaccessible to users who had previously pinned the site. Because this risk of lockout was so high and difficult to recover from, browsers began phasing out support, prioritizing user access over the potential security gains of HPKP, since the operational burden was too great.",
+        "distractor_analysis": "The first distractor wrongly claims ineffectiveness against sophisticated attacks. The second focuses on complexity but misses the core lockout risk. The third incorrectly suggests it was replaced by a superior encryption protocol.",
+        "analogy": "It's like a security system that, if slightly misconfigured, permanently locks the owner out of their own building. The risk of being unable to get in outweighs the benefit of the security itself."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "analysis",
+      "bloom_level": "evaluate",
+      "prerequisites": [
+        "CRYPTO_HPKP_DEPRECATION",
+        "CRYPTO_OPERATIONAL_SECURITY"
+      ]
+    },
+    {
+      "question_text": "How did HPKP aim to reduce the impact of a compromised Certificate Authority (CA)?",
+      "correct_answer": "By allowing websites to 'pin' specific public keys, clients would only trust certificates containing those keys, bypassing potentially compromised CAs.",
+      "distractors": [
+        {
+          "text": "By requiring CAs to use stronger encryption algorithms for their own keys.",
+          "misconception": "Targets [mitigation vs. prevention confusion]: Students who believe HPKP forces CA security improvements rather than bypassing compromised CAs."
+        },
+        {
+          "text": "By logging all certificates issued by CAs to detect fraudulent ones.",
+          "misconception": "Targets [logging vs. pinning confusion]: Students who confuse HPKP's pinning mechanism with Certificate Transparency logging."
+        },
+        {
+          "text": "By forcing clients to re-validate CA trust chains on every connection.",
+          "misconception": "Targets [mechanism misunderstanding]: Students who believe HPKP increases validation frequency, rather than reducing reliance on CAs."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "A compromised CA can issue fraudulent certificates for any domain. HPKP mitigates this by enabling website owners to specify which public keys are acceptable. Therefore, even if a CA issues a rogue certificate, a client enforcing HPKP will reject it if the public key doesn't match the pinned key, because the trust anchor shifts from the CA to the pinned identity.",
+        "distractor_analysis": "The first distractor incorrectly suggests HPKP enforces CA security. The second confuses HPKP with Certificate Transparency logging. The third misrepresents HPKP as increasing validation frequency.",
+        "analogy": "If you suspect your mail carrier (CA) might be tampering with packages, you can tell your doorman (browser) to only accept packages from specific, trusted individuals (pinned public keys), regardless of who the mail carrier claims delivered it."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "defense",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "CRYPTO_HPKP",
+        "CRYPTO_CA_COMPROMISE"
+      ]
+    }
+  ],
+  "generation_metadata": {
+    "model": "google/gemini-2.5-flash-lite",
+    "num_generated": 18,
+    "temperature": 0.1,
+    "web_citations": [],
+    "research_method": "openrouter_web_plugin",
+    "search_query": "Public Key Pinning (HPKP - Deprecated) 001_Cryptography best practices",
+    "latency_ms": 34417.466
+  },
+  "timestamp": "2026-01-18T16:08:58.295207"
+}

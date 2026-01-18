@@ -1,0 +1,493 @@
+{
+  "topic_title": "Sysmon Log Interpretation",
+  "category": "002_Incident Response And Forensics - Incident 002_Detection and Analysis",
+  "flashcards": [
+    {
+      "question_text": "According to NIST SP 800-61 Rev. 2, what is the primary goal of the 'Containment' phase in incident response, and how does Sysmon assist in this phase?",
+      "correct_answer": "To prevent the incident from spreading further by isolating affected systems, which Sysmon helps by logging network connections and process activity to identify compromised hosts.",
+      "distractors": [
+        {
+          "text": "To immediately eradicate all malware from affected systems, which Sysmon helps by logging file modifications.",
+          "misconception": "Targets [containment vs eradication confusion]: Confuses the goal of containment with immediate eradication."
+        },
+        {
+          "text": "To restore affected systems to their pre-incident state, which Sysmon helps by logging system configuration changes.",
+          "misconception": "Targets [containment vs recovery confusion]: Mixes containment with the recovery phase."
+        },
+        {
+          "text": "To gather all evidence related to the incident, which Sysmon helps by logging process creation events.",
+          "misconception": "Targets [containment vs evidence gathering confusion]: Prioritizes evidence gathering over immediate containment."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The containment phase aims to limit the damage and spread of an incident. Sysmon's detailed logging of network connections (Event ID 3) and process activity (Event ID 1) is crucial for identifying compromised systems and isolating them, thus preventing further lateral movement.",
+        "distractor_analysis": "The first distractor confuses containment with eradication. The second conflates containment with the recovery phase. The third prioritizes evidence gathering over immediate containment actions.",
+        "analogy": "Containment is like building a firebreak to stop a wildfire from spreading, while eradication is like putting out the remaining embers."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "IR_PHASES",
+        "SYSMON_EVENTS"
+      ]
+    },
+    {
+      "question_text": "Which Sysmon Event ID is most critical for detecting suspicious process creation, including command-line arguments, which is vital for identifying initial access or lateral movement techniques?",
+      "correct_answer": "Event ID 1: Process creation",
+      "distractors": [
+        {
+          "text": "Event ID 3: Network connection",
+          "misconception": "Targets [event ID confusion]: Associates process creation with network activity."
+        },
+        {
+          "text": "Event ID 10: ProcessAccess",
+          "misconception": "Targets [event ID confusion]: Focuses on process interaction rather than creation."
+        },
+        {
+          "text": "Event ID 11: FileCreate",
+          "misconception": "Targets [event ID confusion]: Links process activity to file creation instead of execution."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Sysmon Event ID 1 logs process creation events, including the parent process, process name, and crucially, the command-line arguments used. This detail is essential for analyzing how processes were launched and what actions they intended to perform, directly aiding in detecting malicious execution.",
+        "distractor_analysis": "Event ID 3 logs network connections, Event ID 10 logs inter-process memory access, and Event ID 11 logs file creation, none of which directly capture the initiation of a new process with its arguments.",
+        "analogy": "Event ID 1 is like the security camera footage showing someone entering a building and what they were carrying, while other event IDs show different actions they might take inside."
+      },
+      "code_snippets": [],
+      "difficulty": "foundational",
+      "question_type": "definition",
+      "bloom_level": "understand",
+      "prerequisites": [
+        "SYSMON_EVENTS",
+        "PROCESS_MONITORING"
+      ]
+    },
+    {
+      "question_text": "When analyzing Sysmon logs for signs of lateral movement, which combination of Event IDs provides the most comprehensive view of potential remote execution and credential access?",
+      "correct_answer": "Event ID 1 (Process creation) and Event ID 3 (Network connection), often correlated with Event ID 4624 (Windows Security Log - Logon) or Event ID 4648 (Windows Security Log - RunAs)",
+      "distractors": [
+        {
+          "text": "Event ID 11 (FileCreate) and Event ID 15 (FileCreateStreamHash)",
+          "misconception": "Targets [activity focus confusion]: Focuses on file system activity, not execution or access."
+        },
+        {
+          "text": "Event ID 7 (Image loaded) and Event ID 10 (ProcessAccess)",
+          "misconception": "Targets [activity focus confusion]: Focuses on module loading and memory access, not remote execution initiation."
+        },
+        {
+          "text": "Event ID 17 (PipeEvent) and Event ID 18 (PipeEvent)",
+          "misconception": "Targets [activity focus confusion]: Focuses on named pipe activity, which can be used but isn't the primary indicator of remote execution."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Lateral movement often involves executing processes on remote systems (Event ID 1) and establishing network connections (Event ID 3). Correlating these with Windows Security Log events for remote logons (like 4624 or 4648) provides strong evidence of an attacker moving across the network.",
+        "distractor_analysis": "The distractors focus on file system operations, module loading, memory access, or named pipes, which are less direct indicators of remote process execution compared to process creation and network connections.",
+        "analogy": "Detecting lateral movement is like tracking a burglar: you look for them entering new rooms (process creation/network connection) and using stolen keys (credentials) to do so."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SYSMON_EVENTS",
+        "LATERAL_MOVEMENT",
+        "CREDENTIAL_ACCESS"
+      ]
+    },
+    {
+      "question_text": "Sysmon's Event ID 10 (ProcessAccess) logs when one process attempts to access the memory of another. What is a common malicious technique that this event can help detect?",
+      "correct_answer": "Process injection, where malware injects malicious code into a legitimate process to evade detection.",
+      "distractors": [
+        {
+          "text": "Fileless malware execution, where malicious code runs only in memory.",
+          "misconception": "Targets [detection mechanism confusion]: Fileless malware is a broader category; ProcessAccess specifically targets injection into *other* processes."
+        },
+        {
+          "text": "Credential dumping, where attackers steal user credentials from memory.",
+          "misconception": "Targets [related but distinct technique]: While credential dumping often involves memory access, Event ID 10 specifically logs the *access* attempt, not the dumping action itself, which might be logged by other means or tools."
+        },
+        {
+          "text": "Persistence mechanisms like scheduled tasks.",
+          "misconception": "Targets [unrelated technique]: Scheduled tasks are a persistence method, not directly related to inter-process memory access."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Process injection is a technique where a malicious process creates a thread in another process's address space to execute arbitrary code. Sysmon's Event ID 10 logs these 'CreateRemoteThread' events, providing direct visibility into this common evasion tactic.",
+        "distractor_analysis": "Fileless malware is a broader concept. Credential dumping is a related memory-based attack but Event ID 10 specifically logs the access, not the dump. Scheduled tasks are a persistence method unrelated to inter-process memory access.",
+        "analogy": "Event ID 10 is like seeing someone trying to pick the lock on someone else's locker to plant something inside, which is a common way to hide illicit items."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SYSMON_EVENTS",
+        "PROCESS_INJECTION",
+        "MALWARE_EVASION"
+      ]
+    },
+    {
+      "question_text": "When configuring Sysmon, what is the purpose of using a configuration file (e.g., XML) instead of relying on default settings?",
+      "correct_answer": "To tailor logging to specific security needs, reduce noise by filtering benign events, and ensure consistent deployment across multiple systems.",
+      "distractors": [
+        {
+          "text": "To enable Sysmon's automatic updates and patching.",
+          "misconception": "Targets [configuration vs management confusion]: Configuration files manage logging rules, not update mechanisms."
+        },
+        {
+          "text": "To increase the default logging verbosity for all events.",
+          "misconception": "Targets [filtering vs verbosity confusion]: Configuration is used for selective logging, not just increasing verbosity."
+        },
+        {
+          "text": "To automatically send logs to a Security Information and Event Management (SIEM) system.",
+          "misconception": "Targets [logging vs forwarding confusion]: Configuration defines what to log, not how or where to forward it."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "A Sysmon configuration file allows administrators to define precisely which events to log, filter out noise (e.g., benign processes like <code>explorer.exe</code>), and set inclusion/exclusion rules. This ensures relevant data is captured for incident response and security analysis, and enables consistent deployment via Group Policy or other management tools.",
+        "distractor_analysis": "Configuration files manage logging rules, not update mechanisms. They are used for selective logging, not just increasing verbosity. Log forwarding to a SIEM is a separate configuration step, not handled by the Sysmon event logging configuration itself.",
+        "analogy": "A Sysmon configuration file is like a custom instruction manual for a security camera system, telling it exactly what to watch for and ignore, rather than just recording everything indiscriminately."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "procedure",
+      "bloom_level": "apply",
+      "prerequisites": [
+        "SYSMON_CONFIGURATION",
+        "LOG_MANAGEMENT"
+      ]
+    },
+    {
+      "question_text": "Sysmon Event ID 12 (RegistryEvent) logs changes to the Windows Registry. Which type of registry modification is MOST indicative of a persistence mechanism being established?",
+      "correct_answer": "Adding a new value to the 'Run' or 'RunOnce' keys in the user or machine registry hives.",
+      "distractors": [
+        {
+          "text": "Modifying values related to file associations.",
+          "misconception": "Targets [persistence vs file association confusion]: File association changes are less common for direct persistence."
+        },
+        {
+          "text": "Creating new keys under the 'Software' hive for legitimate applications.",
+          "misconception": "Targets [persistence vs application installation confusion]: New software keys are typical during installation, not necessarily persistence."
+        },
+        {
+          "text": "Deleting values in the 'ControlSet' related to services.",
+          "misconception": "Targets [persistence vs system configuration confusion]: Deleting values can be disruptive, but adding to Run keys is a direct persistence method."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Persistence mechanisms aim to ensure malware or unauthorized code executes automatically upon system startup or user login. Adding entries to the 'Run' or 'RunOnce' registry keys (HKCU or HKLM) is a classic method for achieving this, as Windows automatically executes programs listed there.",
+        "distractor_analysis": "Modifying file associations or creating general 'Software' keys are not primary persistence methods. Deleting 'ControlSet' values can be harmful but doesn't directly establish a new execution point.",
+        "analogy": "Establishing persistence via the 'Run' keys is like putting a note on the refrigerator that says 'Remember to do this every morning' – it ensures an action happens automatically."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SYSMON_EVENTS",
+        "PERSISTENCE_TECHNIQUES",
+        "WINDOWS_REGISTRY"
+      ]
+    },
+    {
+      "question_text": "Sysmon Event ID 11 (FileCreate) logs when a file is created. What additional information, if configured, makes this event particularly useful for detecting malicious file drops or malware staging?",
+      "correct_answer": "The hash of the created file.",
+      "distractors": [
+        {
+          "text": "The process ID of the creator process.",
+          "misconception": "Targets [information value confusion]: Process ID is logged by default (Event ID 1), but hash is more critical for file identification."
+        },
+        {
+          "text": "The file's last modified timestamp.",
+          "misconception": "Targets [information value confusion]: Timestamps are useful but less definitive than a hash for identifying specific malicious files."
+        },
+        {
+          "text": "The file's size in bytes.",
+          "misconception": "Targets [information value confusion]: File size is less unique than a hash for identifying specific malware."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "While Event ID 11 logs file creation, including the creator process, the inclusion of the file's hash (e.g., MD5, SHA1, SHA256) is invaluable. This hash acts as a unique fingerprint, allowing security analysts to quickly compare the created file against threat intelligence feeds or known malware signatures.",
+        "distractor_analysis": "The process ID is logged by Event ID 1. Timestamps and file sizes are less unique identifiers compared to cryptographic hashes for pinpointing specific malicious files.",
+        "analogy": "The file hash is like a unique serial number for a suspicious item found at a crime scene; it allows investigators to immediately check if it's linked to known criminal activity."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SYSMON_EVENTS",
+        "FILE_ANALYSIS",
+        "HASHING"
+      ]
+    },
+    {
+      "question_text": "Sysmon Event ID 3 (Network connection) logs outbound network connections. What is a key indicator of potential C2 (Command and Control) communication that can be identified using this event?",
+      "correct_answer": "Connections to known malicious IP addresses or domains, or unusual port usage for common processes.",
+      "distractors": [
+        {
+          "text": "Connections originating from the System process.",
+          "misconception": "Targets [process origin confusion]: The System process making connections is often legitimate; the destination is key."
+        },
+        {
+          "text": "Connections that are immediately terminated.",
+          "misconception": "Targets [connection behavior confusion]: Short-lived connections can be normal (e.g., DNS lookups); C2 often involves sustained or periodic communication."
+        },
+        {
+          "text": "Connections made using the HTTP protocol.",
+          "misconception": "Targets [protocol usage confusion]: HTTP is a common protocol used by both legitimate applications and C2 channels; context is needed."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Identifying C2 communication involves looking for connections to known malicious infrastructure (IPs/domains) or unusual patterns. For instance, a web server process (like <code>httpd.exe</code>) making connections on non-standard ports, or any process connecting to an IP flagged in threat intelligence, are strong indicators.",
+        "distractor_analysis": "Connections from the System process are often normal. Immediately terminated connections aren't inherently suspicious. HTTP is a common protocol used legitimately, so its mere presence isn't a C2 indicator without further context.",
+        "analogy": "Detecting C2 traffic is like spotting a secret signal between spies – you look for coded messages (known bad IPs/domains) or unusual communication methods (non-standard ports)."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SYSMON_EVENTS",
+        "NETWORK_TRAFFIC_ANALYSIS",
+        "COMMAND_AND_CONTROL"
+      ]
+    },
+    {
+      "question_text": "Sysmon Event ID 7 (Image loaded) logs when a DLL is loaded into a process. What malicious technique does this event help detect, especially when combined with process information?",
+      "correct_answer": "DLL hijacking or side-loading, where a malicious DLL is loaded by a legitimate application.",
+      "distractors": [
+        {
+          "text": "Buffer overflows, which exploit memory vulnerabilities.",
+          "misconception": "Targets [vulnerability type confusion]: Buffer overflows are memory corruption issues, not directly DLL loading."
+        },
+        {
+          "text": "SQL injection attacks.",
+          "misconception": "Targets [attack vector confusion]: SQL injection targets databases, unrelated to DLL loading."
+        },
+        {
+          "text": "Man-in-the-Middle (MitM) attacks.",
+          "misconception": "Targets [attack vector confusion]: MitM attacks intercept network traffic, unrelated to DLL loading."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "DLL hijacking occurs when an application loads a malicious DLL instead of a legitimate one, often because the malicious DLL is placed in a location with higher search precedence. Event ID 7 logs the image (DLL) being loaded and the process loading it, allowing analysts to identify unexpected or suspicious DLLs associated with legitimate applications.",
+        "distractor_analysis": "Buffer overflows, SQL injection, and MitM attacks are distinct types of vulnerabilities or attacks that do not directly involve the loading of DLLs into processes.",
+        "analogy": "DLL hijacking is like a legitimate company's delivery truck (the application) accidentally picking up a package from a criminal (the malicious DLL) instead of the intended supplier."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SYSMON_EVENTS",
+        "DLL_HIJACKING",
+        "MALWARE_TECHNIQUES"
+      ]
+    },
+    {
+      "question_text": "Sysmon Event ID 19 (WmiEvent) logs WMI activity. What is a common malicious use of WMI that this event can help detect?",
+      "correct_answer": "Establishing persistence or executing commands remotely using WMI event subscriptions.",
+      "distractors": [
+        {
+          "text": "Exfiltrating large amounts of data.",
+          "misconception": "Targets [activity focus confusion]: While WMI can be used to facilitate exfiltration, Event ID 19 specifically logs WMI *event* activity, not data transfer itself."
+        },
+        {
+          "text": "Performing denial-of-service (DoS) attacks.",
+          "misconception": "Targets [attack vector confusion]: WMI is not typically used as a primary tool for DoS attacks."
+        },
+        {
+          "text": "Cracking password hashes.",
+          "misconception": "Targets [activity focus confusion]: Password cracking is a separate process, not directly related to WMI event logging."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Attackers leverage Windows Management Instrumentation (WMI) for various malicious purposes, including establishing persistence by creating event subscriptions that trigger malicious scripts or commands. Sysmon's Event ID 19 logs these WMI event activities, providing visibility into such potentially malicious configurations.",
+        "distractor_analysis": "Event ID 19 is specific to WMI event subscriptions, not general data exfiltration, DoS attacks, or password cracking, although WMI might be used as a tool in those broader attack chains.",
+        "analogy": "Detecting malicious WMI activity is like finding hidden tripwires (WMI event subscriptions) set up to trigger an alarm (malicious script execution) when someone walks by."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SYSMON_EVENTS",
+        "WMI",
+        "PERSISTENCE_TECHNIQUES"
+      ]
+    },
+    {
+      "question_text": "When analyzing Sysmon logs, particularly Event ID 1 (Process creation), what is the significance of observing a child process being spawned by an unusual parent process (e.g., <code>winword.exe</code> spawning <code>powershell.exe</code>)?",
+      "correct_answer": "It strongly suggests a potential exploit or malicious script execution, as legitimate applications rarely spawn command shells or scripting engines directly.",
+      "distractors": [
+        {
+          "text": "It indicates a normal system update process.",
+          "misconception": "Targets [normal behavior confusion]: System updates typically involve system services, not application spawning shells."
+        },
+        {
+          "text": "It signifies a benign software installation.",
+          "misconception": "Targets [normal behavior confusion]: Software installations usually involve installers and services, not typically office applications spawning shells."
+        },
+        {
+          "text": "It is a common behavior for antivirus software.",
+          "misconception": "Targets [normal behavior confusion]: While AV might interact with processes, `winword.exe` spawning `powershell.exe` is not standard AV behavior."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The parent-child process relationship logged in Event ID 1 is critical. When an unexpected parent spawns a child (like <code>winword.exe</code> launching <code>powershell.exe</code>), it often indicates that the parent process has been compromised to execute malicious code via the child process, a common technique for initial access or privilege escalation.",
+        "distractor_analysis": "This behavior is highly anomalous and not indicative of normal system updates, software installations, or typical antivirus operations.",
+        "analogy": "Seeing <code>winword.exe</code> spawn <code>powershell.exe</code> is like seeing a chef suddenly start operating the cash register – it's out of the ordinary and suggests something else is going on."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "scenario",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SYSMON_EVENTS",
+        "PROCESS_RELATIONSHIPS",
+        "MALWARE_EXECUTION"
+      ]
+    },
+    {
+      "question_text": "Sysmon Event ID 13 (RegistryEvent - Value Set) logs when a registry value is modified. What kind of malicious activity might this event help uncover if the modification occurs in specific system locations?",
+      "correct_answer": "Changes to configuration settings that enable or disable security features, or modifications to startup values for persistence.",
+      "distractors": [
+        {
+          "text": "The installation of new software.",
+          "misconception": "Targets [activity focus confusion]: Software installation involves many registry changes, but Event ID 13 specifically logs value *sets*, which can be more targeted for malicious config changes."
+        },
+        {
+          "text": "User login events.",
+          "misconception": "Targets [event type confusion]: User logins are logged in Windows Security Event Logs, not typically as registry value sets."
+        },
+        {
+          "text": "Network connection attempts.",
+          "misconception": "Targets [event type confusion]: Network connections are logged by Event ID 3, not registry modifications."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Modifying registry values can alter system behavior. If an attacker changes settings related to firewall rules, UAC prompts, or adds/modifies entries in startup locations (like Run keys), Event ID 13 will log these specific value changes, providing evidence of tampering or persistence establishment.",
+        "distractor_analysis": "While software installation involves registry changes, Event ID 13 focuses on specific value modifications which are more indicative of targeted configuration changes. User logins and network connections are logged by different event types.",
+        "analogy": "Registry value changes are like an attacker subtly altering the settings on a thermostat to make the house uncomfortable (disable security) or ensuring a heater turns on automatically (persistence)."
+      },
+      "code_snippets": [],
+      "difficulty": "intermediate",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SYSMON_EVENTS",
+        "WINDOWS_REGISTRY",
+        "MALWARE_CONFIG"
+      ]
+    },
+    {
+      "question_text": "Sysmon Event ID 8 (CreateRemoteThread) logs when a process creates a thread in another process. Why is this event particularly important for detecting advanced threats?",
+      "correct_answer": "It directly captures the mechanism used in process injection, a common technique for malware to hide its execution within legitimate processes.",
+      "distractors": [
+        {
+          "text": "It logs all inter-process communication (IPC) channels.",
+          "misconception": "Targets [IPC scope confusion]: Event ID 8 is specific to thread creation, not all IPC mechanisms like pipes or RPC."
+        },
+        {
+          "text": "It monitors for unauthorized file access.",
+          "misconception": "Targets [activity focus confusion]: This event relates to process execution, not file system access."
+        },
+        {
+          "text": "It detects brute-force login attempts.",
+          "misconception": "Targets [attack vector confusion]: Brute-force attacks are typically logged in Windows Security Event Logs, not related to thread creation."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "The CreateRemoteThread API call is the core function used in many process injection techniques. By logging when one process initiates a thread in another's address space, Sysmon Event ID 8 provides direct visibility into this stealthy method of executing malicious code under the guise of a trusted process.",
+        "distractor_analysis": "Event ID 8 is specific to thread creation for remote processes, not general IPC, file access, or brute-force login detection.",
+        "analogy": "Event ID 8 is like catching someone remotely activating a hidden device inside another person's machinery to make it do something it shouldn't."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SYSMON_EVENTS",
+        "PROCESS_INJECTION",
+        "ADVANCED_MALWARE"
+      ]
+    },
+    {
+      "question_text": "Sysmon Event ID 15 (FileCreateStreamHash) logs the hash of alternate data streams (ADS) created on NTFS file systems. Why is monitoring ADS creation significant for incident response?",
+      "correct_answer": "Malware can hide malicious code or data within ADS to evade detection by traditional file-scanning antivirus solutions.",
+      "distractors": [
+        {
+          "text": "It indicates the creation of new directories.",
+          "misconception": "Targets [ADS vs directory confusion]: ADS are associated with files, not separate directory structures."
+        },
+        {
+          "text": "It logs the modification of file permissions.",
+          "misconception": "Targets [ADS vs permissions confusion]: ADS are data streams, distinct from file access control lists (ACLs)."
+        },
+        {
+          "text": "It tracks the deletion of temporary files.",
+          "misconception": "Targets [ADS vs temporary files confusion]: ADS are a feature of NTFS filesystems, not directly related to temporary file cleanup."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Alternate Data Streams (ADS) allow additional data to be associated with a file without changing its primary content or size. Attackers can embed malicious scripts or executables within ADS, making them invisible to standard file integrity checks. Event ID 15 provides visibility into the creation of these hidden streams.",
+        "distractor_analysis": "ADS are not related to directory creation, file permissions, or temporary file deletion. They are a specific NTFS feature for associating hidden data with files.",
+        "analogy": "Hiding malware in ADS is like smuggling contraband inside a hollowed-out book – it looks normal on the outside, but contains hidden illicit material."
+      },
+      "code_snippets": [],
+      "difficulty": "expert",
+      "question_type": "analysis",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SYSMON_EVENTS",
+        "NTFS",
+        "MALWARE_STEALTH"
+      ]
+    },
+    {
+      "question_text": "When analyzing Sysmon logs, especially Event ID 3 (Network connection), what is a key indicator that a process might be performing unauthorized data exfiltration?",
+      "correct_answer": "A process, particularly one not typically associated with network activity, making large, sustained outbound connections to an unknown or suspicious IP address.",
+      "distractors": [
+        {
+          "text": "A process making frequent, small inbound connections.",
+          "misconception": "Targets [directionality confusion]: Exfiltration is outbound; inbound connections suggest listening or receiving."
+        },
+        {
+          "text": "A process establishing connections on standard ports like 80 or 443, regardless of destination.",
+          "misconception": "Targets [port usage confusion]: While common ports are used, the destination and volume are more critical indicators for exfiltration."
+        },
+        {
+          "text": "A process that frequently restarts its network service.",
+          "misconception": "Targets [behavioral confusion]: Restarting a network service isn't directly indicative of data exfiltration."
+        }
+      ],
+      "detailed_explanation": {
+        "core_logic": "Data exfiltration involves transferring sensitive data out of the network. Sysmon Event ID 3 helps detect this by logging outbound connections. Anomalous behavior, such as a non-network-related process (e.g., a document editor) sending large amounts of data to an unusual destination, is a strong indicator.",
+        "distractor_analysis": "Exfiltration is outbound, not inbound. Connections on common ports can be legitimate; the destination and volume are key. Service restarts are not direct indicators of data theft.",
+        "analogy": "Detecting data exfiltration is like noticing a normally quiet employee suddenly carrying out large, heavy boxes late at night – it's suspicious activity involving removal of assets."
+      },
+      "code_snippets": [],
+      "difficulty": "advanced",
+      "question_type": "scenario",
+      "bloom_level": "analyze",
+      "prerequisites": [
+        "SYSMON_EVENTS",
+        "DATA_EXFILTRATION",
+        "NETWORK_MONITORING"
+      ]
+    }
+  ],
+  "generation_metadata": {
+    "model": "google/gemini-2.5-flash-lite",
+    "num_generated": 15,
+    "temperature": 0.1,
+    "web_citations": [],
+    "research_method": "openrouter_web_plugin",
+    "search_query": "Sysmon Log Interpretation 002_Incident Response And Forensics best practices",
+    "latency_ms": 25973.822
+  },
+  "timestamp": "2026-01-18T13:19:45.958624"
+}
