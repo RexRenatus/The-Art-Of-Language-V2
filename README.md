@@ -12,7 +12,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Topics-139,403-blue?style=for-the-badge" alt="Topics">
-  <img src="https://img.shields.io/badge/Flashcards-480,075+-green?style=for-the-badge" alt="Flashcards">
+  <img src="https://img.shields.io/badge/Flashcards-473,082-green?style=for-the-badge" alt="Flashcards">
   <img src="https://img.shields.io/badge/Deduplicated-335,114-brightgreen?style=for-the-badge" alt="Deduplicated">
   <img src="https://img.shields.io/badge/Domains-47-orange?style=for-the-badge" alt="Domains">
   <img src="https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge" alt="License">
@@ -24,8 +24,8 @@
 
 - **139,403 curriculum topics** across cybersecurity, networking, and software engineering
 - **8-voter AI consensus system** for pedagogical quality assurance
-- **480,075+ validated flashcards** with Phase 15 quality protocol
-- **GPU-accelerated deduplication** - 30.2% duplicate removal on H100 (480K → 335K)
+- **473,082 validated flashcards** with Phase 15 quality protocol
+- **GPU-accelerated deduplication** - 30.2% duplicate removal on H100 (473K → 331K)
 - **Web-grounded research** via Exa semantic search and Context7
 - **Production pipeline** processing 29 topics/minute
 
@@ -40,7 +40,18 @@ Ready-to-use Anki packages for the Cybersecurity curriculum. Import directly int
   <img src="Threat-Hunting-Back.png" alt="Flashcard Back" width="400">
 </p>
 
-### Deduplicated
+### V3 - Recommended (Latest)
+**Updated January 2026** - Improved flashcard quality with enhanced higher-order Bloom levels and refined explanations.
+
+| Domain | Cards | Size | Download |
+|--------|-------|------|----------|
+| Threat Intelligence & Hunting | 47,381 | 33 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/apkg/v3/non-deduplicated/001_cybersecurity/017_threat-intelligence-and-hunting.apkg) |
+
+> **Note:** V3 packages are being rolled out progressively. Use V3 where available; other domains use V2 below.
+
+---
+
+### V2 - Deduplicated
 Semantically deduplicated using GPU-accelerated embeddings. 30.2% fewer cards with no redundancy.
 
 | Domain | Cards | Size | Download |
@@ -56,8 +67,8 @@ Semantically deduplicated using GPU-accelerated embeddings. 30.2% fewer cards wi
 | Threat Intelligence | 32,438 | 14 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/apkg/deduplicated/001_cybersecurity/017_threat-intelligence-and-hunting.apkg) |
 | **Total** | **335,114** | **139 MB** | |
 
-### Non-Deduplicated (Full Dataset - Recommended)
-Complete flashcard set without deduplication.
+### V2 - Non-Deduplicated (Full Dataset)
+Complete flashcard set without deduplication. Use V3 above where available.
 
 | Domain | Cards | Size | Download |
 |--------|-------|------|----------|
@@ -69,7 +80,7 @@ Complete flashcard set without deduplication.
 | Application Security | 42,032 | 17 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/apkg/non-deduplicated/001_cybersecurity/009_application-security.apkg) |
 | Incident Response | 46,918 | 19 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/apkg/non-deduplicated/001_cybersecurity/015_incident-response-and-forensics.apkg) |
 | Penetration Testing | 38,259 | 15 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/apkg/non-deduplicated/001_cybersecurity/016_penetration-testing-and-ethical-hacking.apkg) |
-| Threat Intelligence | 54,465 | 22 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/apkg/non-deduplicated/001_cybersecurity/017_threat-intelligence-and-hunting.apkg) |
+| Threat Intelligence | 54,465 | 22 MB | [Download APKG](https://storage.googleapis.com/flashcards-generations-learning/apkg/non-deduplicated/001_cybersecurity/017_threat-intelligence-and-hunting.apkg) *(Use V3 above)* |
 | **Total** | **480,075** | **190 MB** | |
 
 <details>
@@ -127,7 +138,7 @@ flowchart TB
 
     subgraph SYNTHESIS["⚡ Generation Phase"]
         G --> H["Grok 4.1<br/>Synthesis"]
-        H --> I["Gemini 2.5<br/>Flashcards"]
+        H --> I["Claude Sonnet 4.5<br/>Flashcards"]
     end
 
     subgraph OUTPUT["✅ Validation & Export"]
@@ -305,18 +316,18 @@ Grok synthesizes an optimized learning prompt from voter consensus and research.
 </details>
 
 <details>
-<summary><strong>Stage 7: 📚 Flashcard Generation (Gemini 2.5 Flash)</strong></summary>
+<summary><strong>Stage 7: 📚 Flashcard Generation (Claude Sonnet 4.5)</strong></summary>
 
 ### What Happens
-Gemini generates 15-20 validated flashcards per topic.
+Claude generates 15-20 validated flashcards per topic using extended thinking for higher-order cognitive questions.
 
 ### Model Configuration
 | Setting | Value |
 |---------|-------|
-| Model | `google/gemini-2.5-flash-lite` |
+| Model | `anthropic/claude-sonnet-4.5` |
 | Temperature | 0.1 |
 | Max Tokens | 50,000 |
-| Reasoning | Disabled (fast generation) |
+| Extended Thinking | `effort: high` (80% reasoning budget) |
 
 ### Flashcard Schema
 ```json
@@ -450,8 +461,8 @@ python -m flashcard_maker \
 | 🏛️ **Domains** | 47 |
 | 📚 **Subdomains** | 355 |
 | 📝 **Topics** | 139,403 |
-| 🎴 **Flashcards (Raw)** | 480,075 |
-| ✨ **Flashcards (Deduplicated)** | 335,114 |
+| 🎴 **Flashcards (Raw)** | 473,082 |
+| ✨ **Flashcards (Deduplicated)** | 331,000 |
 | 🔄 **Deduplication Rate** | 30.2% |
 | 💾 **Data Size** | 23.42 MB |
 | ⏱️ **Throughput** | 29 topics/min |
@@ -608,13 +619,15 @@ The-Art-Of-Language-V2/
 
 ## Model Configuration
 
-| Purpose | Model | Max Tokens | Temperature |
-|---------|-------|------------|-------------|
-| **Voters** | `x-ai/grok-4.1-fast` | 2,000 | 0.7 |
-| **Synthesis** | `x-ai/grok-4.1-fast` | 4,000 | 0.5 |
-| **Research** | `google/gemini-2.5-flash` | 3,000 | 0.7 |
-| **Flashcards** | `google/gemini-2.5-flash-lite` | 50,000 | 0.1 |
-| **Embeddings** | `all-mpnet-base-v2` | 768 dims | - |
+| Purpose | Model | Max Tokens | Temperature | Extended Thinking |
+|---------|-------|------------|-------------|-------------------|
+| **Voters** | `x-ai/grok-4.1-fast` | 2,000 | 0.7 | - |
+| **Synthesis** | `x-ai/grok-4.1-fast` | 4,000 | 0.5 | - |
+| **Research** | `google/gemini-2.5-flash` | 3,000 | 0.7 | - |
+| **Flashcards** | `anthropic/claude-sonnet-4.5` | 50,000 | 0.1 | `effort: high` (80%) |
+| **Embeddings** | `all-mpnet-base-v2` | 768 dims | - | - |
+
+**Extended Thinking (2026-01-23):** Flashcard generation now uses OpenRouter's extended thinking with 80% reasoning budget. This improves higher-order Bloom levels from 0% to 80%+ at ~$0.28/topic.
 
 ---
 
@@ -654,5 +667,5 @@ As of January 2026:
 ---
 
 <p align="center">
-  <sub>Built with 🔥 Firecrawl, 🤖 Grok, ✨ Gemini, and 🚀 H100 GPU</sub>
+  <sub>Built with 🔥 Firecrawl, 🤖 Grok, 🧠 Claude, ✨ Gemini, and 🚀 H100 GPU</sub>
 </p>
